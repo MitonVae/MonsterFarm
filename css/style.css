@@ -722,6 +722,49 @@ svg[width="48"], svg[width="50"], svg[width="60"] {
     color: #8b949e;
 }
 
+/* ==================== 教学引导遮罩（聚光灯强引导）==================== */
+
+/* 遮罩容器：不拦截事件，由四块子片拦截 */
+#tutorialOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 4000;
+    pointer-events: none; /* 容器本身透明，子片自行设置 */
+}
+
+/* 四块遮罩片（拦截点击） */
+.tut-mask {
+    position: fixed;
+    background: rgba(0, 0, 0, 0.72);
+    pointer-events: all;
+    z-index: 4000;
+}
+
+/* 镂空区域的发光边框（不拦截点击）*/
+.tut-focus-border {
+    position: fixed;
+    z-index: 4001;
+    border-radius: 10px;
+    border: 2px solid rgba(88,166,255,0.9);
+    box-shadow:
+        0 0 0 3px rgba(88,166,255,0.25),
+        0 0 20px rgba(88,166,255,0.4),
+        inset 0 0 12px rgba(88,166,255,0.08);
+    animation: tut-focus-glow 1.5s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes tut-focus-glow {
+    0%, 100% {
+        box-shadow: 0 0 0 3px rgba(88,166,255,0.25), 0 0 20px rgba(88,166,255,0.4), inset 0 0 12px rgba(88,166,255,0.08);
+        border-color: rgba(88,166,255,0.9);
+    }
+    50% {
+        box-shadow: 0 0 0 5px rgba(88,166,255,0.4), 0 0 32px rgba(88,166,255,0.65), inset 0 0 18px rgba(88,166,255,0.15);
+        border-color: #79b8ff;
+    }
+}
+
 /* ==================== 教学引导气泡 ==================== */
 #tutorialBubble {
     position: fixed;
@@ -734,7 +777,7 @@ svg[width="48"], svg[width="50"], svg[width="60"] {
     border: 1px solid #58a6ff;
     border-radius: 16px;
     box-shadow: 0 8px 32px rgba(88,166,255,0.25), 0 2px 8px rgba(0,0,0,0.6);
-    z-index: 3000;
+    z-index: 4100; /* 高于遮罩 4000 */
     opacity: 0;
     transition: opacity 0.35s ease, transform 0.35s ease;
     overflow: hidden;
@@ -742,7 +785,8 @@ svg[width="48"], svg[width="50"], svg[width="60"] {
 
 #tutorialBubble.tut-show {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    /* positionBubble 用 left:px 定位时 transform 只含 translateY(0) */
+    transform: var(--tut-show-transform, translateX(-50%) translateY(0));
 }
 
 #tutorialBubble.tut-waiting {
@@ -835,6 +879,18 @@ svg[width="48"], svg[width="50"], svg[width="60"] {
 .tut-btn:disabled {
     opacity: 0.45;
     cursor: default;
+}
+
+.tut-waiting-label {
+    font-size: 12px;
+    color: #f0c53d;
+    font-style: italic;
+    animation: tut-blink 1.2s ease-in-out infinite;
+}
+
+@keyframes tut-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.45; }
 }
 
 /* 引导高亮标签 */
