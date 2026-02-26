@@ -88,9 +88,11 @@ function settleZone(zone) {
         if (m) gainExp(m, 20 + Math.floor(Math.random() * 15));
     });
 
-    // 捕获判定
+    // 捕获判定（引导第一步必定捕获）
     var caught = null;
-    if (Math.random() < zone.catchChance) {
+    var catchRoll = (typeof tutorialState !== 'undefined' && tutorialState.guaranteeCatch)
+        ? 1.0 : Math.random();
+    if (catchRoll < zone.catchChance || tutorialState && tutorialState.guaranteeCatch) {
         var typeId = zone.monsters[Math.floor(Math.random() * zone.monsters.length)];
         caught = createMonster(typeId);
     }

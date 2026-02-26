@@ -3,6 +3,10 @@
 window.selectMonster = function(monsterId) {
     gameState.selectedMonster = gameState.selectedMonster === monsterId ? null : monsterId;
     renderMonsters();
+    // 引导钩子：Step2 点击怪兽卡片 → Step3
+    if (gameState.selectedMonster === monsterId) {
+        if (typeof onTutorialMonsterSelected === 'function') onTutorialMonsterSelected();
+    }
 };
 
 window.assignToFarm = function(monsterId) {
@@ -13,7 +17,16 @@ window.assignToFarm = function(monsterId) {
         showNotification('该怪兽正在忙碌中！', 'warning');
         return;
     }
-    
+
+    // 引导期间：先触发钩子（切换到 Step4 pick_plot），再弹出地块选择器
+    var inTutorialAssign = typeof tutorialState !== 'undefined' && tutorialState.active && tutorialState.waitingForAssign;
+    if (inTutorialAssign) {
+        if (typeof onTutorialAssignFarm === 'function') onTutorialAssignFarm();
+        showAssignPlotPicker(monsterId);
+        return;
+    }
+
+    // 非引导期间的原有逻辑
     var availablePlot = gameState.plots.find(function(p) { return p.crop && !p.assignedMonster && !p.locked; });
     
     if (!availablePlot) {

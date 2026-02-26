@@ -384,6 +384,8 @@ window.assignMonsterToPlot = function(monsterId, plotId) {
         startGrowTimer(plotId);
     }
     showNotification(monster.name + ' 驻守地块 #' + (plotId+1), 'success');
+    // 引导钩子：Step4 选择地块 → Step5
+    if (typeof onTutorialPlotPicked === 'function') onTutorialPlotPicked();
     renderFarm();
     renderSidebarMonsters();
     return true;
