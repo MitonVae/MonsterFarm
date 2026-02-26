@@ -1,0 +1,1147 @@
+/* ==================== 基础样式重置 ==================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #0d1117;
+    color: #e6edf3;
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* ==================== 响应式布局容器 ==================== */
+.app-container {
+    display: flex;
+    min-height: 100vh;
+    position: relative;
+}
+
+/* ==================== 左侧栏样式 ==================== */
+.sidebar {
+    width: 300px;
+    background: #21262d;
+    border-right: 1px solid #30363d;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    transition: transform 0.3s ease;
+    z-index: 100;
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #30363d;
+    background: #0d1117;
+}
+
+.sidebar-header h2 {
+    font-size: 18px;
+    color: #58a6ff;
+    margin: 0;
+}
+
+.sidebar-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: #8b949e;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.sidebar-toggle:hover {
+    background: #30363d;
+    color: #e6edf3;
+}
+
+.sidebar-section {
+    padding: 20px;
+    border-bottom: 1px solid #30363d;
+}
+
+.sidebar-section:last-child {
+    border-bottom: none;
+    flex: 1;
+}
+
+.sidebar-section h3 {
+    font-size: 14px;
+    color: #58a6ff;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* 侧边栏资源显示 */
+.sidebar-resources {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sidebar-resource {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    background: #0d1117;
+    border-radius: 6px;
+    border: 1px solid #30363d;
+}
+
+.resource-icon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.resource-value {
+    font-weight: 600;
+    color: #58a6ff;
+    font-size: 16px;
+}
+
+/* 侧边栏怪兽列表 */
+.sidebar-monsters {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.sidebar-monster {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sidebar-monster:hover {
+    background: #30363d;
+    border-color: #58a6ff;
+}
+
+.sidebar-monster.selected {
+    background: #58a6ff;
+    border-color: #58a6ff;
+    color: white;
+}
+
+.sidebar-monster-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar-monster-info {
+    flex: 1;
+}
+
+.sidebar-monster-name {
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 2px;
+}
+
+.sidebar-monster-status {
+    font-size: 11px;
+    color: #8b949e;
+}
+
+.sidebar-monster.selected .sidebar-monster-status {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* 快捷操作按钮 */
+.quick-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.quick-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    color: #e6edf3;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 13px;
+}
+
+.quick-action-btn:hover {
+    background: #30363d;
+    border-color: #58a6ff;
+}
+
+.quick-action-icon {
+    width: 16px;
+    height: 16px;
+}
+
+/* ==================== 主内容区域 ==================== */
+.main-container {
+    flex: 1;
+    margin-left: 300px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.desktop-tabs {
+    background: #21262d;
+    padding: 15px 20px;
+    border-bottom: 1px solid #30363d;
+}
+
+.tabs {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.tab {
+    padding: 10px 16px;
+    background: #21262d;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    white-space: nowrap;
+    font-size: 14px;
+}
+
+.tab:hover {
+    background: #30363d;
+    border-color: #58a6ff;
+}
+
+.tab.active {
+    background: #58a6ff;
+    border-color: #58a6ff;
+    color: white;
+}
+
+.main-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+/* ==================== 移动端底部导航 ==================== */
+.mobile-bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #21262d;
+    border-top: 1px solid #30363d;
+    padding: 8px 0;
+    z-index: 200;
+}
+
+.bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    margin: 0 4px;
+}
+
+.bottom-nav-item:hover {
+    background: #30363d;
+}
+
+.bottom-nav-item.active {
+    background: #58a6ff;
+    color: white;
+}
+
+.nav-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-label {
+    font-size: 10px;
+    font-weight: 500;
+}
+
+/* ==================== 内容区域样式 ==================== */
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 农场样式 */
+.farm-container {
+    background: #30363d;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    border: 1px solid #21262d;
+}
+
+.farm-container h2 {
+    color: #e6edf3;
+    margin-bottom: 15px;
+}
+
+.farm-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.plot {
+    aspect-ratio: 1;
+    background: #21262d;
+    border-radius: 12px;
+    border: 3px solid #30363d;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    padding: 10px;
+}
+
+.plot:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    border-color: #58a6ff;
+}
+
+.plot.locked {
+    background: #161b22;
+    border-color: #21262d;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.plot.planted {
+    background: #1a472a;
+    border-color: #238636;
+}
+
+.plot.ready {
+    background: #238636;
+    border-color: #46d164;
+}
+
+.plot-icon {
+    margin-bottom: 8px;
+}
+
+.plot-text {
+    font-size: 11px;
+    text-align: center;
+    color: #e6edf3;
+}
+
+.progress-bar {
+    width: 90%;
+    height: 6px;
+    background: rgba(0,0,0,0.4);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 8px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #238636;
+    transition: width 0.3s;
+}
+
+/* 怪兽样式 */
+.monster-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.monster-card {
+    background: #30363d;
+    padding: 15px;
+    border-radius: 12px;
+    border: 2px solid #21262d;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    color: #e6edf3;
+}
+
+.monster-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    border-color: #58a6ff;
+}
+
+.monster-card.working {
+    background: #1f6feb;
+    border-color: #58a6ff;
+}
+
+.monster-card.selected {
+    background: #bf8700;
+    border-color: #f0c53d;
+}
+
+.monster-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.monster-icon-container {
+    margin-right: 12px;
+}
+
+.monster-info {
+    flex: 1;
+}
+
+.monster-name {
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 3px;
+    color: #e6edf3;
+}
+
+.monster-type {
+    font-size: 11px;
+    color: #e6edf3;
+    display: inline-block;
+    padding: 2px 8px;
+    background: rgba(88, 166, 255, 0.2);
+    border-radius: 10px;
+    border: 1px solid #58a6ff;
+}
+
+.monster-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+    font-size: 11px;
+}
+
+.stat {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 8px;
+    background: #21262d;
+    border-radius: 5px;
+    border: 1px solid #30363d;
+}
+
+.stat-label {
+    color: #8b949e;
+}
+
+.stat-value {
+    font-weight: bold;
+    color: #58a6ff;
+}
+
+/* 矢量图标 - 动态尺寸 */
+.svg-icon {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+svg[width="12"], svg[width="14"] {
+    vertical-align: text-bottom;
+}
+
+svg[width="16"], svg[width="20"] {
+    vertical-align: text-top;
+}
+
+svg[width="24"] {
+    vertical-align: middle;
+}
+
+svg[width="48"], svg[width="50"], svg[width="60"] {
+    display: block;
+    margin: 0 auto;
+}
+
+/* 按钮样式 */
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.3s;
+    display: inline-block;
+}
+
+.btn-primary {
+    background: #58a6ff;
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(88, 166, 255, 0.4);
+    background: #7c3aed;
+}
+
+.btn-success {
+    background: #238636;
+    color: white;
+}
+
+.btn-success:hover:not(:disabled) {
+    background: #2ea043;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(35, 134, 54, 0.4);
+}
+
+.btn-danger {
+    background: #da3633;
+    color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+    background: #f85149;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(218, 54, 51, 0.4);
+}
+
+.btn-warning {
+    background: #fb8500;
+    color: white;
+}
+
+.btn-warning:hover:not(:disabled) {
+    background: #ffb000;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(251, 133, 0, 0.4);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* 科技树等其他组件样式保持不变... */
+.tech-tree {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.tech-item {
+    background: #30363d;
+    padding: 15px;
+    border-radius: 12px;
+    border: 2px solid #21262d;
+    position: relative;
+    color: #e6edf3;
+}
+
+.tech-item.unlocked {
+    background: #1a472a;
+    border-color: #46d164;
+}
+
+.tech-item.locked {
+    opacity: 0.6;
+}
+
+.tech-title {
+    font-weight: bold;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #e6edf3;
+}
+
+.tech-desc {
+    font-size: 12px;
+    color: #8b949e;
+    margin-bottom: 10px;
+}
+
+.tech-cost {
+    font-size: 11px;
+    color: #f0883e;
+    margin-bottom: 10px;
+}
+
+/* 通知样式 */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #30363d;
+    color: #e6edf3;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.6);
+    animation: slideIn 0.3s ease-out;
+    z-index: 1000;
+    max-width: 300px;
+    border-left: 4px solid #58a6ff;
+    border: 1px solid #21262d;
+}
+
+.notification.success {
+    border-left-color: #4caf50;
+}
+
+.notification.warning {
+    border-left-color: #ff9800;
+}
+
+.notification.error {
+    border-left-color: #f44336;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* 模态框 */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: #0d1117;
+    color: #e6edf3;
+    padding: 30px;
+    border-radius: 15px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    animation: modalIn 0.3s;
+    border: 1px solid #30363d;
+}
+
+@keyframes modalIn {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #30363d;
+    color: #58a6ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.modal-buttons .btn {
+    flex: 1;
+    min-width: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    font-size: 12px;
+    padding: 8px 12px;
+}
+
+/* 怪兽详情弹窗特殊样式 */
+.monster-detail-section {
+    background: #21262d;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+    margin-bottom: 15px;
+}
+
+.monster-detail-section h4 {
+    color: #58a6ff;
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.monster-info-text {
+    font-size: 12px;
+    color: #8b949e;
+    line-height: 1.8;
+}
+
+.monster-info-text div {
+    margin-bottom: 3px;
+}
+
+.monster-info-text strong {
+    color: #e6edf3;
+}
+
+/* 状态指示器 */
+.status-idle {
+    color: #46d164;
+}
+
+.status-working {
+    color: #ff9800;
+}
+
+/* 怪兽属性项样式 */
+.monster-stat-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 8px;
+    background: #0d1117;
+    border-radius: 4px;
+    border: 1px solid #30363d;
+}
+
+.monster-stat-value {
+    color: #58a6ff;
+    font-weight: bold;
+}
+
+/* 怪兽特性标签 */
+.monster-trait-tag {
+    display: inline-block;
+    margin: 2px 5px 2px 0;
+    padding: 2px 8px;
+    background: #58a6ff;
+    color: white;
+    border-radius: 10px;
+    font-size: 11px;
+}
+
+/* ==================== 响应式设计 ==================== */
+
+/* 平板端 768px - 1023px */
+@media (max-width: 1023px) and (min-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    
+    .sidebar-toggle {
+        display: block;
+    }
+    
+    .main-container {
+        margin-left: 0;
+    }
+}
+
+/* 手机端 <= 767px */
+@media (max-width: 767px) {
+    .sidebar {
+        display: none;
+    }
+    
+    .main-container {
+        margin-left: 0;
+        margin-bottom: 80px;
+    }
+    
+    .desktop-tabs {
+        display: none;
+    }
+    
+    .mobile-bottom-nav {
+        display: flex;
+    }
+    
+    .main-content {
+        padding: 15px;
+    }
+    
+    .farm-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    .monster-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+}
+
+/* 超小屏设备 <= 480px */
+@media (max-width: 480px) {
+    .main-content {
+        padding: 10px;
+    }
+    
+    .farm-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    
+    .nav-label {
+        display: none;
+    }
+    
+    .bottom-nav-item {
+        gap: 0;
+    }
+    
+    .nav-icon {
+        width: 28px;
+        height: 28px;
+    }
+}
+
+/* ==================== 动画效果 ==================== */
+@keyframes pulse {
+    0% { 
+        transform: scale(1); 
+        box-shadow: 0 0 0 0 rgba(70, 209, 100, 0.7);
+    }
+    50% { 
+        transform: scale(1.02); 
+        box-shadow: 0 0 0 8px rgba(70, 209, 100, 0.3);
+    }
+    100% { 
+        transform: scale(1); 
+        box-shadow: 0 0 0 0 rgba(70, 209, 100, 0);
+    }
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -468px 0;
+    }
+    100% {
+        background-position: 468px 0;
+    }
+}
+
+/* 平滑过渡 */
+.plot, .monster-card, .tech-item {
+    transition: all 0.3s ease-in-out;
+}
+
+/* 进度条更新动画 */
+.progress-fill {
+    transition: width 0.2s ease-in-out;
+}
+
+/* 成熟状态特殊样式 */
+.plot.ready {
+    cursor: pointer;
+}
+
+.plot.ready:hover {
+    transform: scale(1.1);
+    border-color: #46d164;
+}
+
+/* ==================== 处理页面样式 ==================== */
+.disposal-container {
+    background: #30363d;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    border: 1px solid #21262d;
+}
+
+.disposal-container h2 {
+    color: #e6edf3;
+    margin-bottom: 15px;
+}
+
+.disposal-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin: 30px 0;
+}
+
+.disposal-option {
+    background: #21262d;
+    padding: 20px;
+    border-radius: 12px;
+    border: 2px solid #30363d;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #e6edf3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 180px;
+}
+
+.disposal-option:hover {
+    background: #30363d;
+    border-color: #58a6ff;
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+}
+
+.disposal-option svg {
+    margin-bottom: 10px;
+    flex-shrink: 0;
+}
+
+.disposal-title {
+    font-weight: bold;
+    font-size: 16px;
+    margin: 10px 0 5px 0;
+    color: #58a6ff;
+}
+
+.disposal-desc {
+    font-size: 12px;
+    color: #8b949e;
+    line-height: 1.4;
+    text-align: center;
+}
+
+/* 响应式处理选项 */
+@media (max-width: 768px) {
+    .disposal-options {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+    
+    .disposal-option {
+        min-height: 150px;
+        padding: 15px;
+    }
+    
+    .disposal-title {
+        font-size: 14px;
+    }
+    
+    .disposal-desc {
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 480px) {
+    .disposal-options {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+}
+
+/* ==================== 探索页面样式 ==================== */
+.exploration-area {
+    background: #30363d;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    border: 1px solid #21262d;
+}
+
+.exploration-area h2 {
+    color: #e6edf3;
+    margin-bottom: 15px;
+}
+
+.expedition-panel {
+    background: #21262d;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #30363d;
+    margin: 20px 0;
+}
+
+.expedition-panel h3 {
+    color: #58a6ff;
+    margin-bottom: 15px;
+    font-size: 16px;
+}
+
+.expedition-slots {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.expedition-slot {
+    aspect-ratio: 1;
+    background: #0d1117;
+    border: 2px dashed #30363d;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 10px;
+    min-height: 120px;
+}
+
+.expedition-slot:hover {
+    border-color: #58a6ff;
+    background: #21262d;
+}
+
+.expedition-slot.filled {
+    background: #1a472a;
+    border: 2px solid #46d164;
+    color: #e6edf3;
+}
+
+.expedition-slot.filled:hover {
+    background: #238636;
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.expedition-slot svg {
+    margin-bottom: 5px;
+}
+
+/* 探索队操作按钮区域 */
+.expedition-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+.expedition-actions .btn {
+    flex: 1;
+    min-width: 120px;
+}
+
+/* 响应式探索页面 */
+@media (max-width: 768px) {
+    .expedition-slots {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    .expedition-slot {
+        min-height: 100px;
+        padding: 8px;
+    }
+    
+    .expedition-actions {
+        flex-direction: column;
+    }
+    
+    .expedition-actions .btn {
+        min-width: unset;
+    }
+}
+
+@media (max-width: 480px) {
+    .expedition-slots {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    
+    .expedition-slot {
+        min-height: 80px;
+        padding: 5px;
+    }
+}
