@@ -120,7 +120,8 @@ function renderSidebarMonsters() {
         
         return `
             <div class="sidebar-monster ${isSelected ? 'selected' : ''}" 
-                 onclick="selectMonster(${monster.id}); switchTab('monsters');">
+                 onclick="showMonsterDetailModal(${monster.id});" 
+                 oncontextmenu="selectMonster(${monster.id}); return false;">
                 <div class="sidebar-monster-icon">
                     ${createSVG(monster.type, 28)}
                 </div>
@@ -566,6 +567,201 @@ window.autoPlantAll = function() {
     } else {
         showNotification('没有空余的土地或资源不足', 'info');
     }
+};
+
+// 怪兽详情弹窗 - 独立的怪兽操作界面
+window.showMonsterDetailModal = function(monsterId) {
+    var monster = gameState.monsters.find(function(m) { return m.id === monsterId; });
+    if (!monster) return;
+    
+    var typeData = monsterTypes[monster.type];
+    var isWorking = monster.status !== 'idle';
+    var statusText = getStatusText(monster.status);
+    
+    var modalContent = `
+        <div class="modal-header">
+            ${createSVG(monster.type, 32)} ${monster.name}
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+            <div class="monster-detail-section">
+                <h4>基础信息</h4>
+                <div class="monster-info-text">
+                    <div><strong>类型：</strong> ${typeData.name}</div>
+                    <div><strong>等级：</strong> ${monster.level}</div>
+                    <div><strong>世代：</strong> ${monster.generation}</div>
+                    <div><strong>经验：</strong> ${monster.exp}/${monster.maxExp}</div>
+                    <div><strong>状态：</strong> <span class="${isWorking ? 'status-working' : 'status-idle'}">${isWorking ? statusText : '空闲中'}</span></div>
+                </div>
+            </div>
+            
+            <div class="monster-detail-section">
+                <h4>属性值</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;">
+                    <div class="monster-stat-item">
+                        <span>力量</span>
+                        <span class="monster-stat-value">${monster.stats.strength}</span>
+                    </div>
+                    <div class="monster-stat-item">
+                        <span>敏捷</span>
+                        <span class="monster-stat-value">${monster.stats.agility}</span>
+                    </div>
+                    <div class="monster-stat-item">
+                        <span>智力</span>
+                        <span class="monster-stat-value">${monster.stats.intelligence}</span>
+                    </div>
+                    <div class="monster-stat-item">
+                        <span>耕作</span>
+                        <span class="monster-stat-value">${monster.stats.farming}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="monster-detail-section">
+            <h4>特殊能力</h4>
+            <div class="monster-traits">
+                ${monster.traits.length > 0 ? 
+                    monster.traits.map(function(trait) { 
+                        return '<span class="monster-trait-tag">' + trait.name + '</span>';
+                    }).join('') : 
+                    '<span>无特殊能力</span>'
+                }
+            </div>
+        </div>
+        
+        <div class="modal-buttons">
+            ${!isWorking ? `
+                <button class="btn btn-primary" onclick="assignMonsterToFarm(${monster.id}); closeModal();">
+                    ${createSVG('plant', 16)} 派去耕作
+                </button>
+                <button class="btn btn-warning" onclick="assignMonsterToExpedition(${monster.id}); closeModal();">
+                    ${createSVG('explore', 16)} 派去探索
+                </button>
+                <button class="btn btn-danger" onclick="selectMonster(${monster.id}); switchTab('disposal'); closeModal();">
+                    ${createSVG('trash', 16)} 处理怪兽
+                </button>
+            ` : `
+                <button class="btn btn-warning" onclick="recallMonster(${monster.id}); closeModal();">
+                    ${createSVG('work', 16)} 召回怪兽
+                </button>
+            `}
+            <button class="btn btn-success" onclick="selectMonster(${monster.id}); closeModal();">
+                ${createSVG('check', 16)} 选中
+            </button>
+            <button class="btn btn-primary" onclick="closeModal()">
+                关闭
+            </button>
+        </div>
+    `;
+    
+    showModal(modalContent);
+};
+
+// 获取怪兽状态文本
+window.getStatusText = function(status) {
+    var statusMap = {
+        'idle': '空闲中',
+        'farming': '耕作中',
+        'exploring': '探索中',
+        'preparing': '准备中',
+        'working': '工作中'
+    };
+    return statusMap[status] || '未知状态';
+};
+
+// 快速操作：派遣怪兽去耕作
+window.assignMonsterToFarm = function(monsterId) {
+    var monster = gameState.monsters.find(function(m) { return m.id === monsterId; });
+    if (!monster || monster.status !== 'idle') {
+        showNotification('该怪兽不可用！', 'warning');
+        return;
+    }
+    
+    // 找到空闲的农田
+    var availablePlot = gameState.plots.find(function(plot) {
+        return !plot.locked && plot.crop && !plot.assignedMonster && plot.progress < 100;
+    });
+    
+    if (!availablePlot) {
+        showNotification('没有需要照看的作物！', 'warning');
+        return;
+    }
+    
+    // 分配怪兽到农田
+    availablePlot.assignedMonster = monster;
+    monster.status = 'farming';
+    monster.assignment = 'plot-' + availablePlot.id;
+    
+    showNotification(monster.name + ' 被派去照看农田！', 'success');
+    updateResources();
+    renderFarm();
+};
+
+// 快速操作：派遣怪兽去探索
+window.assignMonsterToExpedition = function(monsterId) {
+    var monster = gameState.monsters.find(function(m) { return m.id === monsterId; });
+    if (!monster || monster.status !== 'idle') {
+        showNotification('该怪兽不可用！', 'warning');
+        return;
+    }
+    
+    if (!gameState.expeditions[0]) {
+        gameState.expeditions[0] = { members: [], status: 'preparing' };
+    }
+    
+    var expedition = gameState.expeditions[0];
+    
+    if (expedition.members.length >= 4) {
+        showNotification('探险队已满！', 'warning');
+        return;
+    }
+    
+    if (expedition.status === 'exploring') {
+        showNotification('探险队正在探索中！', 'warning');
+        return;
+    }
+    
+    expedition.members.push(monster);
+    monster.status = 'preparing';
+    
+    showNotification(monster.name + ' 加入探险队！', 'success');
+    renderExploration();
+};
+
+// 快速操作：召回怪兽
+window.recallMonster = function(monsterId) {
+    var monster = gameState.monsters.find(function(m) { return m.id === monsterId; });
+    if (!monster || monster.status === 'idle') return;
+    
+    // 从农田召回
+    if (monster.status === 'farming') {
+        var plot = gameState.plots.find(function(p) { 
+            return p.assignedMonster && p.assignedMonster.id === monster.id; 
+        });
+        if (plot) {
+            plot.assignedMonster = null;
+        }
+    }
+    
+    // 从探险队召回
+    if (monster.status === 'preparing') {
+        var expedition = gameState.expeditions[0];
+        if (expedition) {
+            var index = expedition.members.findIndex(function(m) { return m.id === monster.id; });
+            if (index > -1) {
+                expedition.members.splice(index, 1);
+            }
+        }
+    }
+    
+    monster.status = 'idle';
+    monster.assignment = null;
+    
+    showNotification(monster.name + ' 已召回！', 'success');
+    updateResources();
+    renderFarm();
+    renderExploration();
 };
 
 // 初始化UI - 在页面加载时调用

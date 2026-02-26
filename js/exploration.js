@@ -11,9 +11,15 @@ window.renderExploration = function() {
         <div class="expedition-panel">
             <h3>当前探险队</h3>
             <div class="expedition-slots" id="expeditionSlots"></div>
-            <div style="margin-top: 15px; display: flex; gap: 10px;">
+            <div class="expedition-actions">
                 <button class="btn btn-primary" onclick="addToExpedition()">
                     添加怪兽
+                </button>
+                <button class="btn btn-warning" onclick="autoFillExpedition()">
+                    智能组队
+                </button>
+                <button class="btn btn-danger" onclick="clearExpedition()">
+                    清空队伍
                 </button>
                 <button class="btn btn-success" onclick="startExpedition()" id="startExpeditionBtn">
                     开始探索 (消耗20能量)
@@ -177,6 +183,73 @@ window.startExpedition = function() {
             triggerRandomEvent('exploration');
         }
     }, expeditionTime / 2);
+};
+
+// 智能组队：自动选择最适合探索的怪兽
+window.autoFillExpedition = function() {
+    if (!gameState.expeditions[0]) {
+        gameState.expeditions[0] = { members: [], status: 'preparing' };
+    }
+    
+    var expedition = gameState.expeditions[0];
+    
+    if (expedition.status === 'exploring') {
+        showNotification('探险队正在探索中！', 'warning');
+        return;
+    }
+    
+    var availableMonsters = gameState.monsters.filter(function(m) {
+        return m.status === 'idle' && !expedition.members.find(function(em) { return em.id === m.id; });
+    });
+    
+    if (availableMonsters.length === 0) {
+        showNotification('没有可用的怪兽！', 'warning');
+        return;
+    }
+    
+    // 按战斗力排序（力量+敏捷+智力）
+    availableMonsters.sort(function(a, b) {
+        var aPower = a.stats.strength + a.stats.agility + a.stats.intelligence;
+        var bPower = b.stats.strength + b.stats.agility + b.stats.intelligence;
+        return bPower - aPower;
+    });
+    
+    // 填满探险队（最多4个）
+    var slotsToFill = 4 - expedition.members.length;
+    var monstersToAdd = availableMonsters.slice(0, slotsToFill);
+    
+    monstersToAdd.forEach(function(monster) {
+        expedition.members.push(monster);
+        monster.status = 'preparing';
+    });
+    
+    renderExpeditionSlots();
+    showNotification('智能组队完成！添加了 ' + monstersToAdd.length + ' 只怪兽', 'success');
+};
+
+// 清空探险队
+window.clearExpedition = function() {
+    if (!gameState.expeditions[0]) return;
+    
+    var expedition = gameState.expeditions[0];
+    
+    if (expedition.status === 'exploring') {
+        showNotification('探险队正在探索中，无法清空！', 'warning');
+        return;
+    }
+    
+    if (expedition.members.length === 0) {
+        showNotification('探险队已经是空的！', 'info');
+        return;
+    }
+    
+    expedition.members.forEach(function(monster) {
+        monster.status = 'idle';
+    });
+    
+    expedition.members = [];
+    renderExpeditionSlots();
+    showNotification('探险队已清空', 'success');
 };
 
 function completeExpedition() {
