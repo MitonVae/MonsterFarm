@@ -1,56 +1,76 @@
-// ==================== 教学引导系统 ====================
+// ==================== 教学引导系统（强引导·聚光灯遮罩版）====================
 
 // 引导步骤定义
 // focusSelector: CSS 选择器，指定聚光灯镂空区域（null = 无镂空，只显示遮罩+气泡）
 // allowInteract:  true = 镂空区域可交互（玩家需自行操作）
 //                false = 镂空区域仅高亮展示，操作由气泡按钮驱动
+// onShow: 气泡出现前的回调
+// onNext: 气泡消失后的回调，可传入 done 回调让引导系统等待
 var tutorialSteps = [
     {
         id: 'welcome',
         title: '👋 欢迎来到怪兽农场！',
         content: '这里是你的怪兽农场。<br><br>' +
-            '你需要 <strong style="color:#58a6ff;">捕获怪兽</strong> 来帮助你耕作，同时探索更多区域获取资源。<br><br>' +
-            '让我们先去探索一下，看看能不能抓到第一只怪兽吧！',
+            '你需要 <strong style="color:#58a6ff;">捕获怪兽</strong> 来帮助耕作，同时探索获取资源。<br><br>' +
+            '首先，点击顶部的 <strong style="color:#f0c53d;">🗺 探索</strong> 标签前往探索界面！',
+        // 高亮探索标签
         focusSelector: '.tab[onclick*="exploration"]',
         allowInteract: false,
         btnText: '前往探索 →',
-        action: function() { switchTab('exploration'); }
+        onShow: null,
+        onNext: function(done) {
+            switchTab('exploration');
+            // 等待 tab 切换动画完成再进入下一步
+            setTimeout(done, 400);
+        }
     },
     {
         id: 'explore_first',
-        title: '🌿 开始探索农场边缘',
-        content: '这是最近的探索区域——<strong style="color:#46d164;">农场边缘</strong>。<br><br>' +
-            '点击下方的 <strong style="color:#58a6ff;">⚡ 探索</strong> 按钮，消耗能量推进探索进度，达到100%后结算奖励，并有机会 <strong style="color:#f0c53d;">捕获野生怪兽</strong>！',
+        title: '🌿 点击「⚡ 探索」开始探索',
+        content: '这是最近的区域——<strong style="color:#46d164;">农场边缘</strong>。<br><br>' +
+            '每次点击 <strong style="color:#58a6ff;">⚡ 探索</strong> 按钮消耗能量推进进度，<br>' +
+            '进度达到 <strong style="color:#f0c53d;">100%</strong> 后结算，<br>并有机会 <strong style="color:#f0c53d;">捕获野生怪兽</strong>！<br><br>' +
+            '现在开始点击探索吧，直到捕获一只怪兽～',
         focusSelector: '#explorationArea',
-        allowInteract: true,   // 玩家需要自己点探索按钮
-        btnText: null,          // 等待捕获，不显示下一步按钮
-        action: null
+        allowInteract: true,
+        btnText: null,         // 等待捕获，不显示按钮
+        onShow: function() {
+            tutorialState.waitingForMonster = true;
+        },
+        onNext: null
     },
     {
         id: 'got_monster',
         title: '🎉 恭喜捕获第一只怪兽！',
         content: '太棒了！你成功捕获了一只怪兽。<br><br>' +
-            '怪兽可以帮你做很多事情：<br>' +
-            '🌱 <strong style="color:#46d164;">派驻农田</strong> — 自动种植和收获作物<br>' +
-            '🗺 <strong style="color:#f0c53d;">参与探索</strong> — 加快探索速度并提升奖励<br><br>' +
-            '现在去右侧的怪兽面板，点击「<strong style="color:#46d164;">派驻农田</strong>」按钮吧！',
+            '右侧面板就是你的 <strong style="color:#58a6ff;">怪兽团队</strong>。<br>' +
+            '点击怪兽卡片上的 <strong style="color:#46d164;">派驻农田</strong> 按钮，<br>' +
+            '让它自动帮你种植和收获作物！',
         focusSelector: '#monsterSidebar',
         allowInteract: true,
-        btnText: '我已派遣 →',
-        action: function() { switchTab('farm'); }
+        btnText: '已了解，去看农场 →',
+        onShow: null,
+        onNext: function(done) {
+            switchTab('farm');
+            setTimeout(done, 400);
+        }
     },
     {
         id: 'farm_intro',
-        title: '🏡 农场操作说明',
-        content: '农场地块有三种状态：<br>' +
-            '⬛ <strong>空地</strong> — 点击选择作物手动种植<br>' +
+        title: '🏡 这是你的农场',
+        content: '地块有三种状态：<br>' +
+            '⬛ <strong>空地</strong> — 点击选择作物种植<br>' +
             '🟡 <strong>生长中</strong> — 等待作物成熟<br>' +
-            '🟢 <strong>可收获</strong> — 点击收获或等怪兽自动收获<br><br>' +
-            '💡 <strong style="color:#58a6ff;">提示</strong>：多抓怪兽、多派遣，农场就能全自动运转！',
+            '🟢 <strong>可收获</strong> — 点击手动收获<br><br>' +
+            '💡 派遣怪兽后，它会 <strong style="color:#46d164;">自动种植和收获</strong>，让农场全程运转！',
         focusSelector: '#farmGrid',
         allowInteract: true,
         btnText: '明白了！开始游戏 ✓',
-        action: function() { completeTutorial(); }
+        onShow: null,
+        onNext: function(done) {
+            completeTutorial();
+            done();
+        }
     }
 ];
 
@@ -67,93 +87,95 @@ window.startTutorial = function() {
     tutorialState.active = true;
     tutorialState.currentStep = 0;
     tutorialState.completed = false;
+    tutorialState.waitingForMonster = false;
     showTutorialStep(0);
 };
 
-// ── 显示引导步骤 ──
+// ── 显示某步骤 ──
 function showTutorialStep(index) {
-    if (index >= tutorialSteps.length) {
-        completeTutorial();
-        return;
-    }
+    if (index >= tutorialSteps.length) { completeTutorial(); return; }
+
     var step = tutorialSteps[index];
     tutorialState.currentStep = index;
+    tutorialState.waitingForMonster = false;
 
-    renderOverlay(step);
-    renderTutorialBubble(step);
+    // 先清旧元素，再渲染新的
+    removeTutorialDOM();
+
+    // 如果有 onShow 钩子，调用它
+    if (step.onShow) step.onShow();
+
+    // 延一帧再渲染，确保 DOM 稳定（特别是 tab 切换后）
+    requestAnimationFrame(function() {
+        renderOverlay(step);
+        renderBubble(step);
+    });
 }
 
-// ── 渲染聚光灯遮罩 ──
+// ── 清除引导 DOM ──
+function removeTutorialDOM() {
+    var o = document.getElementById('tutorialOverlay');
+    var b = document.getElementById('tutorialBubble');
+    if (o) o.remove();
+    if (b) b.remove();
+}
+
+// ── 渲染聚光灯遮罩（四块拼接法）──
 function renderOverlay(step) {
-    // 移除旧遮罩
     var old = document.getElementById('tutorialOverlay');
     if (old) old.remove();
 
     var overlay = document.createElement('div');
     overlay.id = 'tutorialOverlay';
+    document.body.appendChild(overlay);
 
-    if (step.focusSelector) {
-        var target = document.querySelector(step.focusSelector);
-        if (target) {
-            var rect = target.getBoundingClientRect();
-            var pad = 8; // 镂空区域比元素稍大一圈
-
-            // 用 SVG clipPath + foreignObject 实现镂空遮罩
-            // 更简单：用四块绝对定位的遮罩拼接
-            overlay.innerHTML =
-                // 上
-                '<div class="tut-mask tut-mask-top" style="' +
-                    'top:0;left:0;right:0;height:' + Math.max(0, rect.top - pad) + 'px;"></div>' +
-                // 下
-                '<div class="tut-mask tut-mask-bottom" style="' +
-                    'top:' + (rect.bottom + pad) + 'px;left:0;right:0;bottom:0;"></div>' +
-                // 左
-                '<div class="tut-mask tut-mask-left" style="' +
-                    'top:' + Math.max(0, rect.top - pad) + 'px;' +
-                    'left:0;width:' + Math.max(0, rect.left - pad) + 'px;' +
-                    'height:' + (rect.height + pad * 2) + 'px;"></div>' +
-                // 右
-                '<div class="tut-mask tut-mask-right" style="' +
-                    'top:' + Math.max(0, rect.top - pad) + 'px;' +
-                    'left:' + (rect.right + pad) + 'px;right:0;' +
-                    'height:' + (rect.height + pad * 2) + 'px;"></div>' +
-                // 镂空边框高亮
-                '<div class="tut-focus-border" style="' +
-                    'top:' + Math.max(0, rect.top - pad) + 'px;' +
-                    'left:' + Math.max(0, rect.left - pad) + 'px;' +
-                    'width:' + (rect.width + pad * 2) + 'px;' +
-                    'height:' + (rect.height + pad * 2) + 'px;' +
-                    (step.allowInteract ? 'pointer-events:none;' : 'pointer-events:none;') +
-                '"></div>';
-
-            // 若不允许交互，在镂空区域上再盖一层拦截层
-            if (!step.allowInteract) {
-                overlay.innerHTML +=
-                    '<div style="' +
-                        'position:fixed;' +
-                        'top:' + Math.max(0, rect.top - pad) + 'px;' +
-                        'left:' + Math.max(0, rect.left - pad) + 'px;' +
-                        'width:' + (rect.width + pad * 2) + 'px;' +
-                        'height:' + (rect.height + pad * 2) + 'px;' +
-                        'z-index:3999;cursor:not-allowed;' +
-                    '"></div>';
-            }
-        } else {
-            // 找不到目标时，全屏遮罩
-            overlay.innerHTML = '<div class="tut-mask" style="top:0;left:0;right:0;bottom:0;"></div>';
-        }
-    } else {
-        // 无焦点选择器：全屏遮罩（中央信息步骤）
-        overlay.innerHTML = '<div class="tut-mask" style="top:0;left:0;right:0;bottom:0;"></div>';
+    if (!step.focusSelector) {
+        // 全屏纯遮罩
+        overlay.innerHTML = '<div class="tut-mask" style="top:0;left:0;right:0;bottom:0;position:fixed;"></div>';
+        return;
     }
 
-    document.body.appendChild(overlay);
+    var target = document.querySelector(step.focusSelector);
+    if (!target) {
+        overlay.innerHTML = '<div class="tut-mask" style="top:0;left:0;right:0;bottom:0;position:fixed;"></div>';
+        return;
+    }
+
+    var rect = target.getBoundingClientRect();
+
+    // 如果目标不可见（宽高为0，说明 display:none），回退全屏遮罩
+    if (rect.width === 0 && rect.height === 0) {
+        overlay.innerHTML = '<div class="tut-mask" style="top:0;left:0;right:0;bottom:0;position:fixed;"></div>';
+        return;
+    }
+
+    var pad = 8;
+    var top    = Math.max(0, rect.top    - pad);
+    var left   = Math.max(0, rect.left   - pad);
+    var bottom = rect.bottom + pad;
+    var right  = rect.right  + pad;
+    var w      = rect.width  + pad * 2;
+    var h      = rect.height + pad * 2;
+
+    // 四块遮罩拼接
+    overlay.innerHTML =
+        '<div class="tut-mask" style="top:0;left:0;right:0;height:' + top + 'px;position:fixed;"></div>' +
+        '<div class="tut-mask" style="top:' + bottom + 'px;left:0;right:0;bottom:0;position:fixed;"></div>' +
+        '<div class="tut-mask" style="top:' + top + 'px;left:0;width:' + left + 'px;height:' + h + 'px;position:fixed;"></div>' +
+        '<div class="tut-mask" style="top:' + top + 'px;left:' + right + 'px;right:0;height:' + h + 'px;position:fixed;"></div>' +
+        '<div class="tut-focus-border" style="top:' + top + 'px;left:' + left + 'px;width:' + w + 'px;height:' + h + 'px;position:fixed;pointer-events:none;"></div>';
+
+    // allowInteract=false 时在镂空区加拦截层
+    if (!step.allowInteract) {
+        overlay.innerHTML +=
+            '<div style="position:fixed;top:' + top + 'px;left:' + left + 'px;width:' + w + 'px;height:' + h + 'px;z-index:4050;cursor:not-allowed;"></div>';
+    }
 }
 
 // ── 渲染引导气泡 ──
-function renderTutorialBubble(step) {
-    var existing = document.getElementById('tutorialBubble');
-    if (existing) existing.remove();
+function renderBubble(step) {
+    var old = document.getElementById('tutorialBubble');
+    if (old) old.remove();
 
     var isWaiting = (step.btnText === null);
 
@@ -162,137 +184,106 @@ function renderTutorialBubble(step) {
     bubble.innerHTML =
         '<div class="tut-header">' +
             '<span class="tut-title">' + step.title + '</span>' +
-            '<button class="tut-skip" onclick="skipTutorial()" title="跳过引导">✕ 跳过</button>' +
+            '<button class="tut-skip" onclick="skipTutorial()">✕ 跳过</button>' +
         '</div>' +
-        '<div class="tut-body">' + step.content +
-            (isWaiting ? '<div class="tut-waiting-hint">⏳ 请在上方探索区域中点击探索按钮，直到捕获怪兽…</div>' : '') +
-        '</div>' +
+        '<div class="tut-body">' + step.content + '</div>' +
         '<div class="tut-footer">' +
             '<span class="tut-progress">' + (tutorialState.currentStep + 1) + ' / ' + tutorialSteps.length + '</span>' +
             (isWaiting
-                ? '<span class="tut-waiting-label">等待捕获中…</span>'
+                ? '<span class="tut-waiting-label">⏳ 等待捕获怪兽…</span>'
                 : '<button class="tut-btn" onclick="tutorialNext()">' + step.btnText + '</button>'
             ) +
         '</div>';
 
     document.body.appendChild(bubble);
-
-    // 调整气泡位置：避免遮挡焦点区域
     positionBubble(bubble, step);
 
+    // 触发入场动画
     requestAnimationFrame(function() {
         bubble.classList.add('tut-show');
     });
 }
 
-// ── 气泡智能定位：优先放在焦点区域下方，放不下则放上方，再不行放右侧 ──
+// ── 气泡智能定位 ──
 function positionBubble(bubble, step) {
-    // 默认居中底部
-    bubble.style.bottom = '28px';
-    bubble.style.left = '50%';
-    bubble.style.transform = 'translateX(-50%) translateY(30px)';
-    bubble.style.top = '';
-    bubble.style.right = '';
+    // 默认底部居中
+    bubble.style.cssText = 'bottom:24px;left:50%;transform:translateX(-50%) translateY(30px);';
 
     if (!step.focusSelector) return;
     var target = document.querySelector(step.focusSelector);
     if (!target) return;
 
     var rect = target.getBoundingClientRect();
-    var bw = 360; // 气泡宽度
-    var bh = 220; // 气泡估算高度
-    var vw = window.innerWidth;
-    var vh = window.innerHeight;
-    var margin = 16;
+    if (rect.width === 0 && rect.height === 0) return;
 
-    // 尝试放在焦点区域下方
-    if (rect.bottom + bh + margin < vh) {
-        bubble.style.bottom = '';
-        bubble.style.top = (rect.bottom + margin) + 'px';
-        var cx = rect.left + rect.width / 2 - bw / 2;
-        cx = Math.max(margin, Math.min(vw - bw - margin, cx));
-        bubble.style.left = cx + 'px';
-        bubble.style.transform = 'translateY(30px)';
+    var BW = 370, BH = 240;
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var mg = 16;
+
+    function setPos(top, cx) {
+        cx = Math.max(mg, Math.min(vw - BW - mg, cx));
+        bubble.style.cssText =
+            'position:fixed;' +
+            'top:' + top + 'px;' +
+            'left:' + cx + 'px;' +
+            'transform:translateY(20px);' +
+            'width:' + BW + 'px;';
         bubble.style.setProperty('--tut-show-transform', 'translateY(0)');
-        return;
     }
 
-    // 放在上方
-    if (rect.top - bh - margin > 0) {
-        bubble.style.bottom = '';
-        bubble.style.top = (rect.top - bh - margin) + 'px';
-        var cx2 = rect.left + rect.width / 2 - bw / 2;
-        cx2 = Math.max(margin, Math.min(vw - bw - margin, cx2));
-        bubble.style.left = cx2 + 'px';
-        bubble.style.transform = 'translateY(30px)';
-        bubble.style.setProperty('--tut-show-transform', 'translateY(0)');
-        return;
-    }
-
+    var cx0 = rect.left + rect.width / 2 - BW / 2;
+    // 优先放下方
+    if (rect.bottom + BH + mg < vh) { setPos(rect.bottom + mg, cx0); return; }
+    // 放上方
+    if (rect.top - BH - mg > 0)     { setPos(rect.top - BH - mg, cx0); return; }
     // 放右侧
-    if (rect.right + bw + margin < vw) {
-        bubble.style.bottom = '';
-        bubble.style.top = Math.max(margin, rect.top) + 'px';
-        bubble.style.left = (rect.right + margin) + 'px';
-        bubble.style.transform = 'translateY(30px)';
+    if (rect.right + BW + mg < vw)  {
+        bubble.style.cssText =
+            'position:fixed;top:' + Math.max(mg, rect.top) + 'px;' +
+            'left:' + (rect.right + mg) + 'px;' +
+            'transform:translateY(20px);width:' + BW + 'px;';
         bubble.style.setProperty('--tut-show-transform', 'translateY(0)');
         return;
     }
-
-    // fallback: 底部居中（保持默认 translateX(-50%) translateY(0)）
+    // fallback 底部居中
     bubble.style.setProperty('--tut-show-transform', 'translateX(-50%) translateY(0)');
 }
 
-// ── 下一步 ──
+// ── 点击「下一步」按钮 ──
 window.tutorialNext = function() {
     var step = tutorialSteps[tutorialState.currentStep];
-    if (step.action) step.action();
+    if (!step) return;
 
-    // explore_first 步骤：等待捕获，不手动推进
-    if (step.id === 'explore_first') {
-        tutorialState.waitingForMonster = true;
-        return;
+    // explore_first 是纯等待步骤，按钮不存在，此处不应被调用
+    if (step.id === 'explore_first') return;
+
+    if (step.onNext) {
+        // onNext 提供 done 回调，完成后再进入下一步
+        step.onNext(function() {
+            var nextIdx = tutorialState.currentStep + 1;
+            // got_monster / farm_intro 等步骤 onNext 里可能已调 completeTutorial
+            if (tutorialState.active) showTutorialStep(nextIdx);
+        });
+    } else {
+        showTutorialStep(tutorialState.currentStep + 1);
     }
-
-    showTutorialStep(tutorialState.currentStep + 1);
 };
 
-// ── 捕获事件钩子（由 exploration.js settleZone 调用）──
+// ── 捕获事件钩子（exploration.js 调用）──
 window.onTutorialMonsterCaught = function() {
     if (!tutorialState.active || !tutorialState.waitingForMonster) return;
     tutorialState.waitingForMonster = false;
+    // 稍作延迟，让捕获通知先显示
     setTimeout(function() {
         showTutorialStep(2); // got_monster
-    }, 1500);
+    }, 1200);
 };
-
-// ── 高亮标签（遮罩之外的额外视觉提示）──
-function highlightTab(tabName) {
-    document.querySelectorAll('.tab').forEach(function(t) {
-        t.classList.remove('tut-highlight');
-    });
-    var target = document.querySelector('.tab[onclick*="' + tabName + '"]');
-    if (target) target.classList.add('tut-highlight');
-}
 
 // ── 完成引导 ──
 window.completeTutorial = function() {
     tutorialState.active = false;
     tutorialState.completed = true;
-
-    document.querySelectorAll('.tab').forEach(function(t) {
-        t.classList.remove('tut-highlight');
-    });
-
-    var overlay = document.getElementById('tutorialOverlay');
-    if (overlay) overlay.remove();
-
-    var bubble = document.getElementById('tutorialBubble');
-    if (bubble) {
-        bubble.classList.remove('tut-show');
-        setTimeout(function() { bubble.remove(); }, 400);
-    }
-
+    removeTutorialDOM();
     showNotification('🎓 引导完成！祝你农场大丰收～', 'success');
     try { localStorage.setItem('mf_tutorial_done', '1'); } catch(e) {}
 };
@@ -302,15 +293,16 @@ window.skipTutorial = function() {
     completeTutorial();
 };
 
-// ── 检查是否已完成引导 ──
+// ── 是否已完成引导 ──
 window.checkTutorialDone = function() {
     try { return localStorage.getItem('mf_tutorial_done') === '1'; } catch(e) { return false; }
 };
 
-// ── 窗口resize时刷新遮罩位置 ──
+// ── resize 时刷新遮罩 ──
 window.addEventListener('resize', function() {
     if (!tutorialState.active) return;
     var step = tutorialSteps[tutorialState.currentStep];
+    if (!step) return;
     renderOverlay(step);
     var bubble = document.getElementById('tutorialBubble');
     if (bubble) positionBubble(bubble, step);
