@@ -81,6 +81,8 @@ window.updateResources = function() {
     updateSidebarResources();
     // 更新侧边栏怪兽列表
     renderSidebarMonsters();
+    // 同步刷新已展开的资源详情面板
+    if (typeof refreshOpenResourceDetail === 'function') refreshOpenResourceDetail();
 };
 
 // 更新侧边栏资源显示

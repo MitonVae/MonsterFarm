@@ -109,26 +109,45 @@
             <div class="sidebar-section">
                 <h3>资源状况</h3>
                 <div class="sidebar-resources">
-                    <div class="sidebar-resource">
+                    <div class="sidebar-resource res-clickable" data-res="coins" onclick="toggleResourceDetail('coins')">
                         <span class="resource-icon" id="coinsIcon"></span>
+                        <span class="resource-label">金币</span>
                         <span class="resource-value" id="coins">100</span>
+                        <span class="res-chevron" id="chevron-coins">▾</span>
                     </div>
-                    <div class="sidebar-resource">
+                    <div class="res-detail" id="detail-coins"></div>
+
+                    <div class="sidebar-resource res-clickable" data-res="food" onclick="toggleResourceDetail('food')">
                         <span class="resource-icon" id="foodIcon"></span>
+                        <span class="resource-label">食物</span>
                         <span class="resource-value" id="food">50</span>
+                        <span class="res-chevron" id="chevron-food">▾</span>
                     </div>
-                    <div class="sidebar-resource">
+                    <div class="res-detail" id="detail-food"></div>
+
+                    <div class="sidebar-resource res-clickable" data-res="materials" onclick="toggleResourceDetail('materials')">
                         <span class="resource-icon" id="materialsIcon"></span>
+                        <span class="resource-label">材料</span>
                         <span class="resource-value" id="materials">0</span>
+                        <span class="res-chevron" id="chevron-materials">▾</span>
                     </div>
-                    <div class="sidebar-resource">
+                    <div class="res-detail" id="detail-materials"></div>
+
+                    <div class="sidebar-resource res-clickable" data-res="research" onclick="toggleResourceDetail('research')">
                         <span class="resource-icon" id="researchIcon"></span>
+                        <span class="resource-label">研究</span>
                         <span class="resource-value" id="research">0</span>
+                        <span class="res-chevron" id="chevron-research">▾</span>
                     </div>
-                    <div class="sidebar-resource">
+                    <div class="res-detail" id="detail-research"></div>
+
+                    <div class="sidebar-resource res-clickable" data-res="energy" onclick="toggleResourceDetail('energy')">
                         <span class="resource-icon" id="energyIcon"></span>
+                        <span class="resource-label">能量</span>
                         <span class="resource-value" id="energy">100</span>
+                        <span class="res-chevron" id="chevron-energy">▾</span>
                     </div>
+                    <div class="res-detail" id="detail-energy"></div>
                 </div>
             </div>
             
@@ -273,6 +292,7 @@
 
     <!-- 按顺序加载JS模块 -->
     <script src="js/briefing.js"></script>
+    <script src="js/resource-detail.js"></script>
     <script src="js/main.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/farm.js"></script>
