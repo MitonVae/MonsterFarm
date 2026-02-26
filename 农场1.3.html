@@ -1,0 +1,2708 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>怪兽农场 - 挂机经营游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 10px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #f5f5f5;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            color: white;
+        }
+        
+        .resources {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .resource {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .resource-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .resource-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 农场样式 */
+        .farm-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .farm-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .plot {
+            aspect-ratio: 1;
+            background: #d7ccc8;
+            border-radius: 12px;
+            border: 3px solid #8d6e63;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            padding: 10px;
+        }
+        
+        .plot:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .plot.locked {
+            background: #424242;
+            border-color: #212121;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .plot.planted {
+            background: linear-gradient(135deg, #a5d6a7 0%, #81c784 100%);
+            border-color: #66bb6a;
+        }
+        
+        .plot-icon {
+            margin-bottom: 8px;
+        }
+        
+        .plot-text {
+            font-size: 11px;
+            text-align: center;
+            color: #333;
+        }
+        
+        .progress-bar {
+            width: 90%;
+            height: 6px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+            transition: width 0.3s;
+        }
+        
+        /* 怪兽样式 */
+        .monster-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .monster-card {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid #ddd;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .monster-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            border-color: #667eea;
+        }
+        
+        .monster-card.working {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-color: #2196f3;
+        }
+        
+        .monster-card.selected {
+            background: linear-gradient(135deg, #fff9c4 0%, #fff59d 100%);
+            border-color: #ffc107;
+        }
+        
+        .monster-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .monster-icon-container {
+            margin-right: 12px;
+        }
+        
+        .monster-info {
+            flex: 1;
+        }
+        
+        .monster-name {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 3px;
+        }
+        
+        .monster-type {
+            font-size: 11px;
+            color: #666;
+            display: inline-block;
+            padding: 2px 8px;
+            background: #e0e0e0;
+            border-radius: 10px;
+        }
+        
+        .monster-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+            font-size: 11px;
+        }
+        
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 8px;
+            background: #f5f5f5;
+            border-radius: 5px;
+        }
+        
+        .stat-label {
+            color: #666;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        /* 矢量图标 */
+        .svg-icon {
+            width: 48px;
+            height: 48px;
+        }
+        
+        .svg-icon-sm {
+            width: 24px;
+            height: 24px;
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #f44336 0%, #e57373 100%);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ff9800 0%, #ffa726 100%);
+            color: white;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* 科技树 */
+        .tech-tree {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .tech-item {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid #ddd;
+            position: relative;
+        }
+        
+        .tech-item.unlocked {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border-color: #4caf50;
+        }
+        
+        .tech-item.locked {
+            opacity: 0.6;
+        }
+        
+        .tech-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .tech-desc {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .tech-cost {
+            font-size: 11px;
+            color: #f57c00;
+            margin-bottom: 10px;
+        }
+        
+        /* 探索界面 */
+        .exploration-area {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+        }
+        
+        .expedition-panel {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .expedition-slots {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .expedition-slot {
+            aspect-ratio: 1;
+            background: white;
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .expedition-slot:hover {
+            border-color: #667eea;
+            background: #f0f0f0;
+        }
+        
+        .expedition-slot.filled {
+            border-style: solid;
+            border-color: #4caf50;
+        }
+        
+        /* 通知 */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease-out;
+            z-index: 1000;
+            max-width: 300px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .notification.success {
+            border-left-color: #4caf50;
+        }
+        
+        .notification.warning {
+            border-left-color: #ff9800;
+        }
+        
+        .notification.error {
+            border-left-color: #f44336;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        /* 模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: modalIn 0.3s;
+        }
+        
+        @keyframes modalIn {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        .modal-header {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .modal-buttons .btn {
+            flex: 1;
+        }
+        
+        /* 事件面板 */
+        .event-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            max-width: 350px;
+            border-left: 4px solid #ff9800;
+            z-index: 999;
+            animation: slideInLeft 0.3s;
+        }
+        
+        @keyframes slideInLeft {
+            from {
+                transform: translateX(-400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .event-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #ff9800;
+        }
+        
+        .event-desc {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .event-choices {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .event-choices .btn {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+        
+        /* 繁殖界面 */
+        .breeding-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+        }
+        
+        .breeding-slots {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr auto 1fr;
+            gap: 20px;
+            align-items: center;
+            margin: 20px 0;
+        }
+        
+        .breeding-slot {
+            background: #f5f5f5;
+            border: 2px dashed #ddd;
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .breeding-slot:hover {
+            border-color: #667eea;
+            background: #e8eaf6;
+        }
+        
+        .breeding-slot.filled {
+            border-style: solid;
+            border-color: #4caf50;
+        }
+        
+        .breeding-arrow {
+            font-size: 24px;
+            color: #999;
+        }
+        
+        /* 处理界面 */
+        .disposal-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+        }
+        
+        .disposal-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .disposal-option {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid #ddd;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .disposal-option:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .disposal-title {
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .disposal-desc {
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏭 怪兽农场</h1>
+            <p>培育怪兽，经营农场，探索未知世界</p>
+        </div>
+        
+        <div class="resources" id="resources"></div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('farm')">农场</button>
+            <button class="tab" onclick="switchTab('monsters')">怪兽</button>
+            <button class="tab" onclick="switchTab('exploration')">探索</button>
+            <button class="tab" onclick="switchTab('breeding')">繁殖</button>
+            <button class="tab" onclick="switchTab('tech')">科技</button>
+            <button class="tab" onclick="switchTab('disposal')">处理</button>
+        </div>
+        
+        <div id="farm-tab" class="tab-content active">
+            <div class="farm-container">
+                <h2>农场管理</h2>
+                <div class="farm-grid" id="farmGrid"></div>
+            </div>
+        </div>
+        
+        <div id="monsters-tab" class="tab-content">
+            <div class="farm-container">
+                <h2>怪兽管理 <span style="font-size: 14px; color: #666;">(点击选择怪兽进行分配)</span></h2>
+                <div style="margin: 15px 0;">
+                    <button class="btn btn-primary" onclick="showRecruitModal()">招募怪兽</button>
+                </div>
+                <div class="monster-grid" id="monsterGrid"></div>
+            </div>
+        </div>
+        
+        <div id="exploration-tab" class="tab-content">
+            <div class="exploration-area" id="explorationArea"></div>
+        </div>
+        
+        <div id="breeding-tab" class="tab-content">
+            <div class="breeding-container" id="breedingContainer"></div>
+        </div>
+        
+        <div id="tech-tab" class="tab-content">
+            <div class="farm-container">
+                <h2>科技树</h2>
+                <div class="tech-tree" id="techTree"></div>
+            </div>
+        </div>
+        
+        <div id="disposal-tab" class="tab-content">
+            <div class="disposal-container" id="disposalContainer"></div>
+        </div>
+    </div>
+    
+    <!-- 模态框 -->
+    <div class="modal" id="modal">
+        <div class="modal-content" id="modalContent"></div>
+    </div>
+
+    <script>
+        // 游戏状态
+        const gameState = {
+            coins: 100,
+            food: 50,
+            materials: 0,
+            research: 0,
+            energy: 100,
+            maxEnergy: 100,
+            
+            plots: [],
+            monsters: [],
+            expeditions: [],
+            
+            selectedMonster: null,
+            
+            technologies: {},
+            
+            nextMonsterId: 1,
+            
+            // 统计数据
+            totalHarvests: 0,
+            totalExplorations: 0,
+            monstersBreed: 0
+        };
+        
+        // 怪兽类型定义
+        const monsterTypes = {
+            slime: { name: '史莱姆', color: '#4caf50', baseStats: { strength: 3, agility: 2, intelligence: 1, farming: 4 } },
+            goblin: { name: '哥布林', color: '#ff9800', baseStats: { strength: 4, agility: 3, intelligence: 2, farming: 2 } },
+            sprite: { name: '精灵', color: '#2196f3', baseStats: { strength: 1, agility: 4, intelligence: 5, farming: 3 } },
+            golem: { name: '石像鬼', color: '#795548', baseStats: { strength: 5, agility: 1, intelligence: 1, farming: 3 } },
+            wisp: { name: '幽灵', color: '#9c27b0', baseStats: { strength: 2, agility: 5, intelligence: 4, farming: 1 } }
+        };
+        
+        // 作物类型
+        const cropTypes = [
+            { id: 'wheat', name: '小麦', growTime: 15000, yield: 5, value: 8, requiredTech: null },
+            { id: 'corn', name: '玉米', growTime: 25000, yield: 8, value: 15, requiredTech: null },
+            { id: 'potato', name: '土豆', growTime: 20000, yield: 10, value: 10, requiredTech: null },
+            { id: 'berry', name: '浆果', growTime: 30000, yield: 12, value: 25, requiredTech: 'advancedFarming' }
+        ];
+        
+        // 科技树
+        const technologies = {
+            advancedFarming: {
+                name: '高级农业',
+                desc: '解锁高级作物和耕作技术',
+                cost: { research: 50, coins: 200 },
+                unlocked: false,
+                effects: { cropYield: 1.2 }
+            },
+            irrigation: {
+                name: '灌溉系统',
+                desc: '减少作物生长时间20%',
+                cost: { research: 30, materials: 50 },
+                unlocked: false,
+                effects: { growthSpeed: 1.25 }
+            },
+            monsterTraining: {
+                name: '怪兽训练',
+                desc: '提升怪兽属性成长',
+                cost: { research: 80, coins: 300 },
+                unlocked: false,
+                effects: { statGrowth: 1.3 }
+            },
+            exploration: {
+                name: '探索技术',
+                desc: '增加探索收益和成功率',
+                cost: { research: 60, materials: 100 },
+                unlocked: false,
+                effects: { explorationBonus: 1.5 }
+            },
+            breeding: {
+                name: '繁殖技术',
+                desc: '允许怪兽繁殖，培育更强后代',
+                cost: { research: 100, coins: 500 },
+                unlocked: false,
+                effects: { breedingEnabled: true }
+            },
+            expansion: {
+                name: '农场扩建',
+                desc: '解锁更多农田',
+                cost: { coins: 500, materials: 200 },
+                unlocked: false,
+                effects: { extraPlots: 3 }
+            }
+        };
+        
+        // 随机事件池
+        const randomEvents = {
+            farming: [
+                {
+                    title: '🌧️ 及时雨',
+                    desc: '一场及时雨降临农场，作物生长速度临时提升！',
+                    choices: [
+                        { text: '太好了！', effect: () => {
+                            gameState.plots.forEach(plot => {
+                                if (plot.crop) plot.growthBonus = 1.5;
+                            });
+                            setTimeout(() => {
+                                gameState.plots.forEach(plot => plot.growthBonus = 1);
+                            }, 30000);
+                            showNotification('作物生长加速30秒！', 'success');
+                        }}
+                    ]
+                },
+                {
+                    title: '🐛 虫害',
+                    desc: '农场遭遇虫害！是否使用食物驱虫？',
+                    choices: [
+                        { 
+                            text: '使用食物(20)', 
+                            cost: { food: 20 },
+                            effect: () => showNotification('成功驱虫！', 'success')
+                        },
+                        { 
+                            text: '忽略', 
+                            effect: () => {
+                                const plot = gameState.plots.find(p => p.crop);
+                                if (plot) {
+                                    plot.progress = Math.max(0, plot.progress - 30);
+                                    showNotification('作物生长受损...', 'error');
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    title: '💨 大风',
+                    desc: '大风吹过农场，散落了一些材料',
+                    choices: [
+                        { text: '收集', effect: () => {
+                            const gain = Math.floor(Math.random() * 20) + 10;
+                            gameState.materials += gain;
+                            updateResources();
+                            showNotification(`获得 ${gain} 材料！`, 'success');
+                        }}
+                    ]
+                }
+            ],
+            exploration: [
+                {
+                    title: '🗺️ 神秘商人',
+                    desc: '遇到神秘商人，愿意用材料交换金币',
+                    choices: [
+                        { 
+                            text: '交易(材料-50 → 金币+150)', 
+                            cost: { materials: 50 },
+                            effect: () => {
+                                gameState.coins += 150;
+                                updateResources();
+                                showNotification('交易成功！', 'success');
+                            }
+                        },
+                        { text: '拒绝', effect: () => {} }
+                    ]
+                },
+                {
+                    title: '⚔️ 野生怪兽',
+                    desc: '遭遇野生怪兽！是否战斗捕获？',
+                    choices: [
+                        { 
+                            text: '战斗', 
+                            effect: () => {
+                                if (Math.random() > 0.5) {
+                                    const types = Object.keys(monsterTypes);
+                                    const type = types[Math.floor(Math.random() * types.length)];
+                                    createMonster(type);
+                                    showNotification('捕获成功！获得新怪兽！', 'success');
+                                } else {
+                                    gameState.energy = Math.max(0, gameState.energy - 20);
+                                    updateResources();
+                                    showNotification('捕获失败，消耗能量...', 'error');
+                                }
+                            }
+                        },
+                        { text: '逃跑', effect: () => {} }
+                    ]
+                },
+                {
+                    title: '💎 宝藏',
+                    desc: '发现了一个宝箱！',
+                    choices: [
+                        { text: '打开', effect: () => {
+                            const rewards = [
+                                { coins: 100 },
+                                { materials: 80 },
+                                { research: 30 },
+                                { food: 50 }
+                            ];
+                            const reward = rewards[Math.floor(Math.random() * rewards.length)];
+                            Object.keys(reward).forEach(key => {
+                                gameState[key] += reward[key];
+                            });
+                            updateResources();
+                            showNotification('获得奖励：' + JSON.stringify(reward), 'success');
+                        }}
+                    ]
+                }
+            ],
+            general: [
+                {
+                    title: '🎁 意外之财',
+                    desc: '路过的旅行者给了你一些金币',
+                    choices: [
+                        { text: '收下', effect: () => {
+                            gameState.coins += 50;
+                            updateResources();
+                            showNotification('获得 50 金币！', 'success');
+                        }}
+                    ]
+                }
+            ]
+        };
+        
+        // 初始化游戏
+        function initGame() {
+            // 创建初始地块（3块可用，其他锁定）
+            for (let i = 0; i < 9; i++) {
+                gameState.plots.push({
+                    id: i,
+                    locked: i >= 3,
+                    unlockCost: { coins: 100 * (i - 2), materials: 50 * (i - 2) },
+                    crop: null,
+                    plantedAt: null,
+                    progress: 0,
+                    assignedMonster: null,
+                    growthBonus: 1
+                });
+            }
+            
+            // 初始化科技
+            Object.keys(technologies).forEach(key => {
+                gameState.technologies[key] = false;
+            });
+            
+            // 创建初始怪兽
+            createMonster('slime');
+            
+            renderAll();
+            
+            // 启动能量恢复
+            setInterval(() => {
+                if (gameState.energy < gameState.maxEnergy) {
+                    gameState.energy = Math.min(gameState.maxEnergy, gameState.energy + 1);
+                    updateResources();
+                }
+            }, 10000); // 每10秒恢复1点能量
+            
+            // 随机事件触发
+            setInterval(() => {
+                if (Math.random() < 0.1) { // 10%概率
+                    triggerRandomEvent('general');
+                }
+            }, 60000); // 每分钟检查一次
+        }
+        
+        // 创建怪兽
+        function createMonster(type, parent1 = null, parent2 = null) {
+            const typeData = monsterTypes[type];
+            const baseStats = typeData.baseStats;
+            
+            // 基础属性 + 随机变异
+            const stats = {};
+            Object.keys(baseStats).forEach(stat => {
+                let value = baseStats[stat];
+                
+                // 如果是繁殖产生，继承父母属性
+                if (parent1 && parent2) {
+                    const parent1Stat = parent1.stats[stat];
+                    const parent2Stat = parent2.stats[stat];
+                    value = Math.floor((parent1Stat + parent2Stat) / 2);
+                    
+                    // 20%概率突变
+                    if (Math.random() < 0.2) {
+                        value += Math.random() < 0.5 ? -1 : 1;
+                    }
+                }
+                
+                // 随机变异 ±20%
+                value += Math.floor((Math.random() - 0.5) * 2 * (value * 0.2));
+                stats[stat] = Math.max(1, value);
+            });
+            
+            const monster = {
+                id: gameState.nextMonsterId++,
+                type: type,
+                name: `${typeData.name}#${gameState.nextMonsterId}`,
+                stats: stats,
+                level: 1,
+                exp: 0,
+                maxExp: 100,
+                assignment: null, // { type: 'farm'|'exploration'|'selling', target: id }
+                status: 'idle', // idle, working, exploring, breeding
+                traits: generateTraits(),
+                generation: parent1 ? Math.max(parent1.generation, parent2.generation) + 1 : 1
+            };
+            
+            gameState.monsters.push(monster);
+            return monster;
+        }
+        
+        // 生成特性
+        function generateTraits() {
+            const allTraits = [
+                { id: 'fast', name: '敏捷', effect: { agility: 1 } },
+                { id: 'strong', name: '强壮', effect: { strength: 1 } },
+                { id: 'smart', name: '聪慧', effect: { intelligence: 1 } },
+                { id: 'farmer', name: '农夫', effect: { farming: 2 } },
+                { id: 'lazy', name: '懒惰', effect: { farming: -1, agility: -1 } },
+                { id: 'lucky', name: '幸运', effect: { luck: 1 } },
+                { id: 'hardy', name: '顽强', effect: { strength: 1, agility: -1 } }
+            ];
+            
+            const numTraits = Math.random() < 0.3 ? 2 : 1;
+            const traits = [];
+            
+            for (let i = 0; i < numTraits; i++) {
+                const trait = allTraits[Math.floor(Math.random() * allTraits.length)];
+                if (!traits.find(t => t.id === trait.id)) {
+                    traits.push(trait);
+                }
+            }
+            
+            return traits;
+        }
+        
+        // 渲染所有
+        function renderAll() {
+            updateResources();
+            renderFarm();
+            renderMonsters();
+            renderExploration();
+            renderBreeding();
+            renderTech();
+            renderDisposal();
+        }
+        
+        // 更新资源显示
+        function updateResources() {
+            const resources = [
+                { label: '金币', value: gameState.coins, icon: '💰' },
+                { label: '食物', value: gameState.food, icon: '🌾' },
+                { label: '材料', value: gameState.materials, icon: '🔨' },
+                { label: '研究点', value: gameState.research, icon: '🔬' },
+                { label: '能量', value: `${gameState.energy}/${gameState.maxEnergy}`, icon: '⚡' }
+            ];
+            
+            const resourcesEl = document.getElementById('resources');
+            if (!resourcesEl) return;
+            resourcesEl.innerHTML = resources.map(r => `
+                <div class="resource">
+                    <div class="resource-label">${r.icon} ${r.label}</div>
+                    <div class="resource-value">${r.value}</div>
+                </div>
+            `).join('');
+        }
+        
+        // 渲染农场
+        function renderFarm() {
+            const farmGrid = document.getElementById('farmGrid');
+            if (!farmGrid) return;
+            farmGrid.innerHTML = gameState.plots.map(plot => {
+                if (plot.locked) {
+                    return `
+                        <div class="plot locked" onclick="unlockPlot(${plot.id})">
+                            ${createSVG('lock', 48)}
+                            <div class="plot-text">
+                                解锁需要:<br>
+                                💰${plot.unlockCost.coins}<br>
+                                🔨${plot.unlockCost.materials}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                if (plot.crop) {
+                    const cropType = cropTypes.find(c => c.id === plot.crop);
+                    const isReady = plot.progress >= 100;
+                    
+                    return `
+                        <div class="plot planted ${isReady ? 'ready' : ''}" 
+                             onclick="${isReady ? `harvest(${plot.id})` : ''}"
+                             style="${isReady ? 'animation: pulse 1s infinite;' : ''}">
+                            ${createSVG('plant', 48)}
+                            <div class="plot-text">${cropType.name}</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${plot.progress}%"></div>
+                            </div>
+                            ${plot.assignedMonster ? `
+                                <div style="margin-top: 5px;">
+                                    ${createSVG(plot.assignedMonster.type, 24)}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+                
+                return `
+                    <div class="plot" onclick="showPlantMenu(${plot.id})">
+                        ${createSVG('add', 48)}
+                        <div class="plot-text">点击种植</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // 创建SVG图标
+        function createSVG(type, size = 48) {
+            const svgs = {
+                lock: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>`,
+                
+                add: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>`,
+                
+                plant: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#4caf50" stroke-width="2">
+                    <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/>
+                    <path d="M12 2v20"/>
+                </svg>`,
+                
+                slime: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24">
+                    <ellipse cx="12" cy="16" rx="8" ry="6" fill="#4caf50" opacity="0.8"/>
+                    <circle cx="9" cy="14" r="1.5" fill="#fff"/>
+                    <circle cx="15" cy="14" r="1.5" fill="#fff"/>
+                    <circle cx="9" cy="14" r="0.7" fill="#000"/>
+                    <circle cx="15" cy="14" r="0.7" fill="#000"/>
+                </svg>`,
+                
+                goblin: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="7" fill="#ff9800" opacity="0.8"/>
+                    <polygon points="8,8 9,5 11,8" fill="#ff9800"/>
+                    <polygon points="16,8 15,5 13,8" fill="#ff9800"/>
+                    <circle cx="9" cy="12" r="1.2" fill="#fff"/>
+                    <circle cx="15" cy="12" r="1.2" fill="#fff"/>
+                    <circle cx="9" cy="12" r="0.6" fill="#000"/>
+                    <circle cx="15" cy="12" r="0.6" fill="#000"/>
+                    <path d="M 9 15 Q 12 17 15 15" stroke="#000" stroke-width="1" fill="none"/>
+                </svg>`,
+                
+                sprite: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="6" fill="#2196f3" opacity="0.6"/>
+                    <path d="M 8 10 L 6 8 L 8 9" stroke="#2196f3" stroke-width="1.5" fill="none"/>
+                    <path d="M 16 10 L 18 8 L 16 9" stroke="#2196f3" stroke-width="1.5" fill="none"/>
+                    <circle cx="10" cy="11" r="1" fill="#fff"/>
+                    <circle cx="14" cy="11" r="1" fill="#fff"/>
+                    <path d="M 10 14 Q 12 15 14 14" stroke="#fff" stroke-width="1" fill="none"/>
+                </svg>`,
+                
+                golem: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24">
+                    <rect x="7" y="7" width="10" height="12" fill="#795548" opacity="0.8" rx="2"/>
+                    <rect x="8" y="10" width="2" height="2" fill="#ffeb3b"/>
+                    <rect x="14" y="10" width="2" height="2" fill="#ffeb3b"/>
+                    <rect x="10" y="15" width="4" height="1" fill="#000"/>
+                </svg>`,
+                
+                wisp: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="6" fill="#9c27b0" opacity="0.5"/>
+                    <circle cx="12" cy="10" r="4" fill="#ce93d8" opacity="0.7"/>
+                    <circle cx="10" cy="10" r="1" fill="#fff"/>
+                    <circle cx="14" cy="10" r="1" fill="#fff"/>
+                    <path d="M 10 18 Q 12 20 14 18" stroke="#9c27b0" stroke-width="1" fill="none" opacity="0.5"/>
+                </svg>`,
+                
+                explore: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+                </svg>`,
+                
+                breeding: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>`,
+                
+                recycle: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                    <polyline points="7.5 4.21 12 6.81 16.5 4.21"></polyline>
+                    <polyline points="7.5 19.79 7.5 14.6 3 12"></polyline>
+                    <polyline points="21 12 16.5 14.6 16.5 19.79"></polyline>
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                </svg>`
+            };
+            
+            return svgs[type] || svgs.slime;
+        }
+        
+        // 渲染怪兽
+        function renderMonsters() {
+            const monsterGrid = document.getElementById('monsterGrid');
+            if (!monsterGrid) return;
+            
+            if (gameState.monsters.length === 0) {
+                monsterGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #999;">还没有怪兽，去招募一些吧！</div>';
+                return;
+            }
+            
+            monsterGrid.innerHTML = gameState.monsters.map(monster => {
+                const typeData = monsterTypes[monster.type];
+                const isSelected = gameState.selectedMonster === monster.id;
+                const isWorking = monster.status !== 'idle';
+                
+                return `
+                    <div class="monster-card ${isWorking ? 'working' : ''} ${isSelected ? 'selected' : ''}" 
+                         onclick="selectMonster(${monster.id})">
+                        <div class="monster-header">
+                            <div class="monster-icon-container">
+                                ${createSVG(monster.type, 48)}
+                            </div>
+                            <div class="monster-info">
+                                <div class="monster-name">${monster.name}</div>
+                                <div class="monster-type" style="background: ${typeData.color}; color: white;">
+                                    ${typeData.name} Gen.${monster.generation}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="monster-stats">
+                            <div class="stat">
+                                <span class="stat-label">力量</span>
+                                <span class="stat-value">${monster.stats.strength}</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-label">敏捷</span>
+                                <span class="stat-value">${monster.stats.agility}</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-label">智力</span>
+                                <span class="stat-value">${monster.stats.intelligence}</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-label">耕作</span>
+                                <span class="stat-value">${monster.stats.farming}</span>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 10px; font-size: 11px;">
+                            <div style="color: #666; margin-bottom: 3px;">特性: ${monster.traits.map(t => t.name).join(', ')}</div>
+                            <div style="color: #666;">等级: ${monster.level} (${monster.exp}/${monster.maxExp})</div>
+                            ${isWorking ? `<div style="color: #2196f3; font-weight: bold; margin-top: 5px;">⚙️ ${getStatusText(monster.status)}</div>` : ''}
+                        </div>
+                        
+                        ${isSelected ? `
+                            <div style="margin-top: 10px; display: flex; gap: 5px;">
+                                <button class="btn btn-primary" style="flex:1; padding: 5px; font-size: 11px;" 
+                                        onclick="event.stopPropagation(); assignToFarm(${monster.id})">
+                                    耕作
+                                </button>
+                                <button class="btn btn-warning" style="flex:1; padding: 5px; font-size: 11px;" 
+                                        onclick="event.stopPropagation(); assignToSelling(${monster.id})">
+                                    售卖
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // 获取状态文本
+        function getStatusText(status) {
+            const statusMap = {
+                idle: '空闲',
+                working: '工作中',
+                exploring: '探索中',
+                breeding: '繁殖中',
+                selling: '售卖中'
+            };
+            return statusMap[status] || status;
+        }
+        
+        // 选择怪兽
+        function selectMonster(monsterId) {
+            gameState.selectedMonster = gameState.selectedMonster === monsterId ? null : monsterId;
+            renderMonsters();
+        }
+        
+        // 分配到农场
+        function assignToFarm(monsterId) {
+            const monster = gameState.monsters.find(m => m.id === monsterId);
+            if (!monster) return;
+            
+            if (monster.status !== 'idle') {
+                showNotification('该怪兽正在忙碌中！', 'warning');
+                return;
+            }
+            
+            // 找到已种植但没有分配怪兽的地块
+            const availablePlot = gameState.plots.find(p => p.crop && !p.assignedMonster && !p.locked);
+            
+            if (!availablePlot) {
+                showNotification('没有可分配的农田！请先种植作物', 'warning');
+                return;
+            }
+            
+            // 分配怪兽
+            availablePlot.assignedMonster = monster;
+            monster.assignment = { type: 'farm', target: availablePlot.id };
+            monster.status = 'working';
+            
+            showNotification(`${monster.name} 开始在农田工作！`, 'success');
+            renderAll();
+            
+            // 触发农场事件
+            if (Math.random() < 0.15) {
+                setTimeout(() => triggerRandomEvent('farming'), 2000);
+            }
+        }
+        
+        // 分配到售卖
+        function assignToSelling(monsterId) {
+            const monster = gameState.monsters.find(m => m.id === monsterId);
+            if (!monster) return;
+            
+            if (monster.status !== 'idle') {
+                showNotification('该怪兽正在忙碌中！', 'warning');
+                return;
+            }
+            
+            if (gameState.food < 10) {
+                showNotification('食物不足！需要10食物', 'error');
+                return;
+            }
+            
+            gameState.food -= 10;
+            monster.status = 'selling';
+            
+            showNotification(`${monster.name} 出门售卖了...`, 'success');
+            
+            // 售卖需要30秒
+            setTimeout(() => {
+                const earnings = 20 + Math.floor(Math.random() * 30) + monster.stats.intelligence * 2;
+                gameState.coins += earnings;
+                
+                // 获得经验
+                gainExp(monster, 15);
+                
+                monster.status = 'idle';
+                updateResources();
+                renderMonsters();
+                showNotification(`${monster.name} 回来了！赚了 ${earnings} 金币`, 'success');
+            }, 30000);
+            
+            renderAll();
+        }
+        
+        // 解锁地块
+        function unlockPlot(plotId) {
+            const plot = gameState.plots[plotId];
+            if (!plot.locked) return;
+            
+            const cost = plot.unlockCost;
+            
+            if (gameState.coins >= cost.coins && gameState.materials >= cost.materials) {
+                if (confirm(`解锁这块农田需要：\n💰 ${cost.coins} 金币\n🔨 ${cost.materials} 材料\n\n确定解锁吗？`)) {
+                    gameState.coins -= cost.coins;
+                    gameState.materials -= cost.materials;
+                    plot.locked = false;
+                    
+                    showNotification('解锁成功！', 'success');
+                    renderAll();
+                }
+            } else {
+                showNotification('资源不足！', 'error');
+            }
+        }
+        
+        // 显示种植菜单
+        function showPlantMenu(plotId) {
+            const plot = gameState.plots[plotId];
+            if (plot.locked || plot.crop) return;
+            
+            const availableCrops = cropTypes.filter(crop => 
+                !crop.requiredTech || gameState.technologies[crop.requiredTech]
+            );
+            
+            const modalContent = `
+                <div class="modal-header">选择要种植的作物</div>
+                <div style="display: grid; gap: 10px;">
+                    ${availableCrops.map(crop => `
+                        <div style="padding: 15px; background: #f5f5f5; border-radius: 8px; cursor: pointer; border: 2px solid #ddd;"
+                             onclick="plantCrop(${plotId}, '${crop.id}')"
+                             onmouseover="this.style.borderColor='#667eea'"
+                             onmouseout="this.style.borderColor='#ddd'">
+                            <div style="font-weight: bold; margin-bottom: 5px;">${crop.name}</div>
+                            <div style="font-size: 12px; color: #666;">
+                                生长时间: ${crop.growTime/1000}秒<br>
+                                产量: ${crop.yield} 食物<br>
+                                售价: ${crop.value} 金币
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-primary" onclick="closeModal()">取消</button>
+                </div>
+            `;
+            
+            showModal(modalContent);
+        }
+        
+        // 种植作物
+        function plantCrop(plotId, cropId) {
+            const plot = gameState.plots[plotId];
+            const cropType = cropTypes.find(c => c.id === cropId);
+            
+            closeModal();
+            
+            plot.crop = cropId;
+            plot.plantedAt = Date.now();
+            plot.progress = 0;
+            
+            showNotification(`种植了 ${cropType.name}`, 'success');
+            renderFarm();
+            
+            // 开始生长
+            growCrop(plotId);
+        }
+        
+        // 作物生长
+        function growCrop(plotId) {
+            const plot = gameState.plots[plotId];
+            if (!plot.crop) return;
+            
+            const cropType = cropTypes.find(c => c.id === plot.crop);
+            
+            const growInterval = setInterval(() => {
+                if (!plot.crop) {
+                    clearInterval(growInterval);
+                    return;
+                }
+                
+                // 计算生长速度
+                let speedMultiplier = 1;
+                
+                // 怪兽加成
+                if (plot.assignedMonster) {
+                    speedMultiplier *= (1 + plot.assignedMonster.stats.farming * 0.1);
+                }
+                
+                // 科技加成
+                if (gameState.technologies.irrigation) {
+                    speedMultiplier *= technologies.irrigation.effects.growthSpeed;
+                }
+                
+                // 临时buff
+                speedMultiplier *= plot.growthBonus;
+                
+                const elapsed = Date.now() - plot.plantedAt;
+                plot.progress = Math.min(100, (elapsed / cropType.growTime) * 100 * speedMultiplier);
+                
+                renderFarm();
+                
+                if (plot.progress >= 100) {
+                    clearInterval(growInterval);
+                    showNotification(`${cropType.name} 成熟了！`, 'success');
+                    
+                    // 怪兽获得经验
+                    if (plot.assignedMonster) {
+                        gainExp(plot.assignedMonster, 10);
+                    }
+                }
+            }, 100);
+        }
+        
+        // 收获作物
+        function harvest(plotId) {
+            const plot = gameState.plots[plotId];
+            if (!plot.crop || plot.progress < 100) return;
+            
+            const cropType = cropTypes.find(c => c.id === plot.crop);
+            
+            let yieldAmount = cropType.yield;
+            let valueAmount = cropType.value;
+            
+            // 科技加成
+            if (gameState.technologies.advancedFarming) {
+                yieldAmount *= technologies.advancedFarming.effects.cropYield;
+                valueAmount *= technologies.advancedFarming.effects.cropYield;
+            }
+            
+            yieldAmount = Math.floor(yieldAmount);
+            valueAmount = Math.floor(valueAmount);
+            
+            gameState.food += yieldAmount;
+            gameState.coins += valueAmount;
+            gameState.totalHarvests++;
+            
+            // 概率获得研究点
+            if (Math.random() < 0.3) {
+                const research = Math.floor(Math.random() * 5) + 1;
+                gameState.research += research;
+            }
+            
+            showNotification(`收获 ${cropType.name}！获得 ${yieldAmount} 食物和 ${valueAmount} 金币`, 'success');
+            
+            // 清空地块
+            const assignedMonster = plot.assignedMonster;
+            if (assignedMonster) {
+                assignedMonster.status = 'idle';
+                assignedMonster.assignment = null;
+            }
+            
+            plot.crop = null;
+            plot.plantedAt = null;
+            plot.progress = 0;
+            plot.assignedMonster = null;
+            
+            renderAll();
+        }
+        
+        // 怪兽获得经验
+        function gainExp(monster, amount) {
+            monster.exp += amount;
+            
+            while (monster.exp >= monster.maxExp) {
+                monster.exp -= monster.maxExp;
+                monster.level++;
+                monster.maxExp = Math.floor(monster.maxExp * 1.5);
+                
+                // 升级属性提升
+                const statKeys = Object.keys(monster.stats);
+                statKeys.forEach(key => {
+                    const increase = Math.random() < 0.5 ? 1 : 0;
+                    monster.stats[key] += increase;
+                });
+                
+                showNotification(`${monster.name} 升级到 ${monster.level} 级！`, 'success');
+            }
+        }
+        
+        // 渲染探索
+        function renderExploration() {
+            const explorationArea = document.getElementById('explorationArea');
+            if (!explorationArea) return;
+            
+            explorationArea.innerHTML = `
+                <h2>野外探索</h2>
+                <p style="color: #666; margin: 10px 0;">派遣怪兽探索野外，获取资源和新怪兽</p>
+                
+                <div class="expedition-panel">
+                    <h3>当前探险队</h3>
+                    <div class="expedition-slots" id="expeditionSlots"></div>
+                    <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <button class="btn btn-primary" onclick="addToExpedition()">
+                            添加怪兽
+                        </button>
+                        <button class="btn btn-success" onclick="startExpedition()" id="startExpeditionBtn">
+                            开始探索 (消耗20能量)
+                        </button>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px; background: #f5f5f5; padding: 15px; border-radius: 10px;">
+                    <h3>探索记录</h3>
+                    <div id="expeditionHistory" style="max-height: 200px; overflow-y: auto;">
+                        ${gameState.totalExplorations === 0 ? 
+                            '<div style="color: #999; text-align: center; padding: 20px;">还没有探索记录</div>' : 
+                            '历史记录显示在这里'}
+                    </div>
+                </div>
+            `;
+            
+            renderExpeditionSlots();
+        }
+        
+        // 渲染探险槽位
+        function renderExpeditionSlots() {
+            const slots = document.getElementById('expeditionSlots');
+            if (!slots) return;
+            
+            const maxSlots = 4;
+            const currentExpedition = gameState.expeditions[0] || { members: [] };
+            
+            slots.innerHTML = Array(maxSlots).fill(0).map((_, i) => {
+                const monster = currentExpedition.members[i];
+                
+                if (monster) {
+                    return `
+                        <div class="expedition-slot filled" onclick="removeFromExpedition(${i})">
+                            ${createSVG(monster.type, 60)}
+                            <div style="font-size: 10px; margin-top: 5px;">${monster.name}</div>
+                        </div>
+                    `;
+                }
+                
+                return `
+                    <div class="expedition-slot">
+                        ${createSVG('add', 40)}
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // 添加到探险队
+        function addToExpedition() {
+            if (!gameState.expeditions[0]) {
+                gameState.expeditions[0] = { members: [], status: 'preparing' };
+            }
+            
+            const expedition = gameState.expeditions[0];
+            
+            if (expedition.members.length >= 4) {
+                showNotification('探险队已满！', 'warning');
+                return;
+            }
+            
+            if (expedition.status === 'exploring') {
+                showNotification('探险队正在探索中！', 'warning');
+                return;
+            }
+            
+            const availableMonsters = gameState.monsters.filter(m => 
+                m.status === 'idle' && !expedition.members.find(em => em.id === m.id)
+            );
+            
+            if (availableMonsters.length === 0) {
+                showNotification('没有可用的怪兽！', 'warning');
+                return;
+            }
+            
+            const modalContent = `
+                <div class="modal-header">选择探险怪兽</div>
+                <div style="max-height: 400px; overflow-y: auto;">
+                    ${availableMonsters.map(monster => {
+                        const typeData = monsterTypes[monster.type];
+                        return `
+                            <div style="padding: 10px; margin: 5px 0; background: #f5f5f5; border-radius: 8px; cursor: pointer; border: 2px solid #ddd;"
+                                 onclick="selectMonsterForExpedition(${monster.id})"
+                                 onmouseover="this.style.borderColor='#667eea'"
+                                 onmouseout="this.style.borderColor='#ddd'">
+                                <div style="display: flex; align-items: center;">
+                                    ${createSVG(monster.type, 40)}
+                                    <div style="margin-left: 10px; flex: 1;">
+                                        <div style="font-weight: bold;">${monster.name}</div>
+                                        <div style="font-size: 11px; color: #666;">
+                                            ${typeData.name} Lv.${monster.level} | 
+                                            力量:${monster.stats.strength} 敏捷:${monster.stats.agility} 智力:${monster.stats.intelligence}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-primary" onclick="closeModal()">取消</button>
+                </div>
+            `;
+            
+            showModal(modalContent);
+        }
+        
+        // 选择怪兽加入探险
+        function selectMonsterForExpedition(monsterId) {
+            const monster = gameState.monsters.find(m => m.id === monsterId);
+            const expedition = gameState.expeditions[0];
+            
+            expedition.members.push(monster);
+            monster.status = 'preparing';
+            
+            closeModal();
+            renderExpeditionSlots();
+            showNotification(`${monster.name} 加入探险队！`, 'success');
+        }
+        
+        // 从探险队移除
+        function removeFromExpedition(index) {
+            const expedition = gameState.expeditions[0];
+            if (!expedition || expedition.status === 'exploring') return;
+            
+            const monster = expedition.members[index];
+            if (monster) {
+                monster.status = 'idle';
+                expedition.members.splice(index, 1);
+                renderExpeditionSlots();
+                showNotification(`${monster.name} 离开探险队`, 'success');
+            }
+        }
+        
+        // 开始探险
+        function startExpedition() {
+            const expedition = gameState.expeditions[0];
+            
+            if (!expedition || expedition.members.length === 0) {
+                showNotification('探险队是空的！', 'warning');
+                return;
+            }
+            
+            if (gameState.energy < 20) {
+                showNotification('能量不足！需要20点能量', 'error');
+                return;
+            }
+            
+            gameState.energy -= 20;
+            expedition.status = 'exploring';
+            expedition.startTime = Date.now();
+            
+            expedition.members.forEach(m => m.status = 'exploring');
+            
+            updateResources();
+            showNotification('探险队出发了！', 'success');
+            
+            // 探险需要60秒
+            const expeditionTime = 60000;
+            
+            setTimeout(() => {
+                completeExpedition();
+            }, expeditionTime);
+            
+            // 探险过程中可能触发事件
+            setTimeout(() => {
+                if (Math.random() < 0.4) {
+                    triggerRandomEvent('exploration');
+                }
+            }, expeditionTime / 2);
+        }
+        
+        // 完成探险
+        function completeExpedition() {
+            const expedition = gameState.expeditions[0];
+            if (!expedition || expedition.status !== 'exploring') return;
+            
+            // 计算探险收益
+            let totalStrength = 0;
+            let totalAgility = 0;
+            let totalIntelligence = 0;
+            
+            expedition.members.forEach(m => {
+                totalStrength += m.stats.strength;
+                totalAgility += m.stats.agility;
+                totalIntelligence += m.stats.intelligence;
+            });
+            
+            const teamPower = totalStrength + totalAgility + totalIntelligence;
+            
+            // 基础奖励
+            let coinsReward = 50 + Math.floor(Math.random() * 100) + teamPower * 5;
+            let materialsReward = 20 + Math.floor(Math.random() * 50) + Math.floor(teamPower * 0.5);
+            let researchReward = 10 + Math.floor(Math.random() * 20) + Math.floor(totalIntelligence * 2);
+            
+            // 科技加成
+            if (gameState.technologies.exploration) {
+                coinsReward = Math.floor(coinsReward * technologies.exploration.effects.explorationBonus);
+                materialsReward = Math.floor(materialsReward * technologies.exploration.effects.explorationBonus);
+                researchReward = Math.floor(researchReward * technologies.exploration.effects.explorationBonus);
+            }
+            
+            gameState.coins += coinsReward;
+            gameState.materials += materialsReward;
+            gameState.research += researchReward;
+            gameState.totalExplorations++;
+            
+            // 怪兽获得经验
+            expedition.members.forEach(m => {
+                gainExp(m, 25 + Math.floor(Math.random() * 15));
+                m.status = 'idle';
+            });
+            
+            // 有机会发现新怪兽
+            if (Math.random() < 0.3) {
+                const types = Object.keys(monsterTypes);
+                const randomType = types[Math.floor(Math.random() * types.length)];
+                const newMonster = createMonster(randomType);
+                showNotification(`发现了野生的 ${newMonster.name}！`, 'success');
+            }
+            
+            showNotification(
+                `探险完成！获得：💰${coinsReward} 🔨${materialsReward} 🔬${researchReward}`,
+                'success'
+            );
+            
+            // 重置探险队
+            expedition.members = [];
+            expedition.status = 'preparing';
+            
+            updateResources();
+            renderExploration();
+            renderMonsters();
+        }
+        
+        // 渲染繁殖
+        function renderBreeding() {
+            const breedingContainer = document.getElementById('breedingContainer');
+            if (!breedingContainer) return;
+            
+            if (!gameState.technologies.breeding) {
+                breedingContainer.innerHTML = `
+                    <h2>繁殖中心</h2>
+                    <div style="text-align: center; padding: 60px; color: #999;">
+                        <div style="font-size: 48px; margin-bottom: 20px;">🔒</div>
+                        <div>需要解锁"繁殖技术"才能使用</div>
+                        <button class="btn btn-primary" style="margin-top: 20px;" onclick="switchTab('tech')">
+                            前往科技树
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            breedingContainer.innerHTML = `
+                <h2>繁殖中心</h2>
+                <p style="color: #666; margin: 10px 0;">选择两只怪兽进行繁殖，培育更强的后代</p>
+                
+                <div class="breeding-slots">
+                    <div class="breeding-slot" id="breedSlot1" onclick="selectBreedingMonster(1)">
+                        ${gameState.breedingSlot1 ? 
+                            `${createSVG(gameState.breedingSlot1.type, 60)}
+                            <div style="font-size: 12px; margin-top: 10px;">${gameState.breedingSlot1.name}</div>` :
+                            `${createSVG('add', 60)}
+                            <div style="font-size: 12px; margin-top: 10px;">选择怪兽</div>`
+                        }
+                    </div>
+                    
+                    <div class="breeding-arrow">+</div>
+                    
+                    <div class="breeding-slot" id="breedSlot2" onclick="selectBreedingMonster(2)">
+                        ${gameState.breedingSlot2 ? 
+                            `${createSVG(gameState.breedingSlot2.type, 60)}
+                            <div style="font-size: 12px; margin-top: 10px;">${gameState.breedingSlot2.name}</div>` :
+                            `${createSVG('add', 60)}
+                            <div style="font-size: 12px; margin-top: 10px;">选择怪兽</div>`
+                        }
+                    </div>
+                    
+                    <div class="breeding-arrow">=</div>
+                    
+                    <div class="breeding-slot" style="border-color: #4caf50; background: #e8f5e9;">
+                        ${createSVG('breeding', 60)}
+                        <div style="font-size: 12px; margin-top: 10px;">后代</div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin: 20px 0;">
+                    <button class="btn btn-success" onclick="startBreeding()" 
+                            ${!gameState.breedingSlot1 || !gameState.breedingSlot2 ? 'disabled' : ''}>
+                        开始繁殖 (消耗100食物，30能量)
+                    </button>
+                    <button class="btn btn-primary" onclick="clearBreedingSlots()" 
+                            style="margin-left: 10px;">
+                        清空
+                    </button>
+                </div>
+                
+                <div style="background: #f5f5f5; padding: 15px; border-radius: 10px; margin-top: 20px;">
+                    <h3>繁殖说明</h3>
+                    <ul style="margin-left: 20px; color: #666; font-size: 13px; line-height: 1.8;">
+                        <li>后代会继承父母的平均属性</li>
+                        <li>有20%概率发生属性突变</li>
+                        <li>后代类型随机继承父母之一</li>
+                        <li>特性会随机遗传</li>
+                        <li>代数为父母最高代数+1</li>
+                    </ul>
+                </div>
+            `;
+        }
+        
+        // 选择繁殖怪兽
+        function selectBreedingMonster(slotNumber) {
+            const availableMonsters = gameState.monsters.filter(m => 
+                m.status === 'idle' && 
+                m.id !== gameState.breedingSlot1?.id && 
+                m.id !== gameState.breedingSlot2?.id
+            );
+            
+            if (availableMonsters.length === 0) {
+                showNotification('没有可用的怪兽！', 'warning');
+                return;
+            }
+            
+            const modalContent = `
+                <div class="modal-header">选择怪兽 (槽位 ${slotNumber})</div>
+                <div style="max-height: 400px; overflow-y: auto;">
+                    ${availableMonsters.map(monster => {
+                        const typeData = monsterTypes[monster.type];
+                        return `
+                            <div style="padding: 10px; margin: 5px 0; background: #f5f5f5; border-radius: 8px; cursor: pointer; border: 2px solid #ddd;"
+                                 onclick="assignBreedingMonster(${slotNumber}, ${monster.id})"
+                                 onmouseover="this.style.borderColor='#667eea'"
+                                 onmouseout="this.style.borderColor='#ddd'">
+                                <div style="display: flex; align-items: center;">
+                                    ${createSVG(monster.type, 40)}
+                                    <div style="margin-left: 10px; flex: 1;">
+                                        <div style="font-weight: bold;">${monster.name}</div>
+                                        <div style="font-size: 11px; color: #666;">
+                                            ${typeData.name} Lv.${monster.level} Gen.${monster.generation}
+                                        </div>
+                                        <div style="font-size: 10px; color: #999; margin-top: 3px;">
+                                            力:${monster.stats.strength} 敏:${monster.stats.agility} 
+                                            智:${monster.stats.intelligence} 农:${monster.stats.farming}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-primary" onclick="closeModal()">取消</button>
+                </div>
+            `;
+            
+            showModal(modalContent);
+        }
+        
+        // 分配繁殖怪兽
+        function assignBreedingMonster(slotNumber, monsterId) {
+            const monster = gameState.monsters.find(m => m.id === monsterId);
+            
+            if (slotNumber === 1) {
+                gameState.breedingSlot1 = monster;
+            } else {
+                gameState.breedingSlot2 = monster;
+            }
+            
+            monster.status = 'preparing';
+            
+            closeModal();
+            renderBreeding();
+            showNotification(`${monster.name} 进入繁殖槽位`, 'success');
+        }
+        
+        // 清空繁殖槽位
+        function clearBreedingSlots() {
+            if (gameState.breedingSlot1) {
+                gameState.breedingSlot1.status = 'idle';
+                gameState.breedingSlot1 = null;
+            }
+            if (gameState.breedingSlot2) {
+                gameState.breedingSlot2.status = 'idle';
+                gameState.breedingSlot2 = null;
+            }
+            renderBreeding();
+        }
+        
+        // 开始繁殖
+        function startBreeding() {
+            if (!gameState.breedingSlot1 || !gameState.breedingSlot2) {
+                showNotification('请选择两只怪兽！', 'warning');
+                return;
+            }
+            
+            if (gameState.food < 100) {
+                showNotification('食物不足！需要100食物', 'error');
+                return;
+            }
+            
+            if (gameState.energy < 30) {
+                showNotification('能量不足！需要30点能量', 'error');
+                return;
+            }
+            
+            gameState.food -= 100;
+            gameState.energy -= 30;
+            
+            const parent1 = gameState.breedingSlot1;
+            const parent2 = gameState.breedingSlot2;
+            
+            parent1.status = 'breeding';
+            parent2.status = 'breeding';
+            
+            showNotification('开始繁殖...', 'success');
+            updateResources();
+            
+            // 繁殖需要45秒
+            setTimeout(() => {
+                // 随机选择父母之一的类型
+                const childType = Math.random() < 0.5 ? parent1.type : parent2.type;
+                
+                // 创建后代
+                const child = createMonster(childType, parent1, parent2);
+                
+                parent1.status = 'idle';
+                parent2.status = 'idle';
+                
+                gameState.breedingSlot1 = null;
+                gameState.breedingSlot2 = null;
+                gameState.monstersBreed++;
+                
+                showNotification(`繁殖成功！获得新怪兽：${child.name}`, 'success');
+                renderBreeding();
+                renderMonsters();
+            }, 45000);
+        }
+        
+        // 渲染科技树
+        function renderTech() {
+            const techTree = document.getElementById('techTree');
+            if (!techTree) return;
+            
+            techTree.innerHTML = Object.keys(technologies).map(techId => {
+                const tech = technologies[techId];
+                const unlocked = gameState.technologies[techId];
+                
+                const canUnlock = Object.keys(tech.cost).every(resource => {
+                    return gameState[resource] >= tech.cost[resource];
+                });
+                
+                return `
+                    <div class="tech-item ${unlocked ? 'unlocked' : 'locked'}">
+                        <div class="tech-title">
+                            ${unlocked ? '✅' : '🔒'} ${tech.name}
+                        </div>
+                        <div class="tech-desc">${tech.desc}</div>
+                        ${!unlocked ? `
+                            <div class="tech-cost">
+                                需要: ${Object.keys(tech.cost).map(r => 
+                                    `${getResourceIcon(r)}${tech.cost[r]}`
+                                ).join(' ')}
+                            </div>
+                            <button class="btn btn-primary" 
+                                    onclick="unlockTech('${techId}')"
+                                    ${!canUnlock ? 'disabled' : ''}>
+                                ${canUnlock ? '解锁' : '资源不足'}
+                            </button>
+                        ` : `
+                            <div style="color: #4caf50; font-weight: bold; margin-top: 10px;">
+                                ✓ 已解锁
+                            </div>
+                            <div style="font-size: 11px; color: #666; margin-top: 5px;">
+                                ${Object.keys(tech.effects).map(e => 
+                                    `${e}: ${tech.effects[e]}`
+                                ).join(', ')}
+                            </div>
+                        `}
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // 获取资源图标
+        function getResourceIcon(resource) {
+            const icons = {
+                coins: '💰',
+                food: '🌾',
+                materials: '🔨',
+                research: '🔬',
+                energy: '⚡'
+            };
+            return icons[resource] || '';
+        }
+        
+        // 解锁科技
+        function unlockTech(techId) {
+            const tech = technologies[techId];
+            
+            const canUnlock = Object.keys(tech.cost).every(resource => {
+                return gameState[resource] >= tech.cost[resource];
+            });
+            
+            if (!canUnlock) {
+                showNotification('资源不足！', 'error');
+                return;
+            }
+            
+            // 扣除资源
+            Object.keys(tech.cost).forEach(resource => {
+                gameState[resource] -= tech.cost[resource];
+            });
+            
+            gameState.technologies[techId] = true;
+            
+            // 应用科技效果
+            if (techId === 'expansion') {
+                // 解锁额外地块
+                gameState.plots.slice(3, 3 + tech.effects.extraPlots).forEach(plot => {
+                    plot.locked = false;
+                });
+            }
+            
+            showNotification(`成功解锁：${tech.name}！`, 'success');
+            updateResources();
+            renderTech();
+            renderFarm();
+        }
+        
+        // 渲染处理界面
+        function renderDisposal() {
+            const disposalContainer = document.getElementById('disposalContainer');
+            if (!disposalContainer) return;
+            
+            disposalContainer.innerHTML = `
+                <h2>怪兽处理中心</h2>
+                <p style="color: #666; margin: 10px 0;">管理多余的怪兽（选择怪兽后可进行处理）</p>
+                
+                ${gameState.selectedMonster ? `
+                    <div style="background: #fff3e0; padding: 15px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #ff9800;">
+                        <strong>已选择：</strong> ${gameState.monsters.find(m => m.id === gameState.selectedMonster)?.name || '无'}
+                    </div>
+                ` : `
+                    <div style="background: #f5f5f5; padding: 15px; border-radius: 10px; margin: 20px 0; text-align: center; color: #999;">
+                        请先在"怪兽"标签页选择要处理的怪兽
+                    </div>
+                `}
+                
+                <div class="disposal-options">
+                    <div class="disposal-option" onclick="releaseMonster()">
+                        <div style="font-size: 48px;">🌊</div>
+                        <div class="disposal-title">放生</div>
+                        <div class="disposal-desc">
+                            将怪兽放归自然<br>
+                            获得少量材料
+                        </div>
+                    </div>
+                    
+                    <div class="disposal-option" onclick="sacrificeMonster()">
+                        <div style="font-size: 48px;">⚗️</div>
+                        <div class="disposal-title">献祭</div>
+                        <div class="disposal-desc">
+                            献祭怪兽<br>
+                            获得大量研究点
+                        </div>
+                    </div>
+                    
+                    <div class="disposal-option" onclick="decomposeMonster()">
+                        <div style="font-size: 48px;">🔧</div>
+                        <div class="disposal-title">分解</div>
+                        <div class="disposal-desc">
+                            分解怪兽<br>
+                            获得材料和食物
+                        </div>
+                    </div>
+                    
+                    <div class="disposal-option" onclick="sellMonster()">
+                        <div style="font-size: 48px;">💸</div>
+                        <div class="disposal-title">出售</div>
+                        <div class="disposal-desc">
+                            卖给商人<br>
+                            获得大量金币
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="background: #ffebee; padding: 15px; border-radius: 10px; margin-top: 20px; border-left: 4px solid #f44336;">
+                    <strong>⚠️ 警告：</strong> 所有处理操作都是不可逆的，请谨慎操作！
+                </div>
+            `;
+        }
+        
+        // 放生怪兽
+        function releaseMonster() {
+            if (!gameState.selectedMonster) {
+                showNotification('请先选择怪兽！', 'warning');
+                return;
+            }
+            
+            const monster = gameState.monsters.find(m => m.id === gameState.selectedMonster);
+            
+            if (monster.status !== 'idle') {
+                showNotification('该怪兽正在工作中！', 'warning');
+                return;
+            }
+            
+            if (confirm(`确定要放生 ${monster.name} 吗？\n\n这将获得 ${monster.level * 5} 材料`)) {
+                const reward = monster.level * 5;
+                gameState.materials += reward;
+                
+                // 移除怪兽
+                const index = gameState.monsters.findIndex(m => m.id === monster.id);
+                gameState.monsters.splice(index, 1);
+                
+                gameState.selectedMonster = null;
+                
+                showNotification(`放生了 ${monster.name}，获得 ${reward} 材料`, 'success');
+                updateResources();
+                renderMonsters();
+                renderDisposal();
+            }
+        }
+        
+        // 献祭怪兽
+        function sacrificeMonster() {
+            if (!gameState.selectedMonster) {
+                showNotification('请先选择怪兽！', 'warning');
+                return;
+            }
+            
+            const monster = gameState.monsters.find(m => m.id === gameState.selectedMonster);
+            
+            if (monster.status !== 'idle') {
+                showNotification('该怪兽正在工作中！', 'warning');
+                return;
+            }
+            
+            const reward = monster.level * 10 + Object.values(monster.stats).reduce((a, b) => a + b, 0) * 2;
+            
+            if (confirm(`确定要献祭 ${monster.name} 吗？\n\n这将获得 ${reward} 研究点\n\n⚠️ 此操作不可逆！`)) {
+                gameState.research += reward;
+                
+                // 移除怪兽
+                const index = gameState.monsters.findIndex(m => m.id === monster.id);
+                gameState.monsters.splice(index, 1);
+                
+                gameState.selectedMonster = null;
+                
+                showNotification(`献祭了 ${monster.name}，获得 ${reward} 研究点`, 'success');
+                updateResources();
+                renderMonsters();
+                renderDisposal();
+            }
+        }
+        
+        // 分解怪兽
+        function decomposeMonster() {
+            if (!gameState.selectedMonster) {
+                showNotification('请先选择怪兽！', 'warning');
+                return;
+            }
+            
+            const monster = gameState.monsters.find(m => m.id === gameState.selectedMonster);
+            
+            if (monster.status !== 'idle') {
+                showNotification('该怪兽正在工作中！', 'warning');
+                return;
+            }
+            
+            const materialsReward = monster.level * 8 + monster.stats.strength * 3;
+            const foodReward = monster.level * 5 + monster.stats.farming * 2;
+            
+            if (confirm(`确定要分解 ${monster.name} 吗？\n\n将获得：\n🔨 ${materialsReward} 材料\n🌾 ${foodReward} 食物`)) {
+                gameState.materials += materialsReward;
+                gameState.food += foodReward;
+                
+                // 移除怪兽
+                const index = gameState.monsters.findIndex(m => m.id === monster.id);
+                gameState.monsters.splice(index, 1);
+                
+                gameState.selectedMonster = null;
+                
+                showNotification(`分解了 ${monster.name}`, 'success');
+                updateResources();
+                renderMonsters();
+                renderDisposal();
+            }
+        }
+        
+        // 出售怪兽
+        function sellMonster() {
+            if (!gameState.selectedMonster) {
+                showNotification('请先选择怪兽！', 'warning');
+                return;
+            }
+            
+            const monster = gameState.monsters.find(m => m.id === gameState.selectedMonster);
+            
+            if (monster.status !== 'idle') {
+                showNotification('该怪兽正在工作中！', 'warning');
+                return;
+            }
+            
+            const totalStats = Object.values(monster.stats).reduce((a, b) => a + b, 0);
+            const reward = monster.level * 20 + totalStats * 5 + monster.generation * 10;
+            
+            if (confirm(`确定要出售 ${monster.name} 吗？\n\n将获得 ${reward} 金币`)) {
+                gameState.coins += reward;
+                
+                // 移除怪兽
+                const index = gameState.monsters.findIndex(m => m.id === monster.id);
+                gameState.monsters.splice(index, 1);
+                
+                gameState.selectedMonster = null;
+                
+                showNotification(`出售了 ${monster.name}，获得 ${reward} 金币`, 'success');
+                updateResources();
+                renderMonsters();
+                renderDisposal();
+            }
+        }
+        
+        // 触发随机事件
+        function triggerRandomEvent(category) {
+            let eventPool = randomEvents[category] || [];
+            
+            if (eventPool.length === 0) {
+                eventPool = randomEvents.general;
+            }
+            
+            const event = eventPool[Math.floor(Math.random() * eventPool.length)];
+            
+            showEventPanel(event);
+        }
+        
+        // 显示事件面板
+        function showEventPanel(event) {
+            // 移除旧事件
+            const oldEvent = document.querySelector('.event-panel');
+            if (oldEvent) oldEvent.remove();
+            
+            const eventPanel = document.createElement('div');
+            eventPanel.className = 'event-panel';
+            
+            eventPanel.innerHTML = `
+                <div class="event-title">${event.title}</div>
+                <div class="event-desc">${event.desc}</div>
+                <div class="event-choices">
+                    ${event.choices.map((choice, index) => {
+                        const canAfford = !choice.cost || Object.keys(choice.cost).every(r => 
+                            gameState[r] >= choice.cost[r]
+                        );
+                        
+                        return `
+                            <button class="btn ${index === 0 ? 'btn-primary' : 'btn-warning'}" 
+                                    onclick="handleEventChoice(${index}, ${JSON.stringify(event).replace(/"/g, '&quot;')})"
+                                    ${!canAfford ? 'disabled' : ''}>
+                                ${choice.text}
+                            </button>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+            
+            document.body.appendChild(eventPanel);
+            
+            // 30秒后自动关闭
+            setTimeout(() => {
+                if (eventPanel.parentNode) {
+                    eventPanel.remove();
+                }
+            }, 30000);
+        }
+        
+        // 处理事件选择
+        function handleEventChoice(choiceIndex, event) {
+            const choice = event.choices[choiceIndex];
+            
+            // 扣除成本
+            if (choice.cost) {
+                Object.keys(choice.cost).forEach(resource => {
+                    gameState[resource] -= choice.cost[resource];
+                });
+            }
+            
+            // 执行效果
+            if (choice.effect) {
+                choice.effect();
+            }
+            
+            // 移除事件面板
+            const eventPanel = document.querySelector('.event-panel');
+            if (eventPanel) eventPanel.remove();
+            
+            updateResources();
+        }
+        
+        // 显示招募模态框
+        function showRecruitModal() {
+            const recruitOptions = Object.keys(monsterTypes).map(typeId => {
+                const typeData = monsterTypes[typeId];
+                const baseCost = 50;
+                const typeCosts = {
+                    slime: 50,
+                    goblin: 80,
+                    sprite: 120,
+                    golem: 150,
+                    wisp: 200
+                };
+                const cost = typeCosts[typeId] || baseCost;
+                
+                return `
+                    <div style="padding: 15px; margin: 10px 0; background: #f5f5f5; border-radius: 10px; border: 2px solid #ddd; cursor: pointer;"
+                         onclick="recruitMonster('${typeId}', ${cost})"
+                         onmouseover="this.style.borderColor='${typeData.color}'"
+                         onmouseout="this.style.borderColor='#ddd'">
+                        <div style="display: flex; align-items: center;">
+                            ${createSVG(typeId, 50)}
+                            <div style="margin-left: 15px; flex: 1;">
+                                <div style="font-weight: bold; font-size: 16px; color: ${typeData.color};">
+                                    ${typeData.name}
+                                </div>
+                                <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                                    基础属性：
+                                    力量 ${typeData.baseStats.strength} | 
+                                    敏捷 ${typeData.baseStats.agility} | 
+                                    智力 ${typeData.baseStats.intelligence} | 
+                                    耕作 ${typeData.baseStats.farming}
+                                </div>
+                                <div style="font-size: 14px; color: #ff9800; margin-top: 8px; font-weight: bold;">
+                                    💰 ${cost} 金币
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            const modalContent = `
+                <div class="modal-header">招募怪兽</div>
+                <div style="max-height: 500px; overflow-y: auto;">
+                    ${recruitOptions}
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-primary" onclick="closeModal()">取消</button>
+                </div>
+            `;
+            
+            showModal(modalContent);
+        }
+        
+        // 招募怪兽
+        function recruitMonster(typeId, cost) {
+            if (gameState.coins < cost) {
+                showNotification('金币不足！', 'error');
+                return;
+            }
+            
+            if (gameState.monsters.length >= 20) {
+                showNotification('怪兽数量已达上限（20只）！', 'warning');
+                return;
+            }
+            
+            gameState.coins -= cost;
+            const monster = createMonster(typeId);
+            
+            closeModal();
+            showNotification(`成功招募 ${monster.name}！`, 'success');
+            updateResources();
+            renderMonsters();
+        }
+        
+        // 显示模态框
+        function showModal(content) {
+            const modal = document.getElementById('modal');
+            const modalContent = document.getElementById('modalContent');
+            
+            modalContent.innerHTML = content;
+            modal.classList.add('active');
+        }
+        
+        // 关闭模态框
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            modal.classList.remove('active');
+        }
+        
+        // 显示通知
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideIn 0.3s reverse';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+        
+        // 切换标签页
+        function switchTab(tabName) {
+            // 更新标签按钮
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 更新内容
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            // 刷新对应内容
+            switch(tabName) {
+                case 'farm':
+                    renderFarm();
+                    break;
+                case 'monsters':
+                    renderMonsters();
+                    break;
+                case 'exploration':
+                    renderExploration();
+                    break;
+                case 'breeding':
+                    renderBreeding();
+                    break;
+                case 'tech':
+                    renderTech();
+                    break;
+                case 'disposal':
+                    renderDisposal();
+                    break;
+            }
+        }
+        
+        // 自动保存
+        function autoSave() {
+            const saveData = {
+                coins: gameState.coins,
+                food: gameState.food,
+                materials: gameState.materials,
+                research: gameState.research,
+                energy: gameState.energy,
+                monsters: gameState.monsters.map(m => ({
+                    ...m,
+                    assignment: null,
+                    status: 'idle'
+                })),
+                technologies: gameState.technologies,
+                plots: gameState.plots.map(p => ({
+                    ...p,
+                    crop: null,
+                    assignedMonster: null,
+                    progress: 0
+                })),
+                totalHarvests: gameState.totalHarvests,
+                totalExplorations: gameState.totalExplorations,
+                monstersBreed: gameState.monstersBreed,
+                nextMonsterId: gameState.nextMonsterId
+            };
+            
+            localStorage.setItem('monsterFarm_v1', JSON.stringify(saveData));
+        }
+        
+        // 加载游戏
+        function loadGame() {
+            const saved = localStorage.getItem('monsterFarm_v1');
+            
+            if (saved) {
+                try {
+                    const saveData = JSON.parse(saved);
+                    
+                    gameState.coins = saveData.coins || 100;
+                    gameState.food = saveData.food || 50;
+                    gameState.materials = saveData.materials || 0;
+                    gameState.research = saveData.research || 0;
+                    gameState.energy = saveData.energy || 100;
+                    gameState.monsters = saveData.monsters || [];
+                    gameState.technologies = saveData.technologies || {};
+                    gameState.totalHarvests = saveData.totalHarvests || 0;
+                    gameState.totalExplorations = saveData.totalExplorations || 0;
+                    gameState.monstersBreed = saveData.monstersBreed || 0;
+                    gameState.nextMonsterId = saveData.nextMonsterId || 1;
+                    
+                    // 确保科技状态正确
+                    Object.keys(technologies).forEach(key => {
+                        if (!(key in gameState.technologies)) {
+                            gameState.technologies[key] = false;
+                        }
+                    });
+                    
+                    showNotification('游戏加载成功！', 'success');
+                } catch (e) {
+                    console.error('加载存档失败:', e);
+                    showNotification('加载存档失败，开始新游戏', 'warning');
+                }
+            }
+        }
+        
+        // 重置游戏
+        function resetGame() {
+            if (confirm('确定要重置游戏吗？所有进度将丢失！')) {
+                localStorage.removeItem('monsterFarm_v1');
+                location.reload();
+            }
+        }
+        
+        // 点击模态框外部关闭
+        document.getElementById('modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+        
+        // 添加脉冲动画
+        const pulseStyle = document.createElement('style');
+        pulseStyle.textContent = `
+            @keyframes pulse {
+                0%, 100% {
+                    transform: scale(1);
+                    box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+                }
+                50% {
+                    transform: scale(1.05);
+                    box-shadow: 0 8px 25px rgba(76, 175, 80, 0.5);
+                }
+            }
+            
+            .ready {
+                animation: pulse 1.5s infinite;
+            }
+        `;
+        document.head.appendChild(pulseStyle);
+        
+        // 添加快捷键
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + S 保存
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                autoSave();
+                showNotification('游戏已保存！', 'success');
+            }
+            
+            // Esc 关闭模态框
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+            
+            // 数字键切换标签
+            const tabMap = {
+                '1': 'farm',
+                '2': 'monsters',
+                '3': 'exploration',
+                '4': 'breeding',
+                '5': 'tech',
+                '6': 'disposal'
+            };
+            
+            if (tabMap[e.key] && !e.ctrlKey && !e.metaKey) {
+                const tabs = document.querySelectorAll('.tab');
+                const index = parseInt(e.key) - 1;
+                if (tabs[index]) {
+                    tabs[index].click();
+                }
+            }
+        });
+        
+        // 自动保存定时器
+        setInterval(() => {
+            autoSave();
+        }, 30000); // 每30秒自动保存
+        
+        // 添加设置按钮到页面
+        const settingsButton = document.createElement('div');
+        settingsButton.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 12px;
+            border-radius: 50%;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            cursor: pointer;
+            z-index: 999;
+            transition: all 0.3s;
+        `;
+        settingsButton.innerHTML = `
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M12 1v6m0 6v6m8.66-7.5l-5.2 3m-5.2 3l-5.2-3M1.34 16.5l5.2-3m5.2-3l5.2-3"></path>
+            </svg>
+        `;
+        
+        settingsButton.addEventListener('click', () => {
+            const modalContent = `
+                <div class="modal-header">游戏设置</div>
+                <div style="padding: 10px 0;">
+                    <div style="margin-bottom: 15px;">
+                        <h3 style="margin-bottom: 10px;">统计数据</h3>
+                        <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; font-size: 13px;">
+                            <div>总收获次数: ${gameState.totalHarvests}</div>
+                            <div>总探索次数: ${gameState.totalExplorations}</div>
+                            <div>繁殖怪兽数: ${gameState.monstersBreed}</div>
+                            <div>拥有怪兽数: ${gameState.monsters.length}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <h3 style="margin-bottom: 10px;">快捷键</h3>
+                        <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; font-size: 12px;">
+                            <div>1-6: 切换标签页</div>
+                            <div>Ctrl/Cmd + S: 手动保存</div>
+                            <div>Esc: 关闭弹窗</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-success" onclick="autoSave(); showNotification('保存成功！', 'success'); closeModal();">
+                        手动保存
+                    </button>
+                    <button class="btn btn-danger" onclick="resetGame()">
+                        重置游戏
+                    </button>
+                    <button class="btn btn-primary" onclick="closeModal()">
+                        关闭
+                    </button>
+                </div>
+            `;
+            
+            showModal(modalContent);
+        });
+        
+        settingsButton.addEventListener('mouseenter', () => {
+            settingsButton.style.transform = 'scale(1.1) rotate(45deg)';
+        });
+        
+        settingsButton.addEventListener('mouseleave', () => {
+            settingsButton.style.transform = 'scale(1) rotate(0deg)';
+        });
+        
+        document.body.appendChild(settingsButton);
+        
+        // 游戏初始化
+        window.addEventListener('load', () => {
+            loadGame();
+            initGame();
+            
+            // 显示欢迎消息
+            setTimeout(() => {
+                showNotification('欢迎来到怪兽农场！开始你的冒险吧！', 'success');
+            }, 500);
+        });
+        
+        // 页面关闭前保存
+        window.addEventListener('beforeunload', () => {
+            autoSave();
+        });
+    </script>
+</body>
+</html>
