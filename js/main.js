@@ -588,12 +588,72 @@ function resetGame() {
 }
 
 // ==================== 全局事件与定时器 ====================
-// 能量恢复
+
+// ── 资源循环核心（每10秒tick一次）──
 setInterval(function() {
-    if (gameState.energy < gameState.maxEnergy) {
-        gameState.energy = Math.min(gameState.maxEnergy, gameState.energy + 1);
-        updateResources();
+    var changed = false;
+
+    // 1. 能量上限随怪兽数量动态扩容（基础100，每只怪兽+20，最多500）
+    var newMax = Math.min(500, 100 + gameState.monsters.length * 20);
+    if (newMax !== gameState.maxEnergy) {
+        gameState.maxEnergy = newMax;
+        changed = true;
     }
+
+    // 2. 能量自然恢复：基础每10s+1；有食物时额外恢复：每10食物每10s+1（最多+5）
+    if (gameState.energy < gameState.maxEnergy) {
+        var baseRegen = 1;
+        var foodRegen = Math.min(5, Math.floor(gameState.food / 10));
+        var totalRegen = baseRegen + foodRegen;
+        gameState.energy = Math.min(gameState.maxEnergy, gameState.energy + totalRegen);
+        changed = true;
+    }
+
+    // 3. 食物消耗：每只在岗怪兽每10s消耗0.5食物（取整计算，避免过于频繁的小数扣减）
+    var busyMonsters = gameState.monsters.filter(function(m) {
+        return m.status === 'farming' || m.status === 'exploring';
+    }).length;
+    if (busyMonsters > 0) {
+        var foodCost = Math.ceil(busyMonsters * 0.5);
+        var prevFood = gameState.food;
+        gameState.food = Math.max(0, gameState.food - foodCost);
+        // 食物耗尽警告
+        if (prevFood > 0 && gameState.food === 0) {
+            showNotification('⚠️ 食物已耗尽！怪兽效率下降50%！', 'warning');
+        }
+        changed = true;
+    }
+
+    // 4. 金币维护费：每块有怪兽驻守的地块每10s消耗0.3金币（每分钟约1.8金/地块）
+    var activePlots = gameState.plots.filter(function(p) { return p.assignedMonster; }).length;
+    if (activePlots > 0) {
+        var maintainCost = parseFloat((activePlots * 0.3).toFixed(1));
+        // 使用累计扣减，避免浮点数问题
+        if (!gameState._maintainAcc) gameState._maintainAcc = 0;
+        gameState._maintainAcc += maintainCost;
+        if (gameState._maintainAcc >= 1) {
+            var toDeduct = Math.floor(gameState._maintainAcc);
+            gameState._maintainAcc -= toDeduct;
+            var prevCoins = gameState.coins;
+            gameState.coins = Math.max(0, gameState.coins - toDeduct);
+            // 金币耗尽警告
+            if (prevCoins > 0 && gameState.coins === 0) {
+                showNotification('⚠️ 金币已耗尽！怪兽无法维持工作效率！', 'warning');
+            }
+        }
+        changed = true;
+    }
+
+    // 5. 惩罚标志更新（食物OR金币耗尽则效率减半）
+    var wasPenalized = gameState.penalized;
+    gameState.penalized = (gameState.food === 0 || gameState.coins === 0);
+    if (gameState.penalized !== wasPenalized) {
+        changed = true;
+        // 惩罚状态变化时刷新界面
+        if (typeof renderFarm === 'function') renderFarm();
+    }
+
+    if (changed) updateResources();
 }, 10000);
 
 // 随机事件
@@ -731,8 +791,12 @@ document.addEventListener('keydown', function(e) {
         btn.style.cursor = 'grab';
 
         if (!hasMoved) {
-            // 视为点击，打开设置面板
-            openSettingsModal();
+            // 视为点击，打开设置面板（优先使用含字体调整的 showSettingsModal）
+            if (typeof showSettingsModal === 'function') {
+                showSettingsModal();
+            } else {
+                openSettingsModal();
+            }
         }
     }
 

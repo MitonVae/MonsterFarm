@@ -176,6 +176,10 @@ function calcSpeedMultiplier(plot, monster) {
         mult *= technologies.irrigation.effects.growthSpeed;
     }
     mult *= (plot.growthBonus || 1);
+    // 惩罚：食物或金币耗尽时，自动耕作速度降低50%
+    if (gameState.penalized && plot.assignedMonster) {
+        mult *= 0.5;
+    }
     return mult;
 }
 

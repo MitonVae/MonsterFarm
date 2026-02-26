@@ -6,103 +6,15 @@
     <title>怪兽农场 - 挂机经营游戏</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/layout.css">
-    <style>
-        /* ===== CSS 变量驱动三栏布局（由 resizer.js 动态更新变量值）===== */
-        :root {
-            --left-width: 260px;
-            --right-width: 280px;
-        }
-
-        .app-container {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* 桌面端三栏由 resizer.js 用 Grid 控制，此处只保留基础样式 */
-        .sidebar {
-            background: #21262d;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow-y: auto;
-        }
-
-        .monster-sidebar {
-            background: #161b22;
-            border-left: none;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow-y: hidden;
-        }
-
-        .main-container {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            overflow: hidden auto;
-        }
-
-        .mobile-bottom-nav {
-            display: none;
-        }
-
-        /* 平板端：左栏隐藏可切换，右栏收起 */
-        @media (max-width: 1023px) and (min-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-                transition: transform 0.3s ease;
-            }
-            .sidebar.open {
-                transform: translateX(0);
-            }
-            .monster-sidebar {
-                transform: translateX(100%);
-                transition: transform 0.3s ease;
-            }
-            .monster-sidebar.open {
-                transform: translateX(0);
-            }
-            .main-container {
-                margin-left: 0;
-                margin-right: 0;
-            }
-        }
-
-        /* 手机端：两侧边栏都隐藏，显示底部导航 */
-        @media (max-width: 767px) {
-            .sidebar {
-                display: none;
-            }
-            .monster-sidebar {
-                display: none;
-            }
-            .main-container {
-                margin-left: 0;
-                margin-right: 0;
-                margin-bottom: 80px;
-            }
-            .desktop-tabs {
-                display: none;
-            }
-            .mobile-bottom-nav {
-                display: flex !important;
-            }
-        }
-    </style>
 </head>
 <body>
     <!-- 应用容器 -->
-    <div class="app-container">
-        <!-- 左侧栏：资源 + 快捷操作 -->
+    <div class="app-container" id="appContainer">
+
+        <!-- 左侧栏：资源 + 快捷操作（PC 固定显示，移动端隐藏）-->
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <h2>Monster Farm</h2>
-                <button class="sidebar-toggle" id="sidebarToggle">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 12h18M3 6h18M3 18h18"></path>
-                    </svg>
-                </button>
             </div>
             
             <!-- 资源面板 -->
@@ -163,33 +75,62 @@
                         <span class="quick-action-icon" id="recallIcon"></span>
                         召回怪兽
                     </button>
+                    <button class="quick-action-btn" onclick="showSettingsModal()">
+                        <span class="quick-action-icon" id="settingsIcon"></span>
+                        设置
+                    </button>
                 </div>
             </div>
 
             <!-- 农场状态摘要 -->
             <div class="sidebar-section" id="farmSummarySection">
                 <h3>农场概况</h3>
-                <div id="farmSummary" style="font-size:12px;color:#8b949e;line-height:1.8;">
-                    <!-- 由JS动态填充 -->
-                </div>
+                <div id="farmSummary" style="font-size:12px;color:#8b949e;line-height:1.8;"></div>
             </div>
 
             <!-- 实时简报 -->
             <div class="sidebar-section" id="briefingSection" style="flex:1;display:flex;flex-direction:column;min-height:0;">
                 <h3 style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
                     <span>📋 实时简报</span>
-                    <span id="briefingBadge" style="display:none;background:#f85149;color:#fff;font-size:10px;
-                          padding:1px 6px;border-radius:8px;font-weight:700;">NEW</span>
+                    <span id="briefingBadge" style="display:none;background:#f85149;color:#fff;font-size:10px;padding:1px 6px;border-radius:8px;font-weight:700;">NEW</span>
                 </h3>
                 <div id="briefingList" style="flex:1;overflow-y:auto;min-height:120px;max-height:260px;">
                     <div class="briefing-empty">暂无动态，开始游戏吧！</div>
                 </div>
             </div>
         </div>
+
+        <!-- 拖拽分隔条（PC） -->
+        <div class="grd-resizer" id="leftResizer"></div>
         
         <!-- 主内容区域 -->
-        <div class="main-container">
-            <!-- 桌面端标签导航（已移除怪兽标签） -->
+        <div class="main-container" id="mainContainer">
+
+            <!-- 移动端顶部资源状态条（仅移动端可见）-->
+            <div class="mobile-topbar" id="mobileTopbar">
+                <div class="mobile-topbar-title">🌾 Monster Farm</div>
+                <div class="mobile-topbar-resources">
+                    <div class="mob-res" onclick="showMobileResourcePanel()">
+                        <span class="mob-res-icon" id="mobCoinsIcon"></span>
+                        <span id="mob-coins">100</span>
+                    </div>
+                    <div class="mob-res" onclick="showMobileResourcePanel()">
+                        <span class="mob-res-icon" id="mobFoodIcon"></span>
+                        <span id="mob-food">50</span>
+                    </div>
+                    <div class="mob-res" onclick="showMobileResourcePanel()">
+                        <span class="mob-res-icon" id="mobMaterialsIcon"></span>
+                        <span id="mob-materials">0</span>
+                    </div>
+                    <div class="mob-res" onclick="showMobileResourcePanel()">
+                        <span class="mob-res-icon" id="mobEnergyIcon"></span>
+                        <span id="mob-energy">100</span>
+                    </div>
+                </div>
+                <button class="mob-settings-btn" onclick="showSettingsModal()">⚙️</button>
+            </div>
+
+            <!-- PC 端标签导航 -->
             <div class="desktop-tabs">
                 <div class="tabs">
                     <div class="tab active" onclick="switchTab('farm')">🌾 农场</div>
@@ -208,80 +149,52 @@
                         <div class="farm-grid" id="farmGrid"></div>
                     </div>
                 </div>
-                
                 <div id="exploration-tab" class="tab-content">
                     <div class="exploration-area" id="explorationArea"></div>
                 </div>
-                
                 <div id="breeding-tab" class="tab-content">
                     <div class="breeding-container" id="breedingContainer"></div>
                 </div>
-                
                 <div id="tech-tab" class="tab-content">
                     <div class="farm-container">
                         <h2>🔬 科技树</h2>
                         <div class="tech-tree" id="techTree"></div>
                     </div>
                 </div>
-                
                 <div id="disposal-tab" class="tab-content">
                     <div class="disposal-container" id="disposalContainer"></div>
+                </div>
+
+                <!-- 移动端怪兽团队 tab（仅移动端显示，内容与 PC 右侧栏一致）-->
+                <div id="monsters-tab" class="tab-content">
+                    <div style="padding:0;">
+                        <div style="padding:12px 14px;border-bottom:1px solid #30363d;">
+                            <button class="btn btn-explore" style="width:100%;font-size:13px;padding:8px 12px;" onclick="switchTab('exploration')">
+                                🗺 前往探索捕获怪兽
+                            </button>
+                        </div>
+                        <div id="mobileMonsterList" style="padding:10px;"></div>
+                        <div id="mobileMonsterFooter" style="padding:12px 14px;border-top:1px solid #30363d;font-size:13px;color:#8b949e;background:#0d1117;"></div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- 右侧栏：怪兽管理面板 -->
+        <!-- 拖拽分隔条（PC） -->
+        <div class="grd-resizer" id="rightResizer"></div>
+
+        <!-- 右侧栏：怪兽管理面板（PC 固定显示）-->
         <div class="monster-sidebar" id="monsterSidebar">
             <div class="monster-sidebar-header">
                 <span>👾 怪兽团队</span>
-                <button class="monster-sidebar-toggle" id="monsterSidebarToggle" onclick="toggleMonsterSidebar()">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M18 6L6 18M6 6l12 12"></path>
-                    </svg>
-                </button>
             </div>
-            <!-- 探索入口 -->
             <div class="monster-sidebar-recruit">
                 <button class="btn btn-explore" style="width:100%;font-size:13px;padding:8px 12px;" onclick="switchTab('exploration')">
                     🗺 前往探索捕获怪兽
                 </button>
             </div>
-            <!-- 怪兽列表 -->
-            <div class="monster-sidebar-list" id="monsterSidebarList">
-                <!-- 由JS动态填充 -->
-            </div>
-            <!-- 底部统计 -->
-            <div class="monster-sidebar-footer" id="monsterSidebarFooter">
-                <!-- 由JS动态填充 -->
-            </div>
-        </div>
-        
-        <!-- 移动端底部导航栏（含怪兽入口） -->
-        <div class="mobile-bottom-nav">
-            <div class="bottom-nav-item active" onclick="switchTab('farm')" data-tab="farm">
-                <span class="nav-icon" id="farmNavIcon"></span>
-                <span class="nav-label">农场</span>
-            </div>
-            <div class="bottom-nav-item" onclick="showMobileMonsterPanel()" data-tab="monsters">
-                <span class="nav-icon" id="monstersNavIcon"></span>
-                <span class="nav-label">怪兽</span>
-            </div>
-            <div class="bottom-nav-item" onclick="switchTab('exploration')" data-tab="exploration">
-                <span class="nav-icon" id="explorationNavIcon"></span>
-                <span class="nav-label">探索</span>
-            </div>
-            <div class="bottom-nav-item" onclick="switchTab('breeding')" data-tab="breeding">
-                <span class="nav-icon" id="breedingNavIcon"></span>
-                <span class="nav-label">繁殖</span>
-            </div>
-            <div class="bottom-nav-item" onclick="switchTab('tech')" data-tab="tech">
-                <span class="nav-icon" id="techNavIcon"></span>
-                <span class="nav-label">科技</span>
-            </div>
-            <div class="bottom-nav-item" onclick="switchTab('disposal')" data-tab="disposal">
-                <span class="nav-icon" id="disposalNavIcon"></span>
-                <span class="nav-label">处理</span>
-            </div>
+            <div class="monster-sidebar-list" id="monsterSidebarList"></div>
+            <div class="monster-sidebar-footer" id="monsterSidebarFooter"></div>
         </div>
     </div>
     
@@ -289,6 +202,34 @@
     <div class="modal" id="modal">
         <div class="modal-content" id="modalContent"></div>
     </div>
+
+    <!-- 移动端底部导航栏 -->
+    <nav class="mobile-bottom-nav" id="mobileBottomNav">
+        <div class="bottom-nav-item active" onclick="switchTab('farm')" data-tab="farm">
+            <span class="nav-icon" id="farmNavIcon"></span>
+            <span class="nav-label">农场</span>
+        </div>
+        <div class="bottom-nav-item" onclick="switchTab('exploration')" data-tab="exploration">
+            <span class="nav-icon" id="explorationNavIcon"></span>
+            <span class="nav-label">探索</span>
+        </div>
+        <div class="bottom-nav-item" onclick="switchTab('monsters')" data-tab="monsters">
+            <span class="nav-icon" id="monstersNavIcon"></span>
+            <span class="nav-label">怪兽</span>
+        </div>
+        <div class="bottom-nav-item" onclick="switchTab('breeding')" data-tab="breeding">
+            <span class="nav-icon" id="breedingNavIcon"></span>
+            <span class="nav-label">繁殖</span>
+        </div>
+        <div class="bottom-nav-item" onclick="switchTab('tech')" data-tab="tech">
+            <span class="nav-icon" id="techNavIcon"></span>
+            <span class="nav-label">科技</span>
+        </div>
+        <div class="bottom-nav-item" onclick="switchTab('disposal')" data-tab="disposal">
+            <span class="nav-icon" id="disposalNavIcon"></span>
+            <span class="nav-label">处理</span>
+        </div>
+    </nav>
 
     <!-- 按顺序加载JS模块 -->
     <script src="js/briefing.js"></script>
@@ -305,43 +246,16 @@
     <script src="js/resizer.js"></script>
     <script src="js/tutorial.js"></script>
     <script>
-        // 页面加载后初始化
         window.addEventListener('load', function() {
-            loadGame();   // 尝试加载存档
-            initGame();   // 初始化游戏
-            
-            // 强制初始化UI组件
+            loadGame();
+            initGame();
             setTimeout(function() {
                 updateResources();
                 renderAll();
-                
-                // 确保侧边栏图标显示
                 updateSidebarResources();
                 initMobileNavIcons();
+                applyFontSize(localStorage.getItem('mf_font_size') || 'medium');
             }, 100);
-        });
-        
-        // 图标后备初始化（仅处理图标，不干预布局）
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(function() {
-                function createSimpleSVG(type, size) {
-                    var svgMap = {
-                        coin:     '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#f0c53d"/></svg>',
-                        food:     '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#46d164"/></svg>',
-                        material: '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" fill="#8b949e"/></svg>',
-                        research: '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24"><polygon points="12,2 22,20 2,20" fill="#58a6ff"/></svg>',
-                        energy:   '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#2ea043"/></svg>'
-                    };
-                    return svgMap[type] || '';
-                }
-                var icons = { coinsIcon:'coin', foodIcon:'food', materialsIcon:'material', researchIcon:'research', energyIcon:'energy' };
-                for (var id in icons) {
-                    var el = document.getElementById(id);
-                    if (el && !el.innerHTML.trim()) {
-                        el.innerHTML = (typeof createSVG === 'function' ? createSVG(icons[id], 20) : createSimpleSVG(icons[id], 20));
-                    }
-                }
-            }, 300);
         });
     </script>
 </body>
