@@ -87,17 +87,6 @@
                 <h3>农场概况</h3>
                 <div id="farmSummary" style="font-size:12px;color:#8b949e;line-height:1.8;"></div>
             </div>
-
-            <!-- 实时简报 -->
-            <div class="sidebar-section" id="briefingSection" style="flex:1;display:flex;flex-direction:column;min-height:0;">
-                <h3 style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-                    <span>📋 实时简报</span>
-                    <span id="briefingBadge" style="display:none;background:#f85149;color:#fff;font-size:10px;padding:1px 6px;border-radius:8px;font-weight:700;">NEW</span>
-                </h3>
-                <div id="briefingList" style="flex:1;overflow-y:auto;min-height:120px;max-height:260px;">
-                    <div class="briefing-empty">暂无动态，开始游戏吧！</div>
-                </div>
-            </div>
         </div>
 
         <!-- 主内容区域 -->
@@ -173,6 +162,21 @@
                         <div id="mobileMonsterList" style="padding:10px;"></div>
                         <div id="mobileMonsterFooter" style="padding:12px 14px;border-top:1px solid #30363d;font-size:13px;color:#8b949e;background:#0d1117;"></div>
                     </div>
+                </div>
+            </div>
+
+            <!-- 垂直拖拽手柄：分隔主内容区与简报面板 -->
+            <div class="briefing-v-resizer" id="briefingVResizer" title="拖拽调整简报面板高度"></div>
+
+            <!-- 底部实时简报面板 -->
+            <div class="briefing-panel" id="briefingSection">
+                <div class="briefing-panel-header">
+                    <span>📋 实时简报</span>
+                    <span id="briefingBadge" style="display:none;background:#f85149;color:#fff;font-size:10px;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:8px;">NEW</span>
+                    <span class="briefing-panel-toggle" id="briefingToggleBtn" onclick="toggleBriefingPanel()" title="折叠/展开简报">▾</span>
+                </div>
+                <div id="briefingList" class="briefing-panel-list">
+                    <div class="briefing-empty">暂无动态，开始游戏吧！</div>
                 </div>
             </div>
         </div>

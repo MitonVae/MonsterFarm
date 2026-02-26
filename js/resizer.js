@@ -16,7 +16,8 @@
         RIGHT: { min: 180, max: 450, def: 280, key: 'grd_right_w' },
         CENTER_MIN: 320,
         HANDLE_PX: 8,
-        BREAKPOINT: 1024
+        BREAKPOINT: 1024,
+        BRIEFING: { min: 80, max: 500, def: 180, key: 'grd_briefing_h' }
     };
 
     var leftW  = CONFIG.LEFT.def;
@@ -27,8 +28,15 @@
     var startX   = 0;
     var startW   = 0;
 
+    // 垂直拖拽状态
+    var vDragging = false;
+    var vStartY   = 0;
+    var vStartH   = 0;
+    var briefingH = CONFIG.BRIEFING.def;
+
     var appEl, leftSidebar, rightSidebar, mainEl;
     var leftHandle, rightHandle;
+    var briefingPanel, briefingVResizer, mainContent;
 
     /* ── 初始化 ── */
     function init() {
@@ -69,8 +77,9 @@
         rightSidebar.style.zIndex    = 'auto';
 
         mainEl.style.setProperty('margin', '0', 'important');
-        mainEl.style.minHeight = '100vh';
-        mainEl.style.overflow  = 'hidden auto';
+        mainEl.style.height    = '100vh';
+        mainEl.style.minHeight = 'unset';
+        mainEl.style.overflow  = 'hidden';
 
         // mobile-bottom-nav 排除在 grid 列之外（用 position:fixed 固定在底部）
         var mobileNav = document.querySelector('.mobile-bottom-nav');
@@ -103,6 +112,31 @@
         window.addEventListener('resize', applyGrid);
 
         applyGrid();
+
+        // ── 简报面板垂直拖拽 ──
+        briefingPanel   = document.getElementById('briefingSection');
+        briefingVResizer = document.getElementById('briefingVResizer');
+        mainContent      = document.querySelector('.main-content');
+
+        if (briefingPanel && briefingVResizer) {
+            // 读取存储高度
+            var sbh = parseInt(localStorage.getItem(CONFIG.BRIEFING.key));
+            if (sbh >= CONFIG.BRIEFING.min && sbh <= CONFIG.BRIEFING.max) briefingH = sbh;
+
+            applyBriefingHeight();
+
+            briefingVResizer.addEventListener('mousedown', startVDrag);
+            document.addEventListener('mousemove', onVMove);
+            document.addEventListener('mouseup', onVUp);
+
+            briefingVResizer.addEventListener('touchstart', function(e){
+                startVDrag(e.touches[0]);
+            }, { passive: false });
+            document.addEventListener('touchmove', function(e){
+                if (vDragging) onVMove(e.touches[0]);
+            }, { passive: true });
+            document.addEventListener('touchend', onVUp);
+        }
     }
 
     /* ── 创建手柄 ── */
@@ -183,6 +217,62 @@
                 leftW + 'px ' + hp + 'px 1fr ' + hp + 'px ' + rightW + 'px';
         }
     }
+
+    /* ── 垂直拖拽：开始 ── */
+    function startVDrag(e) {
+        if (briefingPanel.classList.contains('collapsed')) return;
+        vDragging = true;
+        vStartY   = e.clientY;
+        vStartH   = briefingH;
+        document.body.style.cursor     = 'row-resize';
+        document.body.style.userSelect = 'none';
+        briefingVResizer.classList.add('active');
+        e.preventDefault && e.preventDefault();
+    }
+
+    /* ── 垂直拖拽：拖拽中 ── */
+    function onVMove(e) {
+        if (!vDragging) return;
+        // 向上拖拽 → 增大高度，向下拖拽 → 减小高度
+        var dy = vStartY - e.clientY;
+        var mainH = mainEl ? mainEl.clientHeight : window.innerHeight;
+        var newH = clamp(vStartH + dy, CONFIG.BRIEFING.min, Math.min(CONFIG.BRIEFING.max, mainH * 0.6));
+        briefingH = newH;
+        applyBriefingHeight();
+    }
+
+    /* ── 垂直拖拽：结束 ── */
+    function onVUp() {
+        if (!vDragging) return;
+        vDragging = false;
+        document.body.style.cursor     = '';
+        document.body.style.userSelect = '';
+        if (briefingVResizer) briefingVResizer.classList.remove('active');
+        localStorage.setItem(CONFIG.BRIEFING.key, briefingH);
+    }
+
+    /* ── 应用简报面板高度 ── */
+    function applyBriefingHeight() {
+        if (!briefingPanel) return;
+        if (!briefingPanel.classList.contains('collapsed')) {
+            briefingPanel.style.height = briefingH + 'px';
+        }
+    }
+
+    /* ── 折叠/展开简报面板（全局函数）── */
+    window.toggleBriefingPanel = function() {
+        if (!briefingPanel) return;
+        var isCollapsed = briefingPanel.classList.toggle('collapsed');
+        if (isCollapsed) {
+            briefingPanel.style.height = '';  // CSS min-height 控制折叠高度
+        } else {
+            briefingPanel.style.height = briefingH + 'px';
+        }
+        // 隐藏/显示拖拽手柄
+        if (briefingVResizer) {
+            briefingVResizer.style.display = isCollapsed ? 'none' : '';
+        }
+    };
 
     function clamp(v, mn, mx) { return Math.max(mn, Math.min(mx, v)); }
 
