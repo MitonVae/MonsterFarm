@@ -864,33 +864,53 @@ window.showSettingsModal = function() {
         '</div>';
 
     showModal(html);
-    // 为版本号注册长按事件（长按2秒）
+    // 为版本号注册 GM 入口事件：
+    //   · 已验证 → 单击直接打开
+    //   · 未验证 → 长按2秒激活
     setTimeout(function() {
         var hint = document.getElementById('gmVersionHint');
         if (!hint) return;
-        var _pressTimer = null;
-        var _pressStart = 0;
-        function startPress(e) {
-            _pressStart = Date.now();
-            hint.style.color = '#58a6ff';
-            _pressTimer = setTimeout(function() {
-                hint.style.color = '#f0c53d';
-                setTimeout(function() {
-                    closeModal();
-                    if (typeof window.openGMPanel === 'function') window.openGMPanel();
-                }, 200);
-            }, 2000);
+
+        // 判断是否已通过验证（sessionStorage）
+        var authed = false;
+        try { authed = sessionStorage.getItem('mf_gm_auth') === '1'; } catch(e) {}
+
+        if (authed) {
+            // 已验证：直接点击/触碰打开，并更新样式提示
+            hint.style.color = '#f0c53d';
+            hint.style.cursor = 'pointer';
+            hint.title = 'GM面板';
+            function openGM(e) {
+                e.stopPropagation();
+                closeModal();
+                if (typeof window.openGMPanel === 'function') window.openGMPanel();
+            }
+            hint.addEventListener('click', openGM);
+            hint.addEventListener('touchend', openGM, { passive: true });
+        } else {
+            // 未验证：长按2秒激活
+            var _pressTimer = null;
+            function startPress() {
+                hint.style.color = '#58a6ff';
+                _pressTimer = setTimeout(function() {
+                    hint.style.color = '#f0c53d';
+                    setTimeout(function() {
+                        closeModal();
+                        if (typeof window.openGMPanel === 'function') window.openGMPanel();
+                    }, 200);
+                }, 2000);
+            }
+            function cancelPress() {
+                if (_pressTimer) { clearTimeout(_pressTimer); _pressTimer = null; }
+                hint.style.color = '#30363d';
+            }
+            hint.addEventListener('mousedown', startPress);
+            hint.addEventListener('touchstart', startPress, { passive: true });
+            hint.addEventListener('mouseup', cancelPress);
+            hint.addEventListener('mouseleave', cancelPress);
+            hint.addEventListener('touchend', cancelPress);
+            hint.addEventListener('touchcancel', cancelPress);
         }
-        function cancelPress() {
-            if (_pressTimer) { clearTimeout(_pressTimer); _pressTimer = null; }
-            hint.style.color = '#30363d';
-        }
-        hint.addEventListener('mousedown', startPress);
-        hint.addEventListener('touchstart', startPress, { passive: true });
-        hint.addEventListener('mouseup', cancelPress);
-        hint.addEventListener('mouseleave', cancelPress);
-        hint.addEventListener('touchend', cancelPress);
-        hint.addEventListener('touchcancel', cancelPress);
     }, 100);
 };
 

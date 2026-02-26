@@ -424,7 +424,7 @@
         });
         showNotification('✅ 已添加全部 ' + Object.keys(monsterTypes).length + ' 种怪兽', 'success');
         if (typeof renderMonsterSidebar === 'function') renderMonsterSidebar();
-        closeModal();
+        window.openGMPanel();
     };
 
     function _spawnMonster(typeKey, level, customName) {
@@ -476,7 +476,7 @@
         gameState.monsters.push(monster);
         if (typeof renderMonsterSidebar === 'function') renderMonsterSidebar();
         showNotification('✅ 已添加 ' + typeData.name + '「' + name + '」Lv.' + level, 'success');
-        closeModal();
+        window.openGMPanel();
     }
 
     function _pickTraits(typeKey) {
@@ -537,7 +537,7 @@
         gameState.plots.forEach(function(p) { p.locked = false; });
         if (typeof renderFarm === 'function') renderFarm();
         showNotification('🔓 全部地块已解锁', 'success');
-        closeModal();
+        setTimeout(function() { window.openGMPanel(); }, 300);
     };
 
     window._gmHarvestAll = function() {
@@ -573,7 +573,7 @@
         });
         if (typeof renderFarm === 'function') renderFarm();
         showNotification('🌟 已催熟 ' + ripened + ' 块，收获 ' + harvested + ' 块作物', 'success');
-        closeModal();
+        setTimeout(function() { window.openGMPanel(); }, 300);
     };
 
     window._gmClearAllPlots = function() {
@@ -590,7 +590,7 @@
         if (typeof renderFarm === 'function') renderFarm();
         if (typeof renderMonsterSidebar === 'function') renderMonsterSidebar();
         showNotification('🧹 全部地块已清空', 'success');
-        closeModal();
+        setTimeout(function() { window.openGMPanel(); }, 300);
     };
 
     // ── 统计重置 ──

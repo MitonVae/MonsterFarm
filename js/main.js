@@ -459,6 +459,9 @@ document.getElementById('modal').addEventListener('click', function(e) {
 
 // 快捷键
 document.addEventListener('keydown', function(e) {
+    // 如果有弹窗打开，屏蔽页签切换快捷键（避免输入数字时误触）
+    var modalOpen = document.getElementById('modal') && document.getElementById('modal').classList.contains('active');
+
     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
         autoSave();
@@ -469,6 +472,9 @@ document.addEventListener('keydown', function(e) {
         closeModal();
     }
     
+    // 有弹窗时不响应数字快捷键
+    if (modalOpen) return;
+
     var tabMap = {
         '1': 'farm',
         '2': 'monsters',
