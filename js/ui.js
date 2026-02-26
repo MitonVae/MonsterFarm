@@ -368,78 +368,18 @@ window.handleEventChoice = function(choiceIndex, event) {
     updateResources();
 };
 
-// 招募模态框
+// 招募功能已替换为「探索捕获」系统
+// showRecruitModal → 重定向到探索标签页，保留函数名以兼容旧存档逻辑
 window.showRecruitModal = function() {
-    var recruitOptions = Object.keys(monsterTypes).map(function(typeId) {
-        var typeData = monsterTypes[typeId];
-        var baseCost = 50;
-        var typeCosts = {
-            slime: 50,
-            goblin: 80,
-            sprite: 120,
-            golem: 150,
-            wisp: 200
-        };
-        var cost = typeCosts[typeId] || baseCost;
-        
-        return `
-            <div style="padding: 15px; margin: 10px 0; background: #21262d; border-radius: 10px; border: 2px solid #30363d; cursor: pointer;"
-                 onclick="recruitMonster('${typeId}', ${cost})"
-                 onmouseover="this.style.borderColor='${typeData.color}'"
-                 onmouseout="this.style.borderColor='#30363d'">
-                <div style="display: flex; align-items: center;">
-                    ${createSVG(typeId, 50)}
-                    <div style="margin-left: 15px; flex: 1;">
-                        <div style="font-weight: bold; font-size: 16px; color: ${typeData.color};">
-                            ${typeData.name}
-                        </div>
-                        <div style="font-size: 12px; color: #8b949e; margin-top: 5px;">
-                            基础属性：
-                            力量 ${typeData.baseStats.strength} | 
-                            敏捷 ${typeData.baseStats.agility} | 
-                            智力 ${typeData.baseStats.intelligence} | 
-                            耕作 ${typeData.baseStats.farming}
-                        </div>
-                        <div style="font-size: 14px; color: #f0c53d; margin-top: 8px; font-weight: bold;">
-                            <span style="display: inline-block; vertical-align: middle; margin-right: 3px;">${createSVG('coin', 14)}</span>${cost} 金币
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }).join('');
-    
-    var modalContent = `
-        <div class="modal-header">招募怪兽</div>
-        <div style="max-height: 500px; overflow-y: auto;">
-            ${recruitOptions}
-        </div>
-        <div class="modal-buttons">
-            <button class="btn btn-primary" onclick="closeModal()">取消</button>
-        </div>
-    `;
-    
-    showModal(modalContent);
+    closeModal();
+    switchTab('exploration');
+    showNotification('🗺 通过探索各区域来捕获野生怪兽吧！', 'info');
 };
 
+// recruitMonster 保留但禁用（探索系统替代）
 window.recruitMonster = function(typeId, cost) {
-    if (gameState.coins < cost) {
-        showNotification('金币不足！', 'error');
-        return;
-    }
-    
-    if (gameState.monsters.length >= 20) {
-        showNotification('怪兽数量已达上限（20只）！', 'warning');
-        return;
-    }
-    
-    gameState.coins -= cost;
-    var monster = createMonster(typeId);
-    
-    closeModal();
-    showNotification('成功招募 ' + monster.name + '！', 'success');
-    updateResources();
-    renderMonsters();
+    showNotification('招募功能已移除，请通过「探索」捕获怪兽！', 'info');
+    switchTab('exploration');
 };
 
 // 触发随机事件（调用utils中的triggerRandomEvent，已在main中引用）
@@ -739,8 +679,8 @@ window.renderMonsterSidebar = function() {
 
     if (gameState.monsters.length === 0) {
         listEl.innerHTML = '<div style="text-align:center;padding:30px 15px;color:#8b949e;font-size:12px;line-height:1.8;">' +
-            '<div style="font-size:32px;margin-bottom:8px;">👾</div>' +
-            '<div>还没有怪兽</div><div>点击上方按钮招募吧！</div></div>';
+            '<div style="font-size:32px;margin-bottom:8px;">�</div>' +
+            '<div>还没有怪兽</div><div style="margin-top:4px;">前往探索区域捕获野生怪兽！</div></div>';
         if (footerEl) footerEl.innerHTML = '';
         return;
     }
@@ -843,11 +783,11 @@ window.toggleMonsterSidebar = function() {
 window.showMobileMonsterPanel = function() {
     var html = '<div class="modal-header">👾 怪兽团队</div>' +
         '<div style="margin-bottom:12px;">' +
-        '<button class="btn btn-primary" style="width:100%;font-size:13px;" onclick="closeModal();showRecruitModal();">+ 招募怪兽</button>' +
+        '<button class="btn btn-explore" style="width:100%;font-size:13px;" onclick="closeModal();switchTab(\'exploration\');">🗺 前往探索捕获怪兽</button>' +
         '</div>';
 
     if (gameState.monsters.length === 0) {
-        html += '<div style="text-align:center;padding:30px;color:#8b949e;">还没有怪兽，去招募吧！</div>';
+        html += '<div style="text-align:center;padding:30px;color:#8b949e;">还没有怪兽，前往探索区域捕获吧！</div>';
     } else {
         html += '<div style="max-height:60vh;overflow-y:auto;">';
         gameState.monsters.forEach(function(monster) {
