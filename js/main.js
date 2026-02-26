@@ -33,10 +33,36 @@ var monsterTypes = {
 };
 
 var cropTypes = [
-    { id: 'wheat', name: '小麦', growTime: 15000, yield: 5, value: 8, requiredTech: null },
-    { id: 'corn', name: '玉米', growTime: 25000, yield: 8, value: 15, requiredTech: null },
-    { id: 'potato', name: '土豆', growTime: 20000, yield: 10, value: 10, requiredTech: null },
-    { id: 'berry', name: '浆果', growTime: 30000, yield: 12, value: 25, requiredTech: 'advancedFarming' }
+    { 
+        id: 'wheat', name: '小麦', growTime: 15000, yield: 5, value: 8, requiredTech: null,
+        preferredMonster: 'goblin',   // 哥布林种小麦有加成
+        desc: '基础粮食作物，生长快速',
+        icon: 'plant'
+    },
+    { 
+        id: 'corn', name: '玉米', growTime: 25000, yield: 8, value: 15, requiredTech: null,
+        preferredMonster: 'golem',    // 石像鬼种玉米有加成
+        desc: '高产作物，需要更长时间',
+        icon: 'plant'
+    },
+    { 
+        id: 'potato', name: '土豆', growTime: 20000, yield: 10, value: 10, requiredTech: null,
+        preferredMonster: 'slime',    // 史莱姆种土豆有加成
+        desc: '耐旱作物，产量稳定',
+        icon: 'plant'
+    },
+    { 
+        id: 'berry', name: '浆果', growTime: 30000, yield: 12, value: 25, requiredTech: 'advancedFarming',
+        preferredMonster: 'sprite',   // 精灵种浆果有加成
+        desc: '珍贵浆果，价值最高',
+        icon: 'plant'
+    },
+    { 
+        id: 'mushroom', name: '蘑菇', growTime: 40000, yield: 6, value: 35, requiredTech: 'advancedFarming',
+        preferredMonster: 'wisp',     // 幽灵种蘑菇有加成
+        desc: '神奇蘑菇，价值极高但难以种植',
+        icon: 'plant'
+    }
 ];
 
 var technologies = {
@@ -222,6 +248,7 @@ function initGame() {
             plantedAt: null,
             progress: 0,
             assignedMonster: null,
+            autoCrop: null,
             growthBonus: 1
         });
     }

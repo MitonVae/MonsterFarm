@@ -168,30 +168,42 @@ window.renderFarm = function() {
         if (plot.crop) {
             var cropType = cropTypes.find(function(c) { return c.id === plot.crop; });
             var isReady = plot.progress >= 100;
+            var hasMonster = !!plot.assignedMonster;
+            var monsterBadge = hasMonster
+                ? `<div style="position:absolute;top:4px;right:4px;background:#1a3a2a;border:1px solid #46d164;border-radius:12px;padding:2px 6px;font-size:10px;display:flex;align-items:center;gap:3px;">
+                       ${createSVG(plot.assignedMonster.type, 14)}<span style="color:#46d164;">自动</span>
+                   </div>`
+                : '';
+            var autoCropBadge = plot.autoCrop && hasMonster
+                ? `<div style="font-size:10px;color:#f0c53d;margin-top:2px;">▶ ${cropTypes.find(function(c){return c.id===plot.autoCrop;}).name}</div>`
+                : '';
+            var statusText = isReady
+                ? (hasMonster ? '自动收获中...' : '点击收获')
+                : cropType.name;
             
             return `
                 <div class="plot planted ${isReady ? 'ready' : ''}" 
                      id="plot-${plot.id}" data-plot-id="${plot.id}"
-                     onclick="${isReady ? 'harvest(' + plot.id + ')' : ''}"
-                     style="${isReady ? 'animation: pulse 1s infinite;' : ''}">
-                    ${createSVG('plant', 48)}
-                    <div class="plot-text">${cropType.name}</div>
+                     onclick="handlePlotClick(${plot.id})"
+                     style="position:relative;${isReady ? 'animation: pulse 1s infinite;' : ''}">
+                    ${monsterBadge}
+                    ${createSVG('plant', 40)}
+                    <div class="plot-text">${statusText}${autoCropBadge}</div>
                     <div class="progress-bar">
                         <div class="progress-fill" style="width: ${plot.progress}%"></div>
                     </div>
-                    ${plot.assignedMonster ? `
-                        <div style="margin-top: 5px;">
-                            ${createSVG(plot.assignedMonster.type, 24)}
-                        </div>
-                    ` : ''}
                 </div>
             `;
         }
         
+        var emptyMonster = plot.assignedMonster;
         return `
-            <div class="plot" id="plot-${plot.id}" data-plot-id="${plot.id}" onclick="showPlantMenu(${plot.id})">
-                ${createSVG('add', 48)}
-                <div class="plot-text">点击种植</div>
+            <div class="plot" id="plot-${plot.id}" data-plot-id="${plot.id}"
+                 onclick="handlePlotClick(${plot.id})"
+                 style="position:relative;">
+                ${emptyMonster ? `<div style="position:absolute;top:4px;right:4px;background:#1a3a2a;border:1px solid #46d164;border-radius:12px;padding:2px 6px;font-size:10px;display:flex;align-items:center;gap:3px;">${createSVG(emptyMonster.type, 14)}<span style="color:#46d164;">待命</span></div>` : ''}
+                ${createSVG('add', 40)}
+                <div class="plot-text">${emptyMonster ? '点击设置作物' : '点击种植'}</div>
             </div>
         `;
     }).join('');
@@ -520,54 +532,7 @@ window.toggleSidebar = function() {
     }
 };
 
-// 一键收获功能
-window.autoHarvestAll = function() {
-    var harvested = 0;
-    gameState.plots.forEach(function(plot) {
-        if (plot.crop && plot.progress >= 100) {
-            harvest(plot.id);
-            harvested++;
-        }
-    });
-    
-    if (harvested > 0) {
-        showNotification('一键收获了 ' + harvested + ' 个作物！', 'success');
-    } else {
-        showNotification('没有可收获的作物', 'info');
-    }
-};
-
-// 自动种植功能
-window.autoPlantAll = function() {
-    var planted = 0;
-    var availableCrops = cropTypes.filter(function(crop) {
-        return gameState.food >= crop.cost && gameState.research >= (crop.requiredTech || 0);
-    });
-    
-    if (availableCrops.length === 0) {
-        showNotification('没有可种植的作物', 'info');
-        return;
-    }
-    
-    var cropToPlant = availableCrops[0]; // 种植第一个可用作物
-    
-    gameState.plots.forEach(function(plot) {
-        if (!plot.locked && !plot.crop && gameState.food >= cropToPlant.cost) {
-            gameState.food -= cropToPlant.cost;
-            plot.crop = cropToPlant.id;
-            plot.progress = 0;
-            planted++;
-        }
-    });
-    
-    if (planted > 0) {
-        showNotification('自动种植了 ' + planted + ' 个 ' + cropToPlant.name + '！', 'success');
-        updateResources();
-        renderFarm();
-    } else {
-        showNotification('没有空余的土地或资源不足', 'info');
-    }
-};
+// autoHarvestAll 和 autoPlantAll 由 farm.js 提供，此处不重复定义
 
 // 怪兽详情弹窗 - 独立的怪兽操作界面
 window.showMonsterDetailModal = function(monsterId) {
@@ -632,8 +597,8 @@ window.showMonsterDetailModal = function(monsterId) {
         
         <div class="modal-buttons">
             ${!isWorking ? `
-                <button class="btn btn-primary" onclick="assignMonsterToFarm(${monster.id}); closeModal();">
-                    ${createSVG('plant', 16)} 派去耕作
+                <button class="btn btn-primary" onclick="closeModal(); showAssignPlotPicker(${monster.id});">
+                    ${createSVG('plant', 16)} 派驻农田
                 </button>
                 <button class="btn btn-warning" onclick="assignMonsterToExpedition(${monster.id}); closeModal();">
                     ${createSVG('explore', 16)} 派去探索
