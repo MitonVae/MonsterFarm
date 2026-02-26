@@ -94,26 +94,41 @@
 
             <!-- 移动端顶部资源状态条（仅移动端可见）-->
             <div class="mobile-topbar" id="mobileTopbar">
-                <div class="mobile-topbar-title">🌾 Monster Farm</div>
+                <!-- 第一行：标题 + 徽章 + 操作按钮 -->
+                <div class="mobile-topbar-row1">
+                    <div class="mobile-topbar-title">⚔ Monster Farm</div>
+                    <div style="display:flex;align-items:center;gap:4px;flex:1;justify-content:flex-end;">
+                        <span class="mob-stat-badge" id="mobMonsterBadge"><span class="val" id="mob-monster-count">0</span> 怪</span>
+                        <span class="mob-stat-badge" id="mobFarmBadge"><span class="val" id="mob-farm-status">农场</span></span>
+                        <div class="mob-topbar-actions">
+                            <button class="mob-settings-btn" onclick="showMobileResourcePanel()" title="资源详情">📊</button>
+                            <button class="mob-settings-btn" onclick="showSettingsModal()" title="设置">⚙</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- 第二行：资源状态 4格网格 -->
                 <div class="mobile-topbar-resources">
                     <div class="mob-res" onclick="showMobileResourcePanel()">
                         <span class="mob-res-icon" id="mobCoinsIcon"></span>
-                        <span id="mob-coins">100</span>
+                        <span class="mob-res-val" id="mob-coins">100</span>
+                        <span class="mob-res-rate" id="mob-coins-rate"></span>
                     </div>
                     <div class="mob-res" onclick="showMobileResourcePanel()">
                         <span class="mob-res-icon" id="mobFoodIcon"></span>
-                        <span id="mob-food">50</span>
+                        <span class="mob-res-val" id="mob-food">50</span>
+                        <span class="mob-res-rate" id="mob-food-rate"></span>
                     </div>
                     <div class="mob-res" onclick="showMobileResourcePanel()">
                         <span class="mob-res-icon" id="mobMaterialsIcon"></span>
-                        <span id="mob-materials">0</span>
+                        <span class="mob-res-val" id="mob-materials">0</span>
+                        <span class="mob-res-rate" id="mob-materials-rate"></span>
                     </div>
                     <div class="mob-res" onclick="showMobileResourcePanel()">
                         <span class="mob-res-icon" id="mobEnergyIcon"></span>
-                        <span id="mob-energy">100</span>
+                        <span class="mob-res-val" id="mob-energy">100</span>
+                        <span class="mob-res-rate" id="mob-energy-rate"></span>
                     </div>
                 </div>
-                <button class="mob-settings-btn" onclick="showSettingsModal()">⚙️</button>
             </div>
 
             <!-- PC 端标签导航 -->

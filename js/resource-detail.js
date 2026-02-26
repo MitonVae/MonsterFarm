@@ -188,3 +188,43 @@ window.refreshOpenResourceDetail = function() {
         }
     }
 };
+
+// ==================== 资源速率估算（供移动端顶栏使用）====================
+// 返回 { coins: N, food: N, materials: N } 每分钟净变化量
+window.getResourceRates = function() {
+    if (typeof gameState === 'undefined') return { coins: 0, food: 0, materials: 0 };
+
+    var coinsPerMin = 0;
+    var foodPerMin = 0;
+    var materialsPerMin = 0;
+
+    // 金币：每个已种植的地块约每分钟产出（基于作物类型粗估）
+    // 维护费：每个驻守怪兽的地块 1.8 金币/分钟
+    if (typeof cropTypes !== 'undefined' && gameState.plots) {
+        gameState.plots.forEach(function(p) {
+            if (p.locked || !p.crop) return;
+            var ct = cropTypes.find(function(c) { return c.id === p.crop; });
+            if (!ct) return;
+            // 收益速率 = 出售价 / 生长时间(分钟)
+            var growMins = (ct.growTime || 60000) / 60000;
+            coinsPerMin += (ct.sellPrice || 0) / growMins;
+            foodPerMin += (ct.foodYield || 0) / growMins;
+            // 维护费
+            if (p.assignedMonster) coinsPerMin -= 1.8;
+        });
+    }
+
+    // 怪兽食物消耗：每只在岗怪兽 3 食物/分钟
+    if (gameState.monsters) {
+        var workingMonsters = gameState.monsters.filter(function(m) {
+            return m.status !== 'idle';
+        }).length;
+        foodPerMin -= workingMonsters * 3;
+    }
+
+    return {
+        coins: Math.round(coinsPerMin),
+        food: Math.round(foodPerMin),
+        materials: Math.round(materialsPerMin)
+    };
+};

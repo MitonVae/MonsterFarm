@@ -960,10 +960,11 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    background: #21262d;
+    background: #161b22;
     border-top: 1px solid #30363d;
-    padding: 8px 0;
+    padding: 4px 2px env(safe-area-inset-bottom, 4px);
     z-index: 200;
+    gap: 0;
 }
 
 .bottom-nav-item {
@@ -971,34 +972,77 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    padding: 8px 4px;
+    gap: 2px;
+    padding: 5px 2px 3px;
     cursor: pointer;
-    transition: all 0.2s ease;
-    border-radius: 8px;
-    margin: 0 4px;
+    transition: all 0.15s ease;
+    border-radius: 6px;
+    margin: 0 1px;
+    position: relative;
 }
 
-.bottom-nav-item:hover {
+.bottom-nav-item:active {
     background: #30363d;
 }
 
 .bottom-nav-item.active {
+    color: #58a6ff;
+}
+
+/* 激活指示条（顶部细线）*/
+.bottom-nav-item.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 20%;
+    right: 20%;
+    height: 2px;
     background: #58a6ff;
-    color: white;
+    border-radius: 0 0 2px 2px;
 }
 
 .nav-icon {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: transform 0.15s;
+}
+
+.bottom-nav-item.active .nav-icon {
+    transform: scale(1.1);
 }
 
 .nav-label {
-    font-size: 12px;
+    font-size: 10px;
     font-weight: 500;
+    color: #8b949e;
+    transition: color 0.15s;
+}
+
+.bottom-nav-item.active .nav-label {
+    color: #58a6ff;
+    font-weight: 600;
+}
+
+/* 导航角标（未读提示）*/
+.nav-badge {
+    position: absolute;
+    top: 2px;
+    right: calc(50% - 16px);
+    background: #f85149;
+    color: #fff;
+    font-size: 8px;
+    font-weight: 700;
+    min-width: 14px;
+    height: 14px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3px;
+    line-height: 1;
 }
 
 /* ==================== 内容区域样式 ==================== */
@@ -1526,11 +1570,12 @@ svg[width="48"], svg[width="50"], svg[width="60"] {
 }
 
 /* ==================== 移动端顶部资源条 ==================== */
+/* ===== 移动端顶栏 ===== */
 .mobile-topbar {
     display: none; /* 默认隐藏，仅移动端显示 */
-    align-items: center;
-    gap: 6px;
-    padding: 8px 12px;
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
     background: #0d1117;
     border-bottom: 1px solid #30363d;
     position: sticky;
@@ -1539,60 +1584,114 @@ svg[width="48"], svg[width="50"], svg[width="60"] {
     flex-shrink: 0;
 }
 
+/* 顶栏第一行：标题 + 操作按钮 */
+.mobile-topbar-row1 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 10px 3px;
+    gap: 6px;
+}
+
 .mobile-topbar-title {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
     color: #58a6ff;
     white-space: nowrap;
     flex-shrink: 0;
+    letter-spacing: 0.3px;
 }
 
+/* 顶栏第二行：2列×2行资源网格 */
 .mobile-topbar-resources {
-    display: flex;
-    gap: 8px;
-    flex: 1;
-    justify-content: center;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border-top: 1px solid #21262d;
 }
 
 .mob-res {
     display: flex;
     align-items: center;
-    gap: 3px;
-    font-size: 12px;
+    gap: 4px;
+    font-size: 11px;
     font-weight: 600;
     color: #e6edf3;
-    background: #21262d;
-    border: 1px solid #30363d;
-    border-radius: 12px;
-    padding: 3px 8px;
+    background: transparent;
+    border: none;
+    border-right: 1px solid #21262d;
+    padding: 4px 6px;
     cursor: pointer;
     white-space: nowrap;
-    transition: border-color 0.15s;
+    transition: background 0.12s;
+    overflow: hidden;
+    min-width: 0;
 }
-.mob-res:active { border-color: #58a6ff; }
+.mob-res:last-child { border-right: none; }
+.mob-res:active { background: #21262d; }
+
+/* 资源数值 */
+.mob-res-val {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    flex: 1;
+}
+
+/* 资源变化速率 */
+.mob-res-rate {
+    font-size: 9px;
+    color: #8b949e;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.mob-res-rate.pos { color: #46d164; }
+.mob-res-rate.neg { color: #f85149; }
 
 .mob-res-icon {
-    width: 14px;
-    height: 14px;
+    width: 13px;
+    height: 13px;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
+    opacity: 0.85;
+}
+
+/* 顶栏右侧操作区 */
+.mob-topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
     flex-shrink: 0;
 }
 
 .mob-settings-btn {
     background: none;
-    border: none;
-    font-size: 18px;
+    border: 1px solid #30363d;
+    font-size: 14px;
     cursor: pointer;
-    padding: 4px;
-    border-radius: 6px;
+    padding: 3px 5px;
+    border-radius: 5px;
     flex-shrink: 0;
     line-height: 1;
     transition: background 0.15s;
+    color: #8b949e;
 }
 .mob-settings-btn:active { background: #30363d; }
+
+/* 顶栏信息徽章（怪兽数、离线收益等）*/
+.mob-stat-badge {
+    font-size: 10px;
+    color: #8b949e;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 4px;
+    padding: 2px 5px;
+    white-space: nowrap;
+}
+.mob-stat-badge .val { color: #e6edf3; font-weight: 700; }
 
 /* ==================== 响应式设计 ==================== */
 
@@ -1626,13 +1725,17 @@ svg[width="48"], svg[width="50"], svg[width="60"] {
         display: flex;
     }
     .main-content {
-        padding: 14px;
-        padding-bottom: 90px;
+        padding: 10px;
+        padding-bottom: 72px;
     }
     /* 平板/移动端隐藏简报面板拖拽手柄 */
     .briefing-v-resizer { display: none !important; }
     .briefing-panel { display: none !important; }
     /* 平板 monsters-tab 不显示（走右侧栏逻辑），但保留渲染能力 */
+    .farm-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+    }
 }
 
 /* 手机端 <= 767px */
@@ -1661,29 +1764,61 @@ svg[width="48"], svg[width="50"], svg[width="60"] {
         display: flex;
     }
     .main-content {
-        padding: 12px;
-        padding-bottom: 90px;
+        padding: 8px;
+        padding-bottom: 72px;
     }
     .briefing-v-resizer { display: none !important; }
     .briefing-panel { display: none !important; }
+    /* 农场：手机端 4列，地块紧凑 */
     .farm-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        margin-top: 8px;
+    }
+    /* 地块紧凑化 */
+    .plot {
+        aspect-ratio: auto;
+        min-height: 72px;
+        padding: 5px 4px;
+        border-radius: 8px;
+        border-width: 2px;
+    }
+    .plot-icon {
+        font-size: 20px;
+        margin-bottom: 3px;
+    }
+    .plot-text {
+        font-size: 10px;
+        line-height: 1.2;
+    }
+    .progress-bar {
+        height: 3px;
+        margin-top: 4px;
     }
     .monster-grid {
         grid-template-columns: 1fr;
-        gap: 10px;
+        gap: 8px;
     }
     /* 移动端怪兽 tab 使用与 PC 右侧栏相同的卡片样式 */
     #monsters-tab .msb-monster-card {
-        margin-bottom: 10px;
+        margin-bottom: 8px;
+    }
+    /* 区域标题压缩 */
+    .farm-container h2,
+    .breeding-container h2,
+    .tech-tree-header,
+    .disposal-container h2 {
+        font-size: 14px;
+        margin-bottom: 8px;
+        margin-top: 0;
+        padding-bottom: 6px;
     }
     /* 通知位置 */
     .notification {
         top: auto;
-        bottom: 90px;
-        right: 12px;
-        left: 12px;
+        bottom: 72px;
+        right: 8px;
+        left: 8px;
         max-width: none;
     }
 }
@@ -1691,27 +1826,33 @@ svg[width="48"], svg[width="50"], svg[width="60"] {
 /* 超小屏设备 <= 480px */
 @media (max-width: 480px) {
     .main-content {
-        padding: 8px;
-        padding-bottom: 86px;
+        padding: 6px;
+        padding-bottom: 68px;
     }
     .farm-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 6px;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 5px;
     }
-    .mobile-topbar-title {
-        display: none; /* 极小屏隐藏标题，节省空间 */
+    .plot {
+        min-height: 64px;
+        padding: 4px 3px;
     }
-    .mob-res {
-        padding: 3px 6px;
-        font-size: 11px;
+    .plot-icon {
+        font-size: 18px;
     }
-    /* 底部导航图标稍大，文字缩小 */
+    .plot-text {
+        font-size: 9px;
+    }
+    /* 导航栏 */
     .nav-label {
-        font-size: 10px;
+        font-size: 9px;
     }
     .nav-icon {
-        width: 22px;
-        height: 22px;
+        width: 20px;
+        height: 20px;
+    }
+    .notification {
+        bottom: 68px;
     }
 }
 

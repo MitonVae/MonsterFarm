@@ -102,23 +102,82 @@ function updateSidebarResources() {
         if (valueEl) valueEl.innerText = res.value;
     });
 
-    // 同步移动端顶部资源条
-    var mobCoins = document.getElementById('mob-coins');
-    var mobFood = document.getElementById('mob-food');
-    var mobMaterials = document.getElementById('mob-materials');
-    var mobEnergy = document.getElementById('mob-energy');
-    var mobCoinsIcon = document.getElementById('mobCoinsIcon');
-    var mobFoodIcon = document.getElementById('mobFoodIcon');
-    var mobMaterialsIcon = document.getElementById('mobMaterialsIcon');
-    var mobEnergyIcon = document.getElementById('mobEnergyIcon');
-    if (mobCoins) mobCoins.innerText = gameState.coins;
-    if (mobFood) mobFood.innerText = gameState.food;
-    if (mobMaterials) mobMaterials.innerText = gameState.materials;
-    if (mobEnergy) mobEnergy.innerText = gameState.energy + '/' + gameState.maxEnergy;
-    if (mobCoinsIcon) mobCoinsIcon.innerHTML = createSVG('coin', 14);
-    if (mobFoodIcon) mobFoodIcon.innerHTML = createSVG('food', 14);
-    if (mobMaterialsIcon) mobMaterialsIcon.innerHTML = createSVG('material', 14);
-    if (mobEnergyIcon) mobEnergyIcon.innerHTML = createSVG('energy', 14);
+    // 同步移动端顶部资源条（含速率显示）
+    _updateMobTopbar();
+}
+
+// 格式化大数字（移动端紧凑显示）
+function _fmtMobNum(n) {
+    n = Math.floor(n);
+    if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+    if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+    return String(n);
+}
+
+// 更新移动端顶部资源栏（包含速率 + 徽章）
+function _updateMobTopbar() {
+    // 图标（只在首次渲染时重绘，避免频繁 DOM 操作）
+    var icons = [
+        { id: 'mobCoinsIcon', key: 'coin' },
+        { id: 'mobFoodIcon', key: 'food' },
+        { id: 'mobMaterialsIcon', key: 'material' },
+        { id: 'mobEnergyIcon', key: 'energy' }
+    ];
+    icons.forEach(function(ic) {
+        var el = document.getElementById(ic.id);
+        if (el && !el._iconSet) { el.innerHTML = createSVG(ic.key, 13); el._iconSet = true; }
+    });
+
+    // 资源值
+    var el;
+    el = document.getElementById('mob-coins'); if (el) el.textContent = _fmtMobNum(gameState.coins);
+    el = document.getElementById('mob-food'); if (el) el.textContent = _fmtMobNum(gameState.food);
+    el = document.getElementById('mob-materials'); if (el) el.textContent = _fmtMobNum(gameState.materials);
+    el = document.getElementById('mob-energy'); if (el) el.textContent = gameState.energy + '/' + gameState.maxEnergy;
+
+    // 资源速率（从 resource-detail 模块读取，若不可用则隐藏）
+    function _setRate(elId, perMin) {
+        var rateEl = document.getElementById(elId);
+        if (!rateEl) return;
+        if (perMin === undefined || perMin === null) { rateEl.textContent = ''; return; }
+        var sign = perMin >= 0 ? '+' : '';
+        rateEl.textContent = sign + _fmtMobNum(perMin) + '/m';
+        rateEl.className = 'mob-res-rate ' + (perMin > 0 ? 'pos' : perMin < 0 ? 'neg' : '');
+    }
+    // 尝试从 getResourceRates 获取速率（如该函数存在）
+    if (typeof getResourceRates === 'function') {
+        var rates = getResourceRates();
+        _setRate('mob-coins-rate', rates.coins);
+        _setRate('mob-food-rate', rates.food);
+        _setRate('mob-materials-rate', rates.materials);
+        _setRate('mob-energy-rate', null); // 能量不显示速率
+    } else {
+        // 降级：不显示速率
+        ['mob-coins-rate','mob-food-rate','mob-materials-rate','mob-energy-rate'].forEach(function(id) {
+            var e = document.getElementById(id); if (e) e.textContent = '';
+        });
+    }
+
+    // 怪兽数量徽章
+    var monsterCountEl = document.getElementById('mob-monster-count');
+    if (monsterCountEl && gameState.monsters) {
+        monsterCountEl.textContent = gameState.monsters.length;
+    }
+
+    // 农场状态徽章（显示已种植/总数）
+    var farmStatusEl = document.getElementById('mob-farm-status');
+    if (farmStatusEl && gameState.plots) {
+        var planted = gameState.plots.filter(function(p) { return p.crop && !p.locked; }).length;
+        var unlocked = gameState.plots.filter(function(p) { return !p.locked; }).length;
+        var ready = gameState.plots.filter(function(p) { return p.progress >= 100 && p.crop; }).length;
+        if (ready > 0) {
+            farmStatusEl.textContent = '✓' + ready + '可收';
+            farmStatusEl.parentElement.style.color = '#46d164';
+        } else {
+            farmStatusEl.textContent = planted + '/' + unlocked + '种';
+            farmStatusEl.parentElement.style.color = '';
+        }
+    }
 }
 
 // 渲染侧边栏怪兽列表
