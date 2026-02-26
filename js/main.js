@@ -780,7 +780,7 @@ document.addEventListener('keydown', function(e) {
         if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasMoved = true;
 
         var newRight  = Math.max(8, Math.min(window.innerWidth  - 56, origRight  - dx));
-        var newBottom = Math.max(8, Math.min(window.innerHeight - 56, origBottom + dy));
+        var newBottom = Math.max(8, Math.min(window.innerHeight - 56, origBottom - dy));
         btn.style.right  = newRight  + 'px';
         btn.style.bottom = newBottom + 'px';
     }

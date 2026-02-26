@@ -470,19 +470,28 @@ window.switchTab = function(tabName) {
 
 // 初始化移动端导航图标
 function initMobileNavIcons() {
-    var farmNavIcon = document.getElementById('farmNavIcon');
-    var monstersNavIcon = document.getElementById('monstersNavIcon');
-    var explorationNavIcon = document.getElementById('explorationNavIcon');
-    var breedingNavIcon = document.getElementById('breedingNavIcon');
-    var techNavIcon = document.getElementById('techNavIcon');
-    var disposalNavIcon = document.getElementById('disposalNavIcon');
-    
-    if (farmNavIcon) farmNavIcon.innerHTML = createSVG('plant', 24);
-    if (monstersNavIcon) monstersNavIcon.innerHTML = createSVG('slime', 24);
-    if (explorationNavIcon) explorationNavIcon.innerHTML = createSVG('explore', 24);
-    if (breedingNavIcon) breedingNavIcon.innerHTML = createSVG('heart', 24);
-    if (techNavIcon) techNavIcon.innerHTML = createSVG('research', 24);
-    if (disposalNavIcon) disposalNavIcon.innerHTML = createSVG('trash', 24);
+    // 图标类型映射（保证移动端与PC端完全一致）
+    var iconMap = {
+        farm:        'plant',
+        exploration: 'explore',
+        monsters:    'slime',
+        breeding:    'heart',
+        tech:        'research',
+        disposal:    'recycle'
+    };
+
+    // 移动端底部导航图标
+    Object.keys(iconMap).forEach(function(key) {
+        var el = document.getElementById(key + 'NavIcon');
+        if (el) el.innerHTML = createSVG(iconMap[key], 24);
+    });
+
+    // PC 端顶部 Tab 图标（排除 monsters，PC 端无此 Tab）
+    var pcTabs = ['farm', 'exploration', 'breeding', 'tech', 'disposal'];
+    pcTabs.forEach(function(key) {
+        var el = document.getElementById(key + 'TabIcon');
+        if (el) el.innerHTML = createSVG(iconMap[key], 18);
+    });
 }
 
 // 侧边栏切换（用于平板端）

@@ -57,9 +57,9 @@ var tutorialSteps = [
         id: 'select_monster',
         title: '🎉 成功捕获怪兽！',
         content: '太棒了！你已经捕获了第一只怪兽。<br><br>' +
-            '现在请 <strong style="color:#f0c53d;">点击右侧怪兽卡片</strong> 将它选中，' +
-            '卡片下方会出现操作按钮。',
-        focusSelector: '#monsterSidebar .monster-card',
+            '现在请 <strong style="color:#f0c53d;">点击右侧怪兽卡片</strong> 打开详情，' +
+            '然后点击「<strong style="color:#46d164;">派驻农田</strong>」按钮。',
+        focusSelector: '#monsterSidebar .msb-monster-card',
         allowInteract: true,
         btnText: null,      // 等玩家点击怪兽卡片后触发钩子推进
         onShow: function() {
@@ -75,15 +75,14 @@ var tutorialSteps = [
         onNext: null
     },
 
-    // ── Step 3：点击「耕作」按钮（强引导） ──
+    // ── Step 3：点击「派驻农田」按钮（强引导） ──
     {
         id: 'assign_farm',
         title: '🌾 派遣怪兽驻守农田',
-        content: '太棒了！怪兽卡片上出现了操作按钮。<br><br>' +
-            '现在请点击高亮的 <strong style="color:#46d164;">耕作</strong> 按钮，<br>' +
+        content: '太棒了！现在请点击高亮的 <strong style="color:#46d164;">派驻农田</strong> 按钮，<br><br>' +
             '让怪兽驻守地块，实现 <strong style="color:#58a6ff;">自动种植和收获</strong>！',
         // 动态更新：onShow 时重新计算
-        focusSelector: '#monsterSidebar .monster-card .btn-primary',
+        focusSelector: '#monsterSidebar .msb-btn-assign',
         allowInteract: true,
         btnText: null,      // 等玩家点击耕作按钮后触发钩子推进
         onShow: function() {
