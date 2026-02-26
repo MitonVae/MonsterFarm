@@ -793,14 +793,30 @@ window.showMobileResourcePanel = function() {
 window.showSettingsModal = function() {
     var cur = localStorage.getItem('mf_font_size') || 'medium';
     var sizes = [
-        { key: 'small',  label: '小', desc: '12px · 信息密度高' },
-        { key: 'medium', label: '中', desc: '14px · 默认（推荐）' },
-        { key: 'large',  label: '大', desc: '16px · 阅读舒适' },
-        { key: 'xlarge', label: '特大', desc: '18px · 无障碍模式' }
+        { key: 'small',  label: '小', desc: '12px · 密度高' },
+        { key: 'medium', label: '中', desc: '14px · 推荐' },
+        { key: 'large',  label: '大', desc: '16px · 舒适' },
+        { key: 'xlarge', label: '特大', desc: '18px · 无障碍' }
     ];
-    var html = '<div class="modal-header">⚙️ 设置</div>' +
-        '<div style="margin-bottom:20px;">' +
-        '<div style="font-size:13px;font-weight:600;color:#8b949e;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">字体大小</div>' +
+
+    // ── 字体大小 ──
+    var html = '<div class="modal-header">⚙️ 游戏设置</div>' +
+        '<div style="padding:4px 0;">' +
+
+        // 统计数据
+        '<div style="margin-bottom:14px;">' +
+        '<h3 style="margin-bottom:8px;font-size:13px;color:#8b949e;letter-spacing:.05em;">📊 游戏统计</h3>' +
+        '<div style="background:#21262d;padding:12px 15px;border-radius:8px;font-size:13px;' +
+            'display:grid;grid-template-columns:1fr 1fr;gap:6px;">' +
+        '<div>总收获：<strong style="color:#46d164;">' + (window.gameState ? window.gameState.totalHarvests : 0) + '</strong></div>' +
+        '<div>总探索：<strong style="color:#58a6ff;">' + (window.gameState ? window.gameState.totalExplorations : 0) + '</strong></div>' +
+        '<div>繁殖数：<strong style="color:#f0c53d;">' + (window.gameState ? (window.gameState.monstersBreed || 0) : 0) + '</strong></div>' +
+        '<div>怪兽数：<strong style="color:#e6edf3;">' + (window.gameState ? window.gameState.monsters.length : 0) + '</strong></div>' +
+        '</div></div>' +
+
+        // 字体大小
+        '<div style="margin-bottom:14px;">' +
+        '<h3 style="margin-bottom:8px;font-size:13px;color:#8b949e;letter-spacing:.05em;">🔤 字体大小</h3>' +
         '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">';
     sizes.forEach(function(s) {
         var active = cur === s.key;
@@ -813,19 +829,40 @@ window.showSettingsModal = function() {
             '</div>';
     });
     html += '</div></div>' +
-        '<div style="margin-bottom:20px;">' +
-        '<div style="font-size:13px;font-weight:600;color:#8b949e;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">存档</div>' +
-        '<div style="display:flex;gap:8px;">' +
-        '<button class="btn btn-primary" style="flex:1;" onclick="quickSave();closeModal();">💾 手动存档</button>' +
-        '<button class="btn btn-secondary" style="flex:1;" onclick="confirmRecallAll();">🔄 一键召回</button>' +
+
+        // 存档操作
+        '<div style="margin-bottom:14px;">' +
+        '<h3 style="margin-bottom:8px;font-size:13px;color:#8b949e;letter-spacing:.05em;">💾 存档</h3>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+        '<button class="btn btn-primary" style="flex:1;min-width:100px;" onclick="quickSave();closeModal();">💾 手动存档</button>' +
+        '<button class="btn btn-secondary" style="flex:1;min-width:100px;" onclick="confirmRecallAll();">🔄 一键召回</button>' +
         '</div></div>' +
-        '<div class="modal-buttons"><button class="btn btn-primary" onclick="closeModal()">关闭</button></div>' +
-        // 隐藏的版本号，长按2秒触发GM面板入口
+
+        // 快捷键
+        '<div style="margin-bottom:14px;">' +
+        '<h3 style="margin-bottom:8px;font-size:13px;color:#8b949e;letter-spacing:.05em;">⌨️ 快捷键</h3>' +
+        '<div style="background:#21262d;padding:12px 15px;border-radius:8px;font-size:12px;' +
+            'color:#8b949e;display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;">' +
+        '<div><kbd style="background:#30363d;padding:1px 5px;border-radius:3px;">1~5</kbd> 切换标签页</div>' +
+        '<div><kbd style="background:#30363d;padding:1px 5px;border-radius:3px;">Ctrl+S</kbd> 手动保存</div>' +
+        '<div><kbd style="background:#30363d;padding:1px 5px;border-radius:3px;">Esc</kbd> 关闭弹窗</div>' +
+        '</div></div>' +
+
+        '</div>' + // end padding wrapper
+
+        // 底部按钮行
+        '<div class="modal-buttons">' +
+        '<button class="btn btn-info" style="background:#1f6feb;border-color:#1f6feb;" onclick="closeModal();if(typeof showTextTutorial===\'function\')showTextTutorial();">📖 游戏教程</button>' +
+        '<button class="btn btn-danger" onclick="if(typeof resetGame===\'function\')resetGame();">🗑 重置游戏</button>' +
+        '<button class="btn btn-primary" onclick="closeModal()">关闭</button>' +
+        '</div>' +
+
+        // 隐藏版本号（长按2秒进入GM面板）
         '<div id="gmVersionHint" ' +
-            'style="text-align:center;margin-top:8px;font-size:10px;color:#30363d;cursor:default;user-select:none;letter-spacing:0.3px;" ' +
-            'title="">' +
+            'style="text-align:center;margin-top:8px;font-size:10px;color:#30363d;cursor:default;user-select:none;letter-spacing:0.3px;">' +
             'v0.9.1-dev' +
         '</div>';
+
     showModal(html);
     // 为版本号注册长按事件（长按2秒）
     setTimeout(function() {
