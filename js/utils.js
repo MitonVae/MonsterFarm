@@ -79,31 +79,48 @@ function createSVG(type, size) {
         </svg>`,
         
         // 资源图标
-        coin: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#f0c53d" stroke-width="2">
+        coin: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="9" fill="#f0c53d" opacity="0.2"/>
-            <circle cx="12" cy="12" r="6" stroke="#f0c53d" stroke-width="2" fill="none"/>
-            <path d="M9 12h6" stroke="#f0c53d" stroke-width="2"/>
-            <path d="M12 9v6" stroke="#f0c53d" stroke-width="2"/>
+            <circle cx="12" cy="12" r="7" stroke="#f0c53d" stroke-width="1.5" fill="none"/>
+            <text x="12" y="16" text-anchor="middle" font-size="10" font-weight="bold" fill="#f0c53d">¥</text>
         </svg>`,
         
-        food: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#46d164" stroke-width="2">
-            <path d="M3 12h18" stroke="#46d164"/>
-            <path d="M3 6h18" stroke="#46d164"/>
-            <path d="M3 18h18" stroke="#46d164"/>
-            <path d="M8 6v12" stroke="#46d164"/>
-            <path d="M16 6v12" stroke="#46d164"/>
+        food: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24">
+            <path d="M12 2c3.5 0 6.5 2.5 8 6-1.5 3.5-4.5 6-8 6s-6.5-2.5-8-6c1.5-3.5 4.5-6 8-6z" fill="#46d164" opacity="0.3"/>
+            <circle cx="12" cy="8" r="6" fill="none" stroke="#46d164" stroke-width="1.5"/>
+            <path d="M8 8c0-2 2-4 4-4s4 2 4 4" fill="none" stroke="#46d164" stroke-width="1.5"/>
+            <path d="M9 12l3 3 6-6" stroke="#46d164" stroke-width="1.5" fill="none"/>
+            <circle cx="12" cy="20" r="2" fill="#8fce00"/>
+            <path d="M12 18v4" stroke="#46d164" stroke-width="1"/>
         </svg>`,
         
-        material: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#8b949e" stroke-width="2">
-            <path d="M9 12l2 2 4-4"/>
-            <path d="M21 12c.552 0 1-.449 1-1V5c0-.552-.448-1-1-1h-6c-.552 0-1 .448-1 1v6c0 .551.448 1 1 1h6z"/>
-            <path d="M3 12c.552 0 1-.449 1-1V5c0-.552-.448-1-1-1h-6c-.552 0-1 .448-1 1v6c0 .551.448 1 1 1h6z"/>
-            <rect x="6" y="14" width="12" height="6" rx="1" fill="#8b949e" opacity="0.3"/>
+        material: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24">
+            <rect x="4" y="6" width="4" height="4" fill="#8b949e" opacity="0.6" rx="0.5"/>
+            <rect x="10" y="6" width="4" height="4" fill="#8b949e" opacity="0.8" rx="0.5"/>
+            <rect x="16" y="6" width="4" height="4" fill="#8b949e" opacity="0.6" rx="0.5"/>
+            <rect x="4" y="12" width="4" height="4" fill="#8b949e" opacity="0.8" rx="0.5"/>
+            <rect x="10" y="12" width="4" height="4" fill="#8b949e" opacity="0.9" rx="0.5"/>
+            <rect x="16" y="12" width="4" height="4" fill="#8b949e" opacity="0.7" rx="0.5"/>
+            <rect x="7" y="3" width="4" height="4" fill="#a0a0a0" opacity="0.9" rx="0.5"/>
+            <rect x="13" y="3" width="4" height="4" fill="#a0a0a0" opacity="0.7" rx="0.5"/>
         </svg>`,
         
-        research: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#58a6ff" stroke-width="2">
-            <circle cx="12" cy="12" r="3" fill="none" stroke="#58a6ff"/>
-            <path d="M12 1v6m0 6v6m8.66-7.5l-5.2 3m-5.2 3l-5.2-3M1.34 16.5l5.2-3m5.2-3l5.2-3"/>
+        research: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24">
+            <circle cx="12" cy="10" r="6" fill="none" stroke="#58a6ff" stroke-width="1.5"/>
+            <path d="M15 15l4 4" stroke="#58a6ff" stroke-width="2"/>
+            <circle cx="12" cy="10" r="3" fill="#58a6ff" opacity="0.2"/>
+            <path d="M10 8l2 2 4-4" stroke="#58a6ff" stroke-width="1.5" fill="none"/>
+            <circle cx="12" cy="10" r="1" fill="#58a6ff"/>
+        </svg>`,
+        
+        land: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24">
+            <rect x="2" y="14" width="20" height="8" fill="#8b4513" opacity="0.6"/>
+            <rect x="2" y="12" width="20" height="2" fill="#228b22" opacity="0.8"/>
+            <path d="M6 12c0-2 1-4 3-4s3 2 3 4" fill="none" stroke="#228b22" stroke-width="1"/>
+            <path d="M12 12c0-2 1-4 3-4s3 2 3 4" fill="none" stroke="#228b22" stroke-width="1"/>
+            <circle cx="8" cy="10" r="1" fill="#90EE90"/>
+            <circle cx="16" cy="10" r="1" fill="#90EE90"/>
+            <path d="M4 16h2m2 0h2m2 0h2m2 0h2m2 0h2" stroke="#654321" stroke-width="1"/>
         </svg>`,
         
         energy: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#f0883e" stroke-width="2">
@@ -233,7 +250,8 @@ function createSVG(type, size) {
     return svgs[type] || svgs.slime;
 }
 
-function getResourceIcon(resource) {
+function getResourceIcon(resource, size) {
+    size = size || 16;
     var iconMap = {
         coins: 'coin',
         food: 'food', 
@@ -242,7 +260,7 @@ function getResourceIcon(resource) {
         energy: 'energy'
     };
     var iconType = iconMap[resource];
-    return iconType ? createSVG(iconType, 16) : '';
+    return iconType ? createSVG(iconType, size) : '';
 }
 
 function getStatusText(status) {

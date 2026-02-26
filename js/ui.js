@@ -35,14 +35,14 @@ function renderResourceCards() {
         { key: 'materials', label: '材料', value: gameState.materials, icon: 'material' },
         { key: 'research', label: '研究点', value: gameState.research, icon: 'research' },
         { key: 'energy', label: '能量', value: gameState.energy + '/' + gameState.maxEnergy, icon: 'energy' },
-        { key: 'land', label: '土地', value: gameState.plots.filter(function(p) { return !p.locked; }).length + '/' + gameState.plots.length, icon: 'unlock' }
+        { key: 'land', label: '土地', value: gameState.plots.filter(function(p) { return !p.locked; }).length + '/' + gameState.plots.length, icon: 'land' }
     ];
     
     resourcesContainer.innerHTML = resources.map(function(res) {
         return `
             <div class="resource">
                 <div class="resource-label">
-                    <span style="display: inline-block; vertical-align: middle; margin-right: 5px;">${createSVG(res.icon, 16)}</span>
+                    <span style="display: inline-block; vertical-align: middle; margin-right: 5px;">${createSVG(res.icon, 20)}</span>
                     ${res.label}
                 </div>
                 <div class="resource-value" id="res-${res.key}">${res.value}</div>
@@ -177,7 +177,7 @@ window.renderMonsters = function() {
                 <div style="margin-top: 10px; font-size: 11px;">
                     <div style="color: #666; margin-bottom: 3px;">特性: ${monster.traits.map(function(t) { return t.name; }).join(', ')}</div>
                     <div style="color: #666;">等级: ${monster.level} (${monster.exp}/${monster.maxExp})</div>
-                    ${isWorking ? '<div style="color: #2196f3; font-weight: bold; margin-top: 5px;"><span style="display: inline-block; vertical-align: middle; margin-right: 5px;">' + createSVG('work', 16) + '</span>' + getStatusText(monster.status) + '</div>' : ''}
+                    ${isWorking ? '<div style="color: #2196f3; font-weight: bold; margin-top: 5px;"><span style="display: inline-block; vertical-align: middle; margin-right: 5px;">' + createSVG('work', 14) + '</span>' + getStatusText(monster.status) + '</div>' : ''}
                 </div>
                 
                 ${isSelected ? `

@@ -15,7 +15,7 @@ window.renderTech = function() {
         return `
             <div class="tech-item ${unlocked ? 'unlocked' : 'locked'}">
                 <div class="tech-title">
-                    <span style="display: inline-block; vertical-align: middle; margin-right: 5px;">${unlocked ? createSVG('check', 16) : createSVG('locked_tech', 16)}</span>${tech.name}
+                    <span style="display: inline-block; vertical-align: middle; margin-right: 5px;">${unlocked ? createSVG('check', 14) : createSVG('locked_tech', 14)}</span>${tech.name}
                 </div>
                 <div class="tech-desc">${tech.desc}</div>
                 ${!unlocked ? `

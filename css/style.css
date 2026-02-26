@@ -7,7 +7,7 @@
 
 body {
     font-family: 'Microsoft YaHei', Arial, sans-serif;
-    background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+    background: #0d1117;
     min-height: 100vh;
     padding: 10px;
     color: #e6edf3;
@@ -27,9 +27,10 @@ body {
     text-align: center;
     margin-bottom: 20px;
     padding: 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #30363d;
     border-radius: 15px;
-    color: white;
+    color: #e6edf3;
+    border: 1px solid #21262d;
 }
 
 .resources {
@@ -88,7 +89,7 @@ body {
 }
 
 .tab.active {
-    background: linear-gradient(135deg, #58a6ff 0%, #7c3aed 100%);
+    background: #58a6ff;
     color: white;
     border-color: #58a6ff;
 }
@@ -157,12 +158,12 @@ body {
 }
 
 .plot.planted {
-    background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 100%);
+    background: #1a472a;
     border-color: #238636;
 }
 
 .plot.ready {
-    background: linear-gradient(135deg, #2d5a3d 0%, #238636 100%);
+    background: #238636;
     border-color: #46d164;
 }
 
@@ -187,7 +188,7 @@ body {
 
 .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #238636, #46d164);
+    background: #238636;
     transition: width 0.3s;
 }
 
@@ -217,12 +218,12 @@ body {
 }
 
 .monster-card.working {
-    background: linear-gradient(135deg, #0d419d 0%, #1f6feb 100%);
+    background: #1f6feb;
     border-color: #58a6ff;
 }
 
 .monster-card.selected {
-    background: linear-gradient(135deg, #7d4e00 0%, #bf8700 100%);
+    background: #bf8700;
     border-color: #f0c53d;
 }
 
@@ -283,15 +284,29 @@ body {
     color: #58a6ff;
 }
 
-/* 矢量图标 */
+/* 矢量图标 - 动态尺寸 */
 .svg-icon {
-    width: 48px;
-    height: 48px;
+    display: inline-block;
+    vertical-align: middle;
 }
 
-.svg-icon-sm {
-    width: 24px;
-    height: 24px;
+/* 针对特定尺寸的优化 */
+svg[width="12"], svg[width="14"] {
+    vertical-align: text-bottom;
+}
+
+svg[width="16"], svg[width="20"] {
+    vertical-align: text-top;
+}
+
+svg[width="24"] {
+    vertical-align: middle;
+}
+
+/* 大尺寸图标居中对齐 */
+svg[width="48"], svg[width="50"], svg[width="60"] {
+    display: block;
+    margin: 0 auto;
 }
 
 /* 按钮样式 */
@@ -307,28 +322,47 @@ body {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #58a6ff;
     color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 5px 15px rgba(88, 166, 255, 0.4);
+    background: #7c3aed;
 }
 
 .btn-success {
-    background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+    background: #238636;
     color: white;
+}
+
+.btn-success:hover:not(:disabled) {
+    background: #2ea043;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(35, 134, 54, 0.4);
 }
 
 .btn-danger {
-    background: linear-gradient(135deg, #f44336 0%, #e57373 100%);
+    background: #da3633;
     color: white;
 }
 
+.btn-danger:hover:not(:disabled) {
+    background: #f85149;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(218, 54, 51, 0.4);
+}
+
 .btn-warning {
-    background: linear-gradient(135deg, #ff9800 0%, #ffa726 100%);
+    background: #fb8500;
     color: white;
+}
+
+.btn-warning:hover:not(:disabled) {
+    background: #ffb000;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(251, 133, 0, 0.4);
 }
 
 .btn:disabled {
@@ -353,7 +387,7 @@ body {
 }
 
 .tech-item.unlocked {
-    background: linear-gradient(135deg, #1a472a 0%, #238636 100%);
+    background: #1a472a;
     border-color: #46d164;
 }
 

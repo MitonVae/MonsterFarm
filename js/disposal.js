@@ -54,7 +54,7 @@ window.renderDisposal = function() {
         </div>
         
         <div style="background: #ffebee; padding: 15px; border-radius: 10px; margin-top: 20px; border-left: 4px solid #f44336;">
-            <strong><span style="display: inline-block; vertical-align: middle; margin-right: 5px;">${createSVG('warning', 16)}</span>警告：</strong> 所有处理操作都是不可逆的，请谨慎操作！
+            <strong><span style="display: inline-block; vertical-align: middle; margin-right: 5px;">${createSVG('warning', 14)}</span>警告：</strong> 所有处理操作都是不可逆的，请谨慎操作！
         </div>
     `;
 };
