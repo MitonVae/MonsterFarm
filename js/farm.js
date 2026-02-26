@@ -240,10 +240,10 @@ function autoHarvestPlot(plotId) {
     var cropType = cropTypes.find(function(c) { return c.id === plot.crop; });
     var yieldAmt = cropType.yield;
     var valueAmt = cropType.value;
-    if (gameState.technologies && gameState.technologies.advancedFarming) {
-        yieldAmt *= technologies.advancedFarming.effects.cropYield;
-        valueAmt *= technologies.advancedFarming.effects.cropYield;
-    }
+    // 全局产量倍率（考虑所有已解锁科技）
+    var yieldMult = calcGlobalYieldMult();
+    yieldAmt = yieldAmt * yieldMult;
+    valueAmt = valueAmt * yieldMult;
     var isQuality = false;
     if (monster) {
         var qChance = calcQualityChance(monster, cropType);
@@ -255,11 +255,17 @@ function autoHarvestPlot(plotId) {
     }
     yieldAmt = Math.floor(yieldAmt);
     valueAmt = Math.floor(valueAmt);
+    // 材料和研究点（来自作物特殊字段）
+    var matYield = Math.floor((cropType.materialYield || 0) * yieldMult);
+    var resYield = Math.floor((cropType.researchYield || 0) * yieldMult);
     gameState.food += yieldAmt;
     gameState.coins += valueAmt;
+    if (matYield > 0) gameState.materials += matYield;
+    gameState.research += resYield + (Math.random() < 0.25 ? Math.floor(Math.random() * 4) + 1 : 0);
     gameState.totalHarvests++;
-    if (Math.random() < 0.25) gameState.research += Math.floor(Math.random() * 4) + 1;
-    var msg = (isQuality ? '✨ 优质 ' : '') + cropType.name + ' 自动收获！+' + yieldAmt + '食 +' + valueAmt + '金';
+    checkMilestones();
+    var extras = (matYield > 0 ? ' +' + matYield + '材' : '') + (resYield > 0 ? ' +' + resYield + '研' : '');
+    var msg = (isQuality ? '✨ 优质 ' : '') + cropType.name + ' 自动收获！+' + yieldAmt + '食 +' + valueAmt + '金' + extras;
     showNotification(msg, isQuality ? 'success' : 'info');
     if (typeof briefHarvest === 'function') briefHarvest((isQuality ? '✨优质' : '') + cropType.name, valueAmt, yieldAmt, monster ? monster.name : null);
     if (monster) {
@@ -324,19 +330,19 @@ window.harvest = function(plotId) {
         return;
     }
     var cropType = cropTypes.find(function(c) { return c.id === plot.crop; });
-    var yieldAmount = cropType.yield;
-    var valueAmount = cropType.value;
-    if (gameState.technologies && gameState.technologies.advancedFarming) {
-        yieldAmount *= technologies.advancedFarming.effects.cropYield;
-        valueAmount *= technologies.advancedFarming.effects.cropYield;
-    }
-    yieldAmount = Math.floor(yieldAmount);
-    valueAmount = Math.floor(valueAmount);
-    gameState.food += yieldAmount;
-    gameState.coins += valueAmount;
+    var yieldMult = calcGlobalYieldMult();
+    var yieldAmount = Math.floor(cropType.yield * yieldMult);
+    var valueAmount = Math.floor(cropType.value * yieldMult);
+    var matYield    = Math.floor((cropType.materialYield  || 0) * yieldMult);
+    var resYield    = Math.floor((cropType.researchYield  || 0) * yieldMult);
+    gameState.food      += yieldAmount;
+    gameState.coins     += valueAmount;
+    gameState.materials += matYield;
+    gameState.research  += resYield + (Math.random() < 0.3 ? Math.floor(Math.random() * 5) + 1 : 0);
     gameState.totalHarvests++;
-    if (Math.random() < 0.3) gameState.research += Math.floor(Math.random() * 5) + 1;
-    showNotification('收获 ' + cropType.name + '！+' + yieldAmount + '食物 +' + valueAmount + '金币', 'success');
+    checkMilestones();
+    var extras = (matYield > 0 ? ' +' + matYield + '材料' : '') + (resYield > 0 ? ' +' + resYield + '研究' : '');
+    showNotification('收获 ' + cropType.name + '！+' + yieldAmount + '食物 +' + valueAmount + '金币' + extras, 'success');
     if (typeof briefHarvest === 'function') briefHarvest(cropType.name, valueAmount, yieldAmount, null);
     plot.crop = null;
     plot.plantedAt = null;

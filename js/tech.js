@@ -1,52 +1,104 @@
 // ==================== 科技树模块 ====================
 
+// 科技分类配置
+var TECH_CATEGORIES = [
+    { id: 'farming',     label: '🌾 农业', color: '#46d164' },
+    { id: 'exploration', label: '🗺 探索', color: '#58a6ff' },
+    { id: 'monster',     label: '👾 怪兽', color: '#9c27b0' },
+    { id: 'breeding',    label: '💕 繁殖', color: '#e91e63' },
+    { id: 'expansion',   label: '🏠 扩建', color: '#f0883e' }
+];
+
+var _activeTechCategory = 'farming';
+
 window.renderTech = function() {
     var techTree = document.getElementById('techTree');
     if (!techTree) return;
-    
-    var techHtml = Object.keys(technologies).map(function(techId) {
+
+    // ── 分类 Tab 头 ──
+    var tabsHtml = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">' +
+        TECH_CATEGORIES.map(function(cat) {
+            var isActive = _activeTechCategory === cat.id;
+            var catTechs = Object.keys(technologies).filter(function(k){ return technologies[k].category === cat.id; });
+            var unlockedCount = catTechs.filter(function(k){ return gameState.technologies[k]; }).length;
+            return '<button onclick="switchTechCategory(\'' + cat.id + '\')" style="' +
+                'padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;' +
+                'border:2px solid ' + (isActive ? cat.color : '#30363d') + ';' +
+                'background:' + (isActive ? cat.color + '22' : 'transparent') + ';' +
+                'color:' + (isActive ? cat.color : '#8b949e') + ';">' +
+                cat.label + ' <span style="font-size:11px;opacity:0.8;">(' + unlockedCount + '/' + catTechs.length + ')</span>' +
+                '</button>';
+        }).join('') +
+        '</div>';
+
+    // ── 当前分类的科技列表 ──
+    var filteredTechs = Object.keys(technologies).filter(function(k) {
+        return technologies[k].category === _activeTechCategory;
+    });
+
+    // 按 tier 排序
+    filteredTechs.sort(function(a, b) {
+        return (technologies[a].tier || 1) - (technologies[b].tier || 1);
+    });
+
+    var techHtml = filteredTechs.map(function(techId) {
         var tech = technologies[techId];
         var unlocked = gameState.technologies[techId];
-        
-        var canUnlock = Object.keys(tech.cost).every(function(resource) {
+
+        // 前置科技检查
+        var prereqMet = !tech.prereq || tech.prereq.length === 0 || tech.prereq.every(function(p) {
+            return gameState.technologies[p];
+        });
+        var canAfford = Object.keys(tech.cost).every(function(resource) {
             return gameState[resource] >= tech.cost[resource];
         });
-        
-        return `
-            <div class="tech-item ${unlocked ? 'unlocked' : 'locked'}">
-                <div class="tech-title">
-                    <span style="display: inline-block; vertical-align: middle; margin-right: 5px;">${unlocked ? createSVG('check', 14) : createSVG('locked_tech', 14)}</span>${tech.name}
-                </div>
-                <div class="tech-desc">${tech.desc}</div>
-                ${!unlocked ? `
-                    <div class="tech-cost">
-                        需要: ${Object.keys(tech.cost).map(function(r) {
-                            return getResourceIcon(r) + tech.cost[r];
-                        }).join(' ')}
-                    </div>
-                    <button class="btn btn-primary" 
-                            onclick="unlockTech('${techId}')"
-                            ${!canUnlock ? 'disabled' : ''}>
-                        ${canUnlock ? '解锁' : '资源不足'}
-                    </button>
-                ` : `
-                    <div style="color: #4caf50; font-weight: bold; margin-top: 10px;">
-                        <span style="display: inline-block; vertical-align: middle; margin-right: 3px;">${createSVG('check', 14)}</span>已解锁
-                    </div>
-                    <div style="font-size: 11px; color: #8b949e; margin-top: 5px;">
-                        ${Object.keys(tech.effects).map(function(e) {
-                            return e + ': ' + tech.effects[e];
-                        }).join(', ')}
-                    </div>
-                `}
-            </div>
-        `;
+        var canUnlock = prereqMet && canAfford;
+        var tierColor = ['','#8b949e','#46d164','#58a6ff','#f0883e','#9c27b0','#ffd700'][tech.tier||1] || '#8b949e';
+
+        var prereqBlock = '';
+        if (!prereqMet && tech.prereq && tech.prereq.length > 0) {
+            prereqBlock = '<div style="font-size:11px;color:#f85149;margin-top:6px;">⚠ 需要先解锁：' +
+                tech.prereq.map(function(p){ return technologies[p] ? technologies[p].name : p; }).join('、') + '</div>';
+        }
+
+        return '<div class="tech-item ' + (unlocked ? 'unlocked' : 'locked') + '" style="' +
+            'border-left:3px solid ' + tierColor + ';opacity:' + (!prereqMet && !unlocked ? '0.55' : '1') + ';">' +
+            '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">' +
+            '<div class="tech-title" style="margin:0;">' +
+                '<span style="display:inline-block;vertical-align:middle;margin-right:4px;">' +
+                (unlocked ? createSVG('check',13) : createSVG('locked_tech',13)) + '</span>' + tech.name +
+            '</div>' +
+            '<span style="font-size:10px;background:' + tierColor + '22;color:' + tierColor + ';padding:1px 6px;border-radius:8px;">Tier ' + (tech.tier||1) + '</span>' +
+            '</div>' +
+            '<div class="tech-desc">' + tech.desc + '</div>' +
+            prereqBlock +
+            (!unlocked ? (
+                '<div class="tech-cost" style="margin-top:8px;">需要：' +
+                Object.keys(tech.cost).map(function(r) {
+                    var have = gameState[r] || 0;
+                    var need = tech.cost[r];
+                    var ok = have >= need;
+                    return '<span style="color:' + (ok?'#46d164':'#f85149') + ';">' + getResourceIcon(r,12) + need + '</span>';
+                }).join(' ') + '</div>' +
+                '<button class="btn btn-primary" style="margin-top:8px;" onclick="unlockTech(\'' + techId + '\')" ' +
+                (!canUnlock ? 'disabled' : '') + '>' +
+                (unlocked ? '已解锁' : (canUnlock ? '解锁' : (!prereqMet ? '前置未满足' : '资源不足'))) +
+                '</button>'
+            ) : (
+                '<div style="color:#46d164;font-weight:bold;margin-top:8px;font-size:13px;">✓ 已解锁</div>'
+            )) +
+            '</div>';
     }).join('');
 
-    // ── 怪兽属性突破区域（研究点永不废弃）──
+    // ── 怪兽属性突破区域 ──
     var breakthroughHtml = renderMonsterBreakthroughSection();
 
-    techTree.innerHTML = techHtml + breakthroughHtml;
+    techTree.innerHTML = tabsHtml + techHtml + breakthroughHtml;
+};
+
+window.switchTechCategory = function(catId) {
+    _activeTechCategory = catId;
+    renderTech();
 };
 
 // 渲染怪兽属性突破面板
@@ -115,29 +167,61 @@ window.performBreakthrough = function() {
 
 window.unlockTech = function(techId) {
     var tech = technologies[techId];
-    
-    var canUnlock = Object.keys(tech.cost).every(function(resource) {
+    if (!tech) return;
+
+    // 前置检查
+    var prereqMet = !tech.prereq || tech.prereq.length === 0 || tech.prereq.every(function(p) {
+        return gameState.technologies[p];
+    });
+    if (!prereqMet) { showNotification('前置科技未满足！', 'error'); return; }
+
+    var canAfford = Object.keys(tech.cost).every(function(resource) {
         return gameState[resource] >= tech.cost[resource];
     });
-    
-    if (!canUnlock) {
-        showNotification('资源不足！', 'error');
-        return;
-    }
-    
+    if (!canAfford) { showNotification('资源不足！', 'error'); return; }
+
+    // 扣除费用
     Object.keys(tech.cost).forEach(function(resource) {
         gameState[resource] -= tech.cost[resource];
     });
-    
     gameState.technologies[techId] = true;
-    
-    if (techId === 'expansion') {
-        gameState.plots.slice(3, 3 + tech.effects.extraPlots).forEach(function(plot) {
-            plot.locked = false;
-        });
+
+    // 应用效果
+    var effects = tech.effects || {};
+
+    // 扩建类：解锁农田
+    if (effects.extraPlots) {
+        var currentUnlocked = gameState.plots.filter(function(p){ return !p.locked; }).length;
+        var toUnlock = effects.extraPlots;
+        var unlockCount = 0;
+        for (var i = currentUnlocked; i < gameState.plots.length && unlockCount < toUnlock; i++) {
+            if (gameState.plots[i].locked) { gameState.plots[i].locked = false; unlockCount++; }
+        }
+        // 如果现有格子不够，动态扩展（支持 unlimitedPlots 科技后逻辑）
+        while (unlockCount < toUnlock) {
+            var newPlotId = gameState.plots.length;
+            gameState.plots.push({
+                id: newPlotId, locked: false,
+                unlockCost: { coins: 0, materials: 0 },
+                crop: null, plantedAt: null, progress: 0,
+                assignedMonster: null, autoCrop: null, growthBonus: 1
+            });
+            unlockCount++;
+        }
     }
-    
-    showNotification('成功解锁：' + tech.name + '！', 'success');
+
+    // 能量上限提升（暂由 main.js tick 动态计算，此处可额外存标记）
+    if (effects.maxLevel) {
+        // 存入 gameState 让怪兽培养逻辑读取
+        if (!gameState.maxMonsterLevel || gameState.maxMonsterLevel < effects.maxLevel) {
+            gameState.maxMonsterLevel = effects.maxLevel;
+        }
+    }
+    if (effects.maxMonsters) {
+        gameState.maxMonstersCapacity = effects.maxMonsters;
+    }
+
+    showNotification('✅ 解锁：' + tech.name + '！', 'success');
     if (typeof briefTech === 'function') briefTech(tech.name);
     updateResources();
     renderTech();

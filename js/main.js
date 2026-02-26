@@ -29,229 +29,8 @@ var gameState = {
 };
 
 // ==================== 常量定义 ====================
-var monsterTypes = {
-    // 基础五种
-    slime:  { name: '史莱姆', color: '#4caf50', baseStats: { strength: 3, agility: 2, intelligence: 1, farming: 4 }, rarity: 'common' },
-    goblin: { name: '哥布林', color: '#ff9800', baseStats: { strength: 4, agility: 3, intelligence: 2, farming: 2 }, rarity: 'common' },
-    sprite: { name: '精灵',   color: '#2196f3', baseStats: { strength: 1, agility: 4, intelligence: 5, farming: 3 }, rarity: 'uncommon' },
-    golem:  { name: '石像鬼', color: '#795548', baseStats: { strength: 5, agility: 1, intelligence: 1, farming: 3 }, rarity: 'uncommon' },
-    wisp:   { name: '幽灵',   color: '#9c27b0', baseStats: { strength: 2, agility: 5, intelligence: 4, farming: 1 }, rarity: 'uncommon' },
-    // 稀有种（通过深度区域探索获得）
-    ifrit:  { name: '炎魔',   color: '#ff5722', baseStats: { strength: 7, agility: 4, intelligence: 3, farming: 1 }, rarity: 'rare' },
-    toxfrog:{ name: '毒液蛙', color: '#8bc34a', baseStats: { strength: 3, agility: 6, intelligence: 4, farming: 2 }, rarity: 'rare' },
-    crystal:{ name: '冰晶',   color: '#80deea', baseStats: { strength: 4, agility: 3, intelligence: 8, farming: 1 }, rarity: 'rare' },
-    shadow: { name: '暗影',   color: '#37474f', baseStats: { strength: 6, agility: 7, intelligence: 5, farming: 0 }, rarity: 'epic' },
-    ancient:{ name: '古龙',   color: '#ffd700', baseStats: { strength: 10,agility: 8, intelligence: 10,farming: 5 }, rarity: 'legendary' }
-};
-
-// ==================== 探索区域定义 ====================
-var explorationZones = [
-    {
-        id: 'farm_edge',
-        name: '农场边缘',
-        icon: '🌿',
-        desc: '农场旁边的草地，安全且容易探索。',
-        unlockCondition: null,           // 默认开放
-        energyCostManual: 5,             // 手动每次消耗能量
-        progressPerClick: [12, 20],      // [min, max] 每次手动点击进度
-        autoProgressPerSec: 0,           // 派遣时每秒进度（由怪兽属性动态计算，此为基础值）
-        monsters: ['slime'],
-        catchChance: 0.25,
-        rewards: { coins: [15, 40], food: [10, 25], materials: [0, 5], research: [0, 0] }
-    },
-    {
-        id: 'shallow_forest',
-        name: '浅林',
-        icon: '🌲',
-        desc: '农场附近的小树林，有零散的资源。',
-        unlockCondition: { type: 'coins', value: 200, label: '拥有金币 ≥ 200' },
-        energyCostManual: 5,
-        progressPerClick: [10, 18],
-        monsters: ['goblin'],
-        catchChance: 0.22,
-        rewards: { coins: [30, 70], food: [5, 15], materials: [10, 25], research: [0, 5] }
-    },
-    {
-        id: 'wild_plain',
-        name: '野外草原',
-        icon: '🏞',
-        desc: '一望无际的草原，偶尔有精灵出没。',
-        unlockCondition: { type: 'totalExplorations', value: 3, label: '完成探索 ≥ 3 次' },
-        energyCostManual: 8,
-        progressPerClick: [8, 16],
-        monsters: ['sprite', 'slime'],
-        catchChance: 0.20,
-        rewards: { coins: [20, 60], food: [15, 30], materials: [5, 15], research: [8, 20] }
-    },
-    {
-        id: 'rocky_hills',
-        name: '碎石丘陵',
-        icon: '🪨',
-        desc: '坚硬的岩石地带，石像鬼在此栖息。',
-        unlockCondition: { type: 'materials', value: 100, label: '拥有材料 ≥ 100' },
-        energyCostManual: 8,
-        progressPerClick: [8, 15],
-        monsters: ['golem', 'goblin'],
-        catchChance: 0.18,
-        rewards: { coins: [40, 90], food: [0, 10], materials: [30, 60], research: [5, 15] }
-    },
-    {
-        id: 'mist_forest',
-        name: '迷雾森林',
-        icon: '🌫',
-        desc: '笼罩在神秘迷雾中的古老森林，幽灵在此游荡。',
-        unlockCondition: { type: 'monsterCount', value: 3, label: '拥有怪兽 ≥ 3 只' },
-        energyCostManual: 10,
-        progressPerClick: [7, 14],
-        monsters: ['wisp', 'sprite'],
-        catchChance: 0.16,
-        rewards: { coins: [30, 80], food: [0, 20], materials: [10, 30], research: [20, 45] }
-    },
-    {
-        id: 'volcano_foot',
-        name: '火山麓',
-        icon: '🌋',
-        desc: '炽热的火山脚下，危险但充满财富，炎魔在此栖息。',
-        unlockCondition: { type: 'tech', value: 'exploration', label: '解锁科技「探索技术」' },
-        energyCostManual: 12,
-        progressPerClick: [6, 13],
-        monsters: ['ifrit', 'golem'],
-        catchChance: 0.14,
-        rewards: { coins: [80, 180], food: [0, 5], materials: [20, 50], research: [10, 25] }
-    },
-    {
-        id: 'swamp',
-        name: '沼泽地带',
-        icon: '🌊',
-        desc: '泥泞危险的沼泽，毒液蛙在此繁衍。',
-        unlockCondition: { type: 'totalExplorations', value: 15, label: '完成探索 ≥ 15 次' },
-        energyCostManual: 12,
-        progressPerClick: [6, 12],
-        monsters: ['toxfrog', 'wisp'],
-        catchChance: 0.13,
-        rewards: { coins: [50, 120], food: [5, 20], materials: [40, 80], research: [15, 35] }
-    },
-    {
-        id: 'snow_plateau',
-        name: '雪域高原',
-        icon: '❄️',
-        desc: '白雪皑皑的高原，冰晶在极寒中修炼。',
-        unlockCondition: { type: 'compound', conditions: [
-            { type: 'monsterCount', value: 5, label: '拥有怪兽 ≥ 5 只' },
-            { type: 'coins', value: 1000, label: '拥有金币 ≥ 1000' }
-        ], label: '拥有 5 只怪兽且金币 ≥ 1000' },
-        energyCostManual: 15,
-        progressPerClick: [5, 11],
-        monsters: ['crystal', 'sprite'],
-        catchChance: 0.11,
-        rewards: { coins: [60, 140], food: [0, 10], materials: [20, 60], research: [40, 80] }
-    },
-    {
-        id: 'dark_cave',
-        name: '暗黑洞窟',
-        icon: '🌑',
-        desc: '深入地下的漆黑洞窟，暗影在此沉眠。需要购买探险通行证。',
-        unlockCondition: { type: 'purchase', value: 2000, label: '花费 2000 金币购买通行证' },
-        energyCostManual: 18,
-        progressPerClick: [4, 10],
-        monsters: ['shadow', 'wisp'],
-        catchChance: 0.10,
-        rewards: { coins: [100, 220], food: [0, 15], materials: [50, 100], research: [50, 100] }
-    },
-    {
-        id: 'ancient_ruins',
-        name: '远古遗迹',
-        icon: '🐉',
-        desc: '传说中存在古龙的神秘遗迹，解锁需要强大的实力。',
-        unlockCondition: { type: 'compound', conditions: [
-            { type: 'allTech', label: '解锁全部科技' },
-            { type: 'totalExplorations', value: 30, label: '完成探索 ≥ 30 次' }
-        ], label: '解锁全部科技且完成探索 ≥ 30 次' },
-        energyCostManual: 20,
-        progressPerClick: [3, 8],
-        monsters: ['ancient'],
-        catchChance: 0.05,
-        rewards: { coins: [200, 500], food: [20, 60], materials: [80, 150], research: [80, 150] }
-    }
-];
-
-var cropTypes = [
-    { 
-        id: 'wheat', name: '小麦', growTime: 15000, yield: 5, value: 8, requiredTech: null,
-        preferredMonster: 'goblin',   // 哥布林种小麦有加成
-        desc: '基础粮食作物，生长快速',
-        icon: 'plant'
-    },
-    { 
-        id: 'corn', name: '玉米', growTime: 25000, yield: 8, value: 15, requiredTech: null,
-        preferredMonster: 'golem',    // 石像鬼种玉米有加成
-        desc: '高产作物，需要更长时间',
-        icon: 'plant'
-    },
-    { 
-        id: 'potato', name: '土豆', growTime: 20000, yield: 10, value: 10, requiredTech: null,
-        preferredMonster: 'slime',    // 史莱姆种土豆有加成
-        desc: '耐旱作物，产量稳定',
-        icon: 'plant'
-    },
-    { 
-        id: 'berry', name: '浆果', growTime: 30000, yield: 12, value: 25, requiredTech: 'advancedFarming',
-        preferredMonster: 'sprite',   // 精灵种浆果有加成
-        desc: '珍贵浆果，价值最高',
-        icon: 'plant'
-    },
-    { 
-        id: 'mushroom', name: '蘑菇', growTime: 40000, yield: 6, value: 35, requiredTech: 'advancedFarming',
-        preferredMonster: 'wisp',     // 幽灵种蘑菇有加成
-        desc: '神奇蘑菇，价值极高但难以种植',
-        icon: 'plant'
-    }
-];
-
-var technologies = {
-    advancedFarming: {
-        name: '高级农业',
-        desc: '解锁高级作物和耕作技术',
-        cost: { research: 50, coins: 200 },
-        unlocked: false,
-        effects: { cropYield: 1.2 }
-    },
-    irrigation: {
-        name: '灌溉系统',
-        desc: '减少作物生长时间20%',
-        cost: { research: 30, materials: 50 },
-        unlocked: false,
-        effects: { growthSpeed: 1.25 }
-    },
-    monsterTraining: {
-        name: '怪兽训练',
-        desc: '提升怪兽属性成长',
-        cost: { research: 80, coins: 300 },
-        unlocked: false,
-        effects: { statGrowth: 1.3 }
-    },
-    exploration: {
-        name: '探索技术',
-        desc: '增加探索收益和成功率',
-        cost: { research: 60, materials: 100 },
-        unlocked: false,
-        effects: { explorationBonus: 1.5 }
-    },
-    breeding: {
-        name: '繁殖技术',
-        desc: '允许怪兽繁殖，培育更强后代',
-        cost: { research: 100, coins: 500 },
-        unlocked: false,
-        effects: { breedingEnabled: true }
-    },
-    expansion: {
-        name: '农场扩建',
-        desc: '解锁更多农田',
-        cost: { coins: 500, materials: 200 },
-        unlocked: false,
-        effects: { extraPlots: 3 }
-    }
-};
+// 所有游戏配置数据（cropTypes/monsterTypes/explorationZones/technologies/allTraits/gameStages/achievements）
+// 现已统一由 js/gamedata.js 提供，如需修改配置参数请到 gamedata.js 中编辑。
 
 var randomEvents = {
     farming: [
@@ -453,26 +232,28 @@ function createMonster(type, parent1, parent2) {
 }
 
 function generateTraits() {
-    var allTraits = [
-        { id: 'fast', name: '敏捷', effect: { agility: 1 } },
-        { id: 'strong', name: '强壮', effect: { strength: 1 } },
-        { id: 'smart', name: '聪慧', effect: { intelligence: 1 } },
-        { id: 'farmer', name: '农夫', effect: { farming: 2 } },
-        { id: 'lazy', name: '懒惰', effect: { farming: -1, agility: -1 } },
-        { id: 'lucky', name: '幸运', effect: { luck: 1 } },
-        { id: 'hardy', name: '顽强', effect: { strength: 1, agility: -1 } }
+    // 使用 gamedata.js 中的扩展特性库
+    var pool = (typeof allTraits !== 'undefined') ? allTraits : [
+        { id: 'fast', name: '敏捷', rarity:'common', effect: { agility: 1 } },
+        { id: 'strong', name: '强壮', rarity:'common', effect: { strength: 1 } },
+        { id: 'farmer', name: '农夫', rarity:'common', effect: { farming: 2 } }
     ];
+    // 按稀有度加权抽取
+    var rarityWeight = { common: 60, uncommon: 25, rare: 10, epic: 4, legendary: 1 };
+    var weightedPool = [];
+    pool.forEach(function(t) {
+        var w = rarityWeight[t.rarity] || 30;
+        for (var i = 0; i < w; i++) weightedPool.push(t);
+    });
     
     var numTraits = Math.random() < 0.3 ? 2 : 1;
     var traits = [];
-    
     for (var i = 0; i < numTraits; i++) {
-        var trait = allTraits[Math.floor(Math.random() * allTraits.length)];
+        var trait = weightedPool[Math.floor(Math.random() * weightedPool.length)];
         if (!traits.find(function(t) { return t.id === trait.id; })) {
             traits.push(trait);
         }
     }
-    
     return traits;
 }
 

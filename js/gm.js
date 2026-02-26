@@ -480,17 +480,14 @@
     }
 
     function _pickTraits(typeKey) {
-        var allTraits = [
-            { name: '勤劳', effect: 'farming+10%' },
-            { name: '强壮', effect: 'strength+10%' },
-            { name: '灵敏', effect: 'agility+10%' },
-            { name: '睿智', effect: 'intelligence+10%' },
-            { name: '幸运', effect: 'loot+5%' }
-        ];
-        // 随机0~2个特性
+        // 使用 gamedata.js 中的全局 allTraits，按稀有度加权随机抽取0~2个
+        var pool = (typeof allTraits !== 'undefined') ? allTraits : [];
         var count = Math.floor(Math.random() * 3);
-        var shuffled = allTraits.slice().sort(function() { return Math.random() - 0.5; });
-        return shuffled.slice(0, count);
+        if (pool.length === 0 || count === 0) return [];
+        var shuffled = pool.slice().sort(function() { return Math.random() - 0.5; });
+        return shuffled.slice(0, count).map(function(t) {
+            return { id: t.id, name: t.name, rarity: t.rarity, effect: t.effect, desc: t.desc };
+        });
     }
 
     // ── 科技解锁 ──

@@ -292,8 +292,80 @@ function getStatusText(status) {
         idle: '空闲',
         working: '工作中',
         exploring: '探索中',
+        farming: '耕作中',
         breeding: '繁殖中',
         selling: '售卖中'
     };
     return statusMap[status] || status;
+}
+
+// ==================== 全局产量倍率（整合所有科技效果）====================
+function calcGlobalYieldMult() {
+    var mult = 1.0;
+    if (!gameState || !gameState.technologies) return mult;
+    var tech = gameState.technologies;
+    // 依次叠加已解锁科技的 cropYield 效果
+    if (typeof technologies !== 'undefined') {
+        Object.keys(tech).forEach(function(key) {
+            if (tech[key] && technologies[key] && technologies[key].effects && technologies[key].effects.cropYield) {
+                mult *= technologies[key].effects.cropYield;
+            }
+        });
+    }
+    return mult;
+}
+
+// ==================== 里程碑（游戏阶段）检测 ====================
+var _milestonesGranted = {};
+
+function checkMilestones() {
+    if (typeof gameStages === 'undefined') return;
+    gameStages.forEach(function(stage) {
+        if (_milestonesGranted[stage.id]) return;
+        var cond = stage.conditions;
+        var met = true;
+        if (cond.totalHarvests    && gameState.totalHarvests    < cond.totalHarvests)    met = false;
+        if (cond.monsterCount     && gameState.monsters.length  < cond.monsterCount)     met = false;
+        if (cond.totalExplorations&& gameState.totalExplorations< cond.totalExplorations)met = false;
+        if (cond.monstersBreed    && gameState.monstersBreed    < cond.monstersBreed)    met = false;
+        if (!met) return;
+
+        _milestonesGranted[stage.id] = true;
+        // 发放奖励
+        var r = stage.rewards;
+        if (r.coins)          gameState.coins += r.coins;
+        if (r.maxEnergyBonus) gameState.maxEnergy += r.maxEnergyBonus;
+        updateResources();
+
+        // 公告
+        var msg = '🎉 达成阶段「' + stage.icon + ' ' + stage.name + '」！\n' +
+                  (r.coins          ? '+ ' + r.coins + ' 金币\n' : '') +
+                  (r.maxEnergyBonus ? '+ 能量上限 ' + r.maxEnergyBonus + '\n' : '') +
+                  (r.unlockMsg      ? r.unlockMsg : '');
+        showNotification(msg, 'achievement');
+        if (typeof briefLog === 'function') briefLog('🏆 ' + stage.icon + ' ' + stage.name, 'achievement');
+    });
+}
+
+// ==================== 稀有度颜色工具 ====================
+function getRarityColor(rarity) {
+    var colors = {
+        common:    '#8b949e',
+        uncommon:  '#2196f3',
+        rare:      '#9c27b0',
+        epic:      '#ff6d00',
+        legendary: '#ffd700'
+    };
+    return colors[rarity] || '#8b949e';
+}
+
+function getRarityLabel(rarity) {
+    var labels = {
+        common:    '普通',
+        uncommon:  '稀有',
+        rare:      '珍贵',
+        epic:      '史诗',
+        legendary: '传说'
+    };
+    return labels[rarity] || rarity;
 }
