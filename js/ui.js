@@ -9,6 +9,8 @@ window.renderAll = function() {
     renderBreeding();
     renderTech();
     renderDisposal();
+    renderMonsterSidebar();
+    renderFarmSummary();
 };
 
 // 初始化界面
@@ -727,6 +729,144 @@ window.recallMonster = function(monsterId) {
     updateResources();
     renderFarm();
     renderExploration();
+};
+
+// ==================== 右侧怪兽侧边栏渲染 ====================
+window.renderMonsterSidebar = function() {
+    var listEl = document.getElementById('monsterSidebarList');
+    var footerEl = document.getElementById('monsterSidebarFooter');
+    if (!listEl) return;
+
+    if (gameState.monsters.length === 0) {
+        listEl.innerHTML = '<div style="text-align:center;padding:30px 15px;color:#8b949e;font-size:12px;line-height:1.8;">' +
+            '<div style="font-size:32px;margin-bottom:8px;">👾</div>' +
+            '<div>还没有怪兽</div><div>点击上方按钮招募吧！</div></div>';
+        if (footerEl) footerEl.innerHTML = '';
+        return;
+    }
+
+    var statusLabels = {
+        'idle': ['空闲', 'msb-status-idle'],
+        'farming': ['耕作中', 'msb-status-farming'],
+        'exploring': ['探索中', 'msb-status-exploring'],
+        'preparing': ['待命', 'msb-status-exploring'],
+        'breeding': ['繁殖中', 'msb-status-breeding']
+    };
+
+    listEl.innerHTML = gameState.monsters.map(function(monster) {
+        var sl = statusLabels[monster.status] || ['未知', 'msb-status-idle'];
+        var statusCls = monster.status || 'idle';
+        var assignInfo = '';
+        if (monster.status === 'farming') {
+            var farmPlot = gameState.plots.find(function(p) { return p.assignedMonster && p.assignedMonster.id === monster.id; });
+            if (farmPlot) assignInfo = '<div style="font-size:10px;color:#46d164;margin-top:4px;">🌱 地块 #' + (farmPlot.id + 1) + (farmPlot.autoCrop ? ' · 自动' : '') + '</div>';
+        } else if (monster.status === 'exploring' || monster.status === 'preparing') {
+            assignInfo = '<div style="font-size:10px;color:#f0c53d;margin-top:4px;">🗺 探索队</div>';
+        }
+
+        // 判断操作按钮
+        var actionBtns = '';
+        if (monster.status === 'idle') {
+            actionBtns = '<button class="msb-action-btn msb-btn-detail" onclick="event.stopPropagation();showMonsterDetailModal(' + monster.id + ')">详情</button>' +
+                '<button class="msb-action-btn msb-btn-assign" onclick="event.stopPropagation();closeModal&&closeModal();showAssignPlotPicker(' + monster.id + ')">派驻农田</button>';
+        } else if (monster.status === 'farming') {
+            var farmPlot2 = gameState.plots.find(function(p) { return p.assignedMonster && p.assignedMonster.id === monster.id; });
+            var plotId = farmPlot2 ? farmPlot2.id : -1;
+            actionBtns = '<button class="msb-action-btn msb-btn-detail" onclick="event.stopPropagation();showMonsterDetailModal(' + monster.id + ')">详情</button>' +
+                (plotId >= 0 ? '<button class="msb-action-btn msb-btn-recall" onclick="event.stopPropagation();removeMonsterFromPlot(' + plotId + ');renderMonsterSidebar();">撤回</button>' : '');
+        } else {
+            actionBtns = '<button class="msb-action-btn msb-btn-detail" onclick="event.stopPropagation();showMonsterDetailModal(' + monster.id + ')">详情</button>' +
+                '<button class="msb-action-btn msb-btn-recall" onclick="event.stopPropagation();recallMonster(' + monster.id + ');">召回</button>';
+        }
+
+        return '<div class="msb-monster-card ' + statusCls + '" onclick="showMonsterDetailModal(' + monster.id + ')">' +
+            '<div class="msb-monster-top">' +
+            '<div class="msb-monster-icon">' + createSVG(monster.type, 28) + '</div>' +
+            '<div class="msb-monster-meta">' +
+            '<div class="msb-monster-name">' + monster.name + '</div>' +
+            '<div class="msb-monster-level">Lv.' + monster.level + ' · ' + (monsterTypes[monster.type] ? monsterTypes[monster.type].name : monster.type) + '</div>' +
+            assignInfo +
+            '</div>' +
+            '<span class="msb-monster-status ' + sl[1] + '">' + sl[0] + '</span>' +
+            '</div>' +
+            '<div class="msb-monster-stats">' +
+            '<div class="msb-stat"><span class="msb-stat-label">力量</span><span class="msb-stat-value">' + monster.stats.strength + '</span></div>' +
+            '<div class="msb-stat"><span class="msb-stat-label">耕作</span><span class="msb-stat-value">' + monster.stats.farming + '</span></div>' +
+            '<div class="msb-stat"><span class="msb-stat-label">经验</span><span class="msb-stat-value">' + monster.exp + '/' + monster.maxExp + '</span></div>' +
+            '</div>' +
+            '<div class="msb-monster-actions">' + actionBtns + '</div>' +
+            '</div>';
+    }).join('');
+
+    // 底部统计
+    if (footerEl) {
+        var total = gameState.monsters.length;
+        var idle = gameState.monsters.filter(function(m) { return m.status === 'idle'; }).length;
+        var farming = gameState.monsters.filter(function(m) { return m.status === 'farming'; }).length;
+        var exploring = gameState.monsters.filter(function(m) { return m.status === 'exploring' || m.status === 'preparing'; }).length;
+        footerEl.innerHTML = '<div style="display:flex;justify-content:space-between;">' +
+            '<span>共 <strong style="color:#e6edf3;">' + total + '</strong> 只</span>' +
+            '<span style="color:#46d164;">耕作 ' + farming + '</span>' +
+            '<span style="color:#f0c53d;">探索 ' + exploring + '</span>' +
+            '<span style="color:#8b949e;">空闲 ' + idle + '</span>' +
+            '</div>';
+    }
+};
+
+// ==================== 左侧农场概况渲染 ====================
+window.renderFarmSummary = function() {
+    var summaryEl = document.getElementById('farmSummary');
+    if (!summaryEl) return;
+    var plots = gameState.plots;
+    var unlocked = plots.filter(function(p) { return !p.locked; }).length;
+    var growing = plots.filter(function(p) { return p.crop && p.progress < 100; }).length;
+    var ready = plots.filter(function(p) { return p.crop && p.progress >= 100; }).length;
+    var auto = plots.filter(function(p) { return p.assignedMonster; }).length;
+    var empty = plots.filter(function(p) { return !p.locked && !p.crop; }).length;
+    summaryEl.innerHTML =
+        '<div style="display:flex;flex-direction:column;gap:6px;">' +
+        '<div style="display:flex;justify-content:space-between;"><span>已解锁地块</span><strong style="color:#58a6ff;">' + unlocked + ' / ' + plots.length + '</strong></div>' +
+        '<div style="display:flex;justify-content:space-between;"><span>自动化地块</span><strong style="color:#46d164;">' + auto + '</strong></div>' +
+        '<div style="display:flex;justify-content:space-between;"><span>生长中</span><strong style="color:#f0c53d;">' + growing + '</strong></div>' +
+        (ready > 0 ? '<div style="display:flex;justify-content:space-between;"><span>待收获 ⚡</span><strong style="color:#f85149;">' + ready + '</strong></div>' : '') +
+        '<div style="display:flex;justify-content:space-between;"><span>空闲地块</span><strong style="color:#8b949e;">' + empty + '</strong></div>' +
+        '</div>';
+};
+
+// ==================== 平板端右侧栏切换 ====================
+window.toggleMonsterSidebar = function() {
+    var sidebar = document.getElementById('monsterSidebar');
+    if (sidebar) sidebar.classList.toggle('open');
+};
+
+// ==================== 移动端怪兽面板（底部弹出）====================
+window.showMobileMonsterPanel = function() {
+    var html = '<div class="modal-header">👾 怪兽团队</div>' +
+        '<div style="margin-bottom:12px;">' +
+        '<button class="btn btn-primary" style="width:100%;font-size:13px;" onclick="closeModal();showRecruitModal();">+ 招募怪兽</button>' +
+        '</div>';
+
+    if (gameState.monsters.length === 0) {
+        html += '<div style="text-align:center;padding:30px;color:#8b949e;">还没有怪兽，去招募吧！</div>';
+    } else {
+        html += '<div style="max-height:60vh;overflow-y:auto;">';
+        gameState.monsters.forEach(function(monster) {
+            var statusMap = { idle: '空闲', farming: '耕作中', exploring: '探索中', preparing: '待命' };
+            var statusColor = { idle: '#8b949e', farming: '#46d164', exploring: '#f0c53d', preparing: '#f0c53d' };
+            var st = monster.status || 'idle';
+            html += '<div style="background:#21262d;border:1px solid #30363d;border-radius:10px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;" onclick="closeModal();showMonsterDetailModal(' + monster.id + ');">' +
+                '<div style="background:#0d1117;border-radius:8px;padding:4px;">' + createSVG(monster.type, 32) + '</div>' +
+                '<div style="flex:1;min-width:0;">' +
+                '<div style="font-weight:700;font-size:13px;">' + monster.name + '</div>' +
+                '<div style="font-size:11px;color:#8b949e;">Lv.' + monster.level + ' · ' + (monsterTypes[monster.type] ? monsterTypes[monster.type].name : '') + '</div>' +
+                '</div>' +
+                '<span style="font-size:11px;color:' + (statusColor[st] || '#8b949e') + ';font-weight:600;">' + (statusMap[st] || st) + '</span>' +
+                '</div>';
+        });
+        html += '</div>';
+    }
+    html += '<div class="modal-buttons"><button class="btn btn-primary" onclick="closeModal()">关闭</button></div>';
+    showModal(html);
 };
 
 // 初始化UI - 在页面加载时调用
