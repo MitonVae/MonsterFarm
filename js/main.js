@@ -561,7 +561,27 @@ function loadGame() {
 
 function resetGame() {
     if (confirm('确定要重置游戏吗？所有进度将丢失！')) {
+        // 先重置内存状态，防止 beforeunload 的 autoSave 把旧数据重新写回
+        gameState.coins = 100;
+        gameState.food = 50;
+        gameState.materials = 0;
+        gameState.research = 0;
+        gameState.energy = 100;
+        gameState.monsters = [];
+        gameState.plots = [];
+        gameState.technologies = {};
+        gameState.totalHarvests = 0;
+        gameState.totalExplorations = 0;
+        gameState.monstersBreed = 0;
+        gameState.nextMonsterId = 1;
+        gameState.zoneStates = {};
+        gameState.purchasedZones = {};
+        gameState.selectedMonster = null;
+
+        // 清除所有相关 localStorage 数据
         localStorage.removeItem('monsterFarm_v1');
+        localStorage.removeItem('mf_tutorial_done');
+
         location.reload();
     }
 }
