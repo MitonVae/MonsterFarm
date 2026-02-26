@@ -98,10 +98,27 @@ function updateSidebarResources() {
     resources.forEach(function(res) {
         var iconEl = document.getElementById(res.id + 'Icon');
         var valueEl = document.getElementById(res.id);
-        
         if (iconEl) iconEl.innerHTML = createSVG(res.icon, 20);
         if (valueEl) valueEl.innerText = res.value;
     });
+
+    // 同步移动端顶部资源条
+    var mobCoins = document.getElementById('mob-coins');
+    var mobFood = document.getElementById('mob-food');
+    var mobMaterials = document.getElementById('mob-materials');
+    var mobEnergy = document.getElementById('mob-energy');
+    var mobCoinsIcon = document.getElementById('mobCoinsIcon');
+    var mobFoodIcon = document.getElementById('mobFoodIcon');
+    var mobMaterialsIcon = document.getElementById('mobMaterialsIcon');
+    var mobEnergyIcon = document.getElementById('mobEnergyIcon');
+    if (mobCoins) mobCoins.innerText = gameState.coins;
+    if (mobFood) mobFood.innerText = gameState.food;
+    if (mobMaterials) mobMaterials.innerText = gameState.materials;
+    if (mobEnergy) mobEnergy.innerText = gameState.energy + '/' + gameState.maxEnergy;
+    if (mobCoinsIcon) mobCoinsIcon.innerHTML = createSVG('coin', 14);
+    if (mobFoodIcon) mobFoodIcon.innerHTML = createSVG('food', 14);
+    if (mobMaterialsIcon) mobMaterialsIcon.innerHTML = createSVG('material', 14);
+    if (mobEnergyIcon) mobEnergyIcon.innerHTML = createSVG('energy', 14);
 }
 
 // 渲染侧边栏怪兽列表
@@ -673,6 +690,80 @@ window.recallMonster = function(monsterId) {
     renderExploration();
 };
 
+// ==================== 移动端检测工具 ====================
+function isMobile() {
+    return window.innerWidth <= 767;
+}
+
+// ==================== 移动端资源详情面板 ====================
+window.showMobileResourcePanel = function() {
+    var html = '<div class="modal-header">📊 资源状况</div>' +
+        '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">';
+    var list = [
+        { key: 'coins',     label: '金币',   icon: 'coin',     val: gameState.coins },
+        { key: 'food',      label: '食物',   icon: 'food',     val: gameState.food },
+        { key: 'materials', label: '材料',   icon: 'material', val: gameState.materials },
+        { key: 'research',  label: '研究点', icon: 'research', val: gameState.research },
+        { key: 'energy',    label: '能量',   icon: 'energy',   val: gameState.energy + '/' + gameState.maxEnergy }
+    ];
+    list.forEach(function(r) {
+        html += '<div style="display:flex;align-items:center;gap:10px;background:#21262d;border:1px solid #30363d;border-radius:8px;padding:10px 14px;" ' +
+            'onclick="closeModal();toggleResourceDetail(\'' + r.key + '\');switchTab(\'farm\');">' +
+            '<span style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;">' + createSVG(r.icon, 22) + '</span>' +
+            '<span style="flex:1;font-size:14px;">' + r.label + '</span>' +
+            '<span style="font-size:15px;font-weight:700;color:#58a6ff;">' + r.val + '</span>' +
+            '<span style="color:#8b949e;font-size:13px;">▾</span>' +
+            '</div>';
+    });
+    html += '</div>' +
+        '<div style="font-size:12px;color:#8b949e;text-align:center;margin-bottom:16px;">点击资源可查看详细说明（在农场页面左侧栏查看）</div>' +
+        '<div class="modal-buttons"><button class="btn btn-primary" onclick="closeModal()">关闭</button></div>';
+    showModal(html);
+};
+
+// ==================== 设置弹窗（含字体大小）====================
+window.showSettingsModal = function() {
+    var cur = localStorage.getItem('mf_font_size') || 'medium';
+    var sizes = [
+        { key: 'small',  label: '小', desc: '12px · 信息密度高' },
+        { key: 'medium', label: '中', desc: '14px · 默认（推荐）' },
+        { key: 'large',  label: '大', desc: '16px · 阅读舒适' },
+        { key: 'xlarge', label: '特大', desc: '18px · 无障碍模式' }
+    ];
+    var html = '<div class="modal-header">⚙️ 设置</div>' +
+        '<div style="margin-bottom:20px;">' +
+        '<div style="font-size:13px;font-weight:600;color:#8b949e;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">字体大小</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">';
+    sizes.forEach(function(s) {
+        var active = cur === s.key;
+        html += '<div onclick="applyFontSize(\'' + s.key + '\');document.querySelectorAll(\'.font-size-opt\').forEach(function(e){e.classList.remove(\'active\')});this.classList.add(\'active\');" ' +
+            'class="font-size-opt' + (active ? ' active' : '') + '" ' +
+            'style="padding:10px 6px;background:' + (active ? '#1f4a7a' : '#21262d') + ';border:2px solid ' + (active ? '#58a6ff' : '#30363d') + ';' +
+            'border-radius:8px;text-align:center;cursor:pointer;transition:all 0.15s;">' +
+            '<div style="font-size:18px;font-weight:700;margin-bottom:3px;">' + s.label + '</div>' +
+            '<div style="font-size:10px;color:#8b949e;line-height:1.3;">' + s.desc + '</div>' +
+            '</div>';
+    });
+    html += '</div></div>' +
+        '<div style="margin-bottom:20px;">' +
+        '<div style="font-size:13px;font-weight:600;color:#8b949e;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">存档</div>' +
+        '<div style="display:flex;gap:8px;">' +
+        '<button class="btn btn-primary" style="flex:1;" onclick="quickSave();closeModal();">💾 手动存档</button>' +
+        '<button class="btn btn-secondary" style="flex:1;" onclick="confirmRecallAll();">🔄 一键召回</button>' +
+        '</div></div>' +
+        '<div class="modal-buttons"><button class="btn btn-primary" onclick="closeModal()">关闭</button></div>';
+    showModal(html);
+};
+
+// 应用字体大小
+window.applyFontSize = function(size) {
+    var sizeMap = { small: '12px', medium: '14px', large: '16px', xlarge: '18px' };
+    var px = sizeMap[size] || '14px';
+    document.documentElement.style.setProperty('font-size', px);
+    document.body.style.fontSize = px;
+    try { localStorage.setItem('mf_font_size', size); } catch(e) {}
+};
+
 // ==================== 右侧怪兽侧边栏渲染 ====================
 window.renderMonsterSidebar = function() {
     var listEl = document.getElementById('monsterSidebarList');
@@ -741,18 +832,26 @@ window.renderMonsterSidebar = function() {
     }).join('');
 
     // 底部统计
-    if (footerEl) {
+    var statsHtml = '';
+    if (gameState.monsters.length > 0) {
         var total = gameState.monsters.length;
         var idle = gameState.monsters.filter(function(m) { return m.status === 'idle'; }).length;
         var farming = gameState.monsters.filter(function(m) { return m.status === 'farming'; }).length;
         var exploring = gameState.monsters.filter(function(m) { return m.status === 'exploring' || m.status === 'preparing'; }).length;
-        footerEl.innerHTML = '<div style="display:flex;justify-content:space-between;">' +
+        statsHtml = '<div style="display:flex;justify-content:space-between;">' +
             '<span>共 <strong style="color:#e6edf3;">' + total + '</strong> 只</span>' +
             '<span style="color:#46d164;">耕作 ' + farming + '</span>' +
             '<span style="color:#f0c53d;">探索 ' + exploring + '</span>' +
             '<span style="color:#8b949e;">空闲 ' + idle + '</span>' +
             '</div>';
     }
+    if (footerEl) footerEl.innerHTML = statsHtml;
+
+    // ── 同步移动端怪兽 tab ──
+    var mobListEl = document.getElementById('mobileMonsterList');
+    var mobFooterEl = document.getElementById('mobileMonsterFooter');
+    if (mobListEl) mobListEl.innerHTML = listEl.innerHTML;
+    if (mobFooterEl) mobFooterEl.innerHTML = statsHtml;
 };
 
 // ==================== 左侧农场概况渲染 ====================
@@ -813,6 +912,10 @@ window.showMobileMonsterPanel = function() {
 
 // 初始化UI - 在页面加载时调用
 window.addEventListener('load', function() {
+    // 恢复字体大小偏好
+    var savedSize = localStorage.getItem('mf_font_size');
+    if (savedSize) applyFontSize(savedSize);
+
     // 初始化移动端导航图标
     initMobileNavIcons();
     
