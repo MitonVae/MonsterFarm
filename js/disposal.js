@@ -28,26 +28,26 @@ window.renderDisposal = function() {
                 </div>
             </div>
             
-            <div class="disposal-option" onclick="showSacrificePanel()">
-                <div style="font-size: 48px;">${createSVG('sacrifice', 48)}</div>
+            <div class="disposal-option" onclick="sacrificeMonster()">
+                ${createSVG('sacrifice', 48)}
                 <div class="disposal-title">献祭仪式</div>
                 <div class="disposal-desc">献祭怪兽获得大量研究点</div>
             </div>
             
-            <div class="disposal-option" onclick="showLaboratoryPanel()">
-                <div style="font-size: 48px;">${createSVG('laboratory', 48)}</div>
+            <div class="disposal-option" onclick="researchMonster()">
+                ${createSVG('laboratory', 48)}
                 <div class="disposal-title">研究实验</div>
                 <div class="disposal-desc">让怪兽参与实验获得科技点数</div>
             </div>
             
-            <div class="disposal-option" onclick="showRecyclePanel()">
-                <div style="font-size: 48px;">${createSVG('repair', 48)}</div>
+            <div class="disposal-option" onclick="decomposeMonster()">
+                ${createSVG('repair', 48)}
                 <div class="disposal-title">分解回收</div>
                 <div class="disposal-desc">分解怪兽获得材料和食物</div>
             </div>
             
-            <div class="disposal-option" onclick="showSellPanel()">
-                <div style="font-size: 48px;">${createSVG('sell', 48)}</div>
+            <div class="disposal-option" onclick="sellMonster()">
+                ${createSVG('sell', 48)}
                 <div class="disposal-title">售卖交易</div>
                 <div class="disposal-desc">将怪兽卖给商人获得金币</div>
             </div>
@@ -146,6 +146,37 @@ window.decomposeMonster = function() {
         gameState.selectedMonster = null;
         
         showNotification('分解了 ' + monster.name, 'success');
+        updateResources();
+        renderMonsters();
+        renderDisposal();
+    }
+};
+
+window.researchMonster = function() {
+    if (!gameState.selectedMonster) {
+        showNotification('请先选择怪兽！', 'warning');
+        return;
+    }
+    
+    var monster = gameState.monsters.find(function(m) { return m.id === gameState.selectedMonster; });
+    
+    if (monster.status !== 'idle') {
+        showNotification('该怪兽正在工作中！', 'warning');
+        return;
+    }
+    
+    var totalStats = Object.values(monster.stats).reduce(function(a, b) { return a + b; }, 0);
+    var reward = monster.level * 15 + totalStats * 3;
+    
+    if (confirm('确定要让 ' + monster.name + ' 参与研究实验吗？\n\n这将获得 ' + reward + ' 研究点\n\n⚠️ 怪兽将永远消失！')) {
+        gameState.research += reward;
+        
+        var index = gameState.monsters.findIndex(function(m) { return m.id === monster.id; });
+        gameState.monsters.splice(index, 1);
+        
+        gameState.selectedMonster = null;
+        
+        showNotification('让 ' + monster.name + ' 参与了研究实验，获得 ' + reward + ' 研究点', 'success');
         updateResources();
         renderMonsters();
         renderDisposal();

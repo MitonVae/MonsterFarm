@@ -5,6 +5,76 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>怪兽农场 - 挂机经营游戏</title>
     <link rel="stylesheet" href="css/layout.css">
+    <style>
+        /* 确保布局正确显示的覆盖样式 */
+        .app-container {
+            display: flex !important;
+            min-height: 100vh !important;
+        }
+        
+        .sidebar {
+            width: 300px !important;
+            background: #21262d !important;
+            position: fixed !important;
+            left: 0 !important;
+            top: 0 !important;
+            height: 100vh !important;
+            z-index: 100 !important;
+        }
+        
+        .main-container {
+            flex: 1 !important;
+            margin-left: 300px !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+        
+        .mobile-bottom-nav {
+            display: none !important;
+        }
+        
+        /* 桌面端显示侧边栏 */
+        @media (min-width: 1024px) {
+            .sidebar {
+                display: flex !important;
+            }
+        }
+        
+        /* 平板端隐藏侧边栏，但可切换 */
+        @media (max-width: 1023px) and (min-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%) !important;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0) !important;
+            }
+            
+            .main-container {
+                margin-left: 0 !important;
+            }
+        }
+        
+        /* 手机端隐藏侧边栏，显示底部导航 */
+        @media (max-width: 767px) {
+            .sidebar {
+                display: none !important;
+            }
+            
+            .main-container {
+                margin-left: 0 !important;
+                margin-bottom: 80px !important;
+            }
+            
+            .desktop-tabs {
+                display: none !important;
+            }
+            
+            .mobile-bottom-nav {
+                display: flex !important;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- 应用容器 -->
@@ -174,6 +244,91 @@
         window.addEventListener('load', function() {
             loadGame();   // 尝试加载存档
             initGame();   // 初始化游戏
+            
+            // 强制初始化UI组件
+            setTimeout(function() {
+                updateResources();
+                renderAll();
+                
+                // 确保侧边栏图标显示
+                updateSidebarResources();
+                initMobileNavIcons();
+            }, 100);
+        });
+        
+        // DOMContentLoaded 备用初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOMContentLoaded triggered');
+            
+            // 强制显示应用容器
+            var appContainer = document.querySelector('.app-container');
+            if (appContainer) {
+                appContainer.style.display = 'flex';
+                appContainer.style.minHeight = '100vh';
+                console.log('App container forced to display');
+            }
+            
+            // 强制显示侧边栏
+            var sidebar = document.getElementById('sidebar');
+            if (sidebar) {
+                sidebar.style.display = 'flex';
+                sidebar.style.flexDirection = 'column';
+                console.log('Sidebar forced to display');
+            }
+            
+            // 强制显示主容器
+            var mainContainer = document.querySelector('.main-container');
+            if (mainContainer) {
+                mainContainer.style.display = 'flex';
+                mainContainer.style.flexDirection = 'column';
+                mainContainer.style.marginLeft = '300px';
+                console.log('Main container forced to display');
+            }
+            
+            // 如果元素存在但没有内容，强制设置
+            setTimeout(function() {
+                var coinsIcon = document.getElementById('coinsIcon');
+                var foodIcon = document.getElementById('foodIcon');
+                var materialsIcon = document.getElementById('materialsIcon');
+                var researchIcon = document.getElementById('researchIcon');
+                var energyIcon = document.getElementById('energyIcon');
+                
+                // 简单的SVG创建函数作为后备
+                function createSimpleSVG(type, size) {
+                    var svgMap = {
+                        coin: '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#f0c53d"/></svg>',
+                        food: '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#46d164"/></svg>',
+                        material: '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" fill="#8b949e"/></svg>',
+                        research: '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24"><polygon points="12,2 22,20 2,20" fill="#58a6ff"/></svg>',
+                        energy: '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#2ea043"/></svg>'
+                    };
+                    return svgMap[type] || '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#666"/></svg>';
+                }
+                
+                if (coinsIcon) {
+                    coinsIcon.innerHTML = (typeof createSVG === 'function' ? createSVG('coin', 20) : createSimpleSVG('coin', 20));
+                    console.log('Coins icon set');
+                }
+                if (foodIcon) {
+                    foodIcon.innerHTML = (typeof createSVG === 'function' ? createSVG('food', 20) : createSimpleSVG('food', 20));
+                    console.log('Food icon set');
+                }
+                if (materialsIcon) {
+                    materialsIcon.innerHTML = (typeof createSVG === 'function' ? createSVG('material', 20) : createSimpleSVG('material', 20));
+                    console.log('Materials icon set');
+                }
+                if (researchIcon) {
+                    researchIcon.innerHTML = (typeof createSVG === 'function' ? createSVG('research', 20) : createSimpleSVG('research', 20));
+                    console.log('Research icon set');
+                }
+                if (energyIcon) {
+                    energyIcon.innerHTML = (typeof createSVG === 'function' ? createSVG('energy', 20) : createSimpleSVG('energy', 20));
+                    console.log('Energy icon set');
+                }
+                
+                // 检查并显示调试信息
+                console.log('Layout fix applied. If you still see issues, check browser console for errors.');
+            }, 200);
         });
     </script>
 </body>
