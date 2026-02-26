@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>怪兽农场 - 挂机经营游戏</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏭 怪兽农场</h1>
+            <p>培育怪兽，经营农场，探索未知世界</p>
+        </div>
+        
+        <div class="resources" id="resources">
+            <!-- 资源卡片由JS动态生成，但为了SEO可以先留空，或静态写占位 -->
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('farm')">农场</button>
+            <button class="tab" onclick="switchTab('monsters')">怪兽</button>
+            <button class="tab" onclick="switchTab('exploration')">探索</button>
+            <button class="tab" onclick="switchTab('breeding')">繁殖</button>
+            <button class="tab" onclick="switchTab('tech')">科技</button>
+            <button class="tab" onclick="switchTab('disposal')">处理</button>
+        </div>
+        
+        <div id="farm-tab" class="tab-content active">
+            <div class="farm-container">
+                <h2>农场管理</h2>
+                <div class="farm-grid" id="farmGrid"></div>
+            </div>
+        </div>
+        
+        <div id="monsters-tab" class="tab-content">
+            <div class="farm-container">
+                <h2>怪兽管理 <span style="font-size: 14px; color: #666;">(点击选择怪兽进行分配)</span></h2>
+                <div style="margin: 15px 0;">
+                    <button class="btn btn-primary" onclick="showRecruitModal()">招募怪兽</button>
+                </div>
+                <div class="monster-grid" id="monsterGrid"></div>
+            </div>
+        </div>
+        
+        <div id="exploration-tab" class="tab-content">
+            <div class="exploration-area" id="explorationArea"></div>
+        </div>
+        
+        <div id="breeding-tab" class="tab-content">
+            <div class="breeding-container" id="breedingContainer"></div>
+        </div>
+        
+        <div id="tech-tab" class="tab-content">
+            <div class="farm-container">
+                <h2>科技树</h2>
+                <div class="tech-tree" id="techTree"></div>
+            </div>
+        </div>
+        
+        <div id="disposal-tab" class="tab-content">
+            <div class="disposal-container" id="disposalContainer"></div>
+        </div>
+    </div>
+    
+    <!-- 模态框 -->
+    <div class="modal" id="modal">
+        <div class="modal-content" id="modalContent"></div>
+    </div>
+
+    <!-- 按顺序加载JS模块 -->
+    <script src="js/main.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/farm.js"></script>
+    <script src="js/monster.js"></script>
+    <script src="js/exploration.js"></script>
+    <script src="js/breeding.js"></script>
+    <script src="js/tech.js"></script>
+    <script src="js/disposal.js"></script>
+    <script src="js/ui.js"></script>
+    <script>
+        // 页面加载后初始化
+        window.addEventListener('load', function() {
+            loadGame();   // 尝试加载存档
+            initGame();   // 初始化游戏
+        });
+    </script>
+</body>
+</html>
