@@ -24,7 +24,7 @@ body {
 .sidebar {
     width: 300px;
     background: #21262d;
-    border-right: 1px solid #30363d;
+    border-right: none;
     display: flex;
     flex-direction: column;
     position: fixed;
