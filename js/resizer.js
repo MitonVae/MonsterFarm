@@ -148,11 +148,12 @@
         root.style.setProperty('--left-width',  leftW  + 'px');
         root.style.setProperty('--right-width', rightW + 'px');
 
-        // 手柄定位：左手柄紧贴左栏右边缘，右手柄紧贴右栏左边缘
+        // 手柄定位：
+        //   左手柄：左栏右边缘（border-right 1px，手柄宽6px，居中 -3px）
+        //   右手柄：右栏左边缘（右栏无 border-left，手柄直接对齐边缘，居中 -3px）
         leftHandle.style.left   = (leftW - 3) + 'px';
         leftHandle.style.right  = '';
 
-        // 右手柄用 left 定位（= 视口宽度 - 右栏宽度 - 3）
         rightHandle.style.left  = (window.innerWidth - rightW - 3) + 'px';
         rightHandle.style.right = '';
     }
