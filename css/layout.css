@@ -419,49 +419,41 @@ body {
 .msb-btn-assign { background: #1a3a2a; color: #46d164; border: 1px solid #2ea043; }
 .msb-btn-recall { background: #3a1a1a; color: #f85149; border: 1px solid #da3633; }
 
-/* ==================== 拖拽分隔条 ==================== */
-.panel-resizer {
-    position: fixed;
-    top: 0;
-    width: 6px;
-    height: 100vh;
-    z-index: 200;
+/* ==================== Grid 拖拽分隔条（新方案）==================== */
+.grd-resizer {
+    /* 作为 Grid 子项，宽度由 grid-template-columns 决定，高度撑满行 */
+    align-self: stretch;
     cursor: col-resize;
     background: transparent;
-    transition: background 0.2s ease;
+    position: relative;
+    transition: background 0.15s ease;
     user-select: none;
+    z-index: 200;
 }
 
-.panel-resizer::after {
+/* 悬停/拖拽时显示蓝色高亮线 */
+.grd-resizer:hover,
+.grd-resizer.active {
+    background: rgba(88, 166, 255, 0.15);
+}
+
+.grd-resizer::after {
     content: '';
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 3px;
-    height: 80px;
-    background: transparent;   /* 默认完全透明，不显示任何竖线 */
+    width: 2px;
+    height: 60px;
+    background: transparent;
     border-radius: 2px;
-    transition: background 0.15s ease, box-shadow 0.15s ease, height 0.15s ease;
+    transition: background 0.15s ease, box-shadow 0.15s ease;
 }
 
-.panel-resizer:hover,
-.panel-resizer.dragging {
-    background: rgba(88, 166, 255, 0.1);
-}
-
-.panel-resizer:hover::after,
-.panel-resizer.dragging::after {
+.grd-resizer:hover::after,
+.grd-resizer.active::after {
     background: #58a6ff;
-    box-shadow: 0 0 10px rgba(88, 166, 255, 0.6);
-}
-
-#leftResizer {
-    /* left 值由 JS 动态设置 */
-}
-
-#rightResizer {
-    /* right 值由 JS 动态设置 */
+    box-shadow: 0 0 8px rgba(88, 166, 255, 0.7);
 }
 
 /* ==================== 主内容区域 ==================== */
