@@ -438,6 +438,44 @@ window.quickSave = function() {
     if (typeof briefSave === 'function') briefSave(false);
 };
 
+// ==================== 一键召回：二次确认弹窗 ====================
+window.confirmRecallAll = function() {
+    // 统计当前在岗怪兽数量
+    var count = 0;
+    gameState.plots.forEach(function(p) { if (p.assignedMonster) count++; });
+    Object.keys(gameState.zoneStates || {}).forEach(function(zid) {
+        var zs = gameState.zoneStates[zid];
+        if (zs && zs.assignedMonsters) count += zs.assignedMonsters.length;
+    });
+
+    if (count === 0) {
+        showModal(
+            '<div style="text-align:center;padding:24px 16px;">' +
+            '<div style="font-size:36px;margin-bottom:12px;">😴</div>' +
+            '<div style="font-size:15px;font-weight:600;color:#e6edf3;margin-bottom:6px;">没有在岗的怪兽</div>' +
+            '<div style="font-size:13px;color:#8b949e;margin-bottom:20px;">所有怪兽当前都处于待机状态。</div>' +
+            '<button class="btn btn-secondary" onclick="closeModal()">关闭</button>' +
+            '</div>'
+        );
+        return;
+    }
+
+    showModal(
+        '<div style="text-align:center;padding:24px 16px;">' +
+        '<div style="font-size:36px;margin-bottom:12px;">⚠️</div>' +
+        '<div style="font-size:15px;font-weight:600;color:#e6edf3;margin-bottom:8px;">确认一键召回？</div>' +
+        '<div style="font-size:13px;color:#8b949e;margin-bottom:20px;">' +
+        '当前共有 <span style="color:#f0c53d;font-weight:700;">' + count + '</span> 只怪兽正在作业，<br>' +
+        '召回后所有进行中的任务将<span style="color:#f85149;">立即中断</span>。' +
+        '</div>' +
+        '<div style="display:flex;gap:12px;justify-content:center;">' +
+        '<button class="btn btn-secondary" onclick="closeModal()" style="min-width:90px;">取消</button>' +
+        '<button class="btn btn-warning" onclick="recallAllMonsters();closeModal();" style="min-width:90px;">确认召回</button>' +
+        '</div>' +
+        '</div>'
+    );
+};
+
 // ==================== 快捷操作：一键召回所有怪兽 ====================
 window.recallAllMonsters = function() {
     var recalled = 0;
