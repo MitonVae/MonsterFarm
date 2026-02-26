@@ -760,8 +760,42 @@ window.showSettingsModal = function() {
         '<button class="btn btn-primary" style="flex:1;" onclick="quickSave();closeModal();">💾 手动存档</button>' +
         '<button class="btn btn-secondary" style="flex:1;" onclick="confirmRecallAll();">🔄 一键召回</button>' +
         '</div></div>' +
-        '<div class="modal-buttons"><button class="btn btn-primary" onclick="closeModal()">关闭</button></div>';
+        '<div class="modal-buttons"><button class="btn btn-primary" onclick="closeModal()">关闭</button></div>' +
+        // 隐藏的版本号，长按2秒触发GM面板入口
+        '<div id="gmVersionHint" ' +
+            'style="text-align:center;margin-top:8px;font-size:10px;color:#30363d;cursor:default;user-select:none;letter-spacing:0.3px;" ' +
+            'title="">' +
+            'v0.9.1-dev' +
+        '</div>';
     showModal(html);
+    // 为版本号注册长按事件（长按2秒）
+    setTimeout(function() {
+        var hint = document.getElementById('gmVersionHint');
+        if (!hint) return;
+        var _pressTimer = null;
+        var _pressStart = 0;
+        function startPress(e) {
+            _pressStart = Date.now();
+            hint.style.color = '#58a6ff';
+            _pressTimer = setTimeout(function() {
+                hint.style.color = '#f0c53d';
+                setTimeout(function() {
+                    closeModal();
+                    if (typeof window.openGMPanel === 'function') window.openGMPanel();
+                }, 200);
+            }, 2000);
+        }
+        function cancelPress() {
+            if (_pressTimer) { clearTimeout(_pressTimer); _pressTimer = null; }
+            hint.style.color = '#30363d';
+        }
+        hint.addEventListener('mousedown', startPress);
+        hint.addEventListener('touchstart', startPress, { passive: true });
+        hint.addEventListener('mouseup', cancelPress);
+        hint.addEventListener('mouseleave', cancelPress);
+        hint.addEventListener('touchend', cancelPress);
+        hint.addEventListener('touchcancel', cancelPress);
+    }, 100);
 };
 
 // 应用字体大小
