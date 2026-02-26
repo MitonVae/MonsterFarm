@@ -98,10 +98,15 @@ function growCrop(plotId) {
         var elapsed = Date.now() - plot.plantedAt;
         plot.progress = Math.min(100, (elapsed / cropType.growTime) * 100 * speedMultiplier);
         
-        renderFarm();
+        // 只更新特定地块的进度条，而不是重新渲染整个农场
+        updatePlotProgress(plotId);
         
         if (plot.progress >= 100) {
             clearInterval(growInterval);
+            
+            // 进度完成时更新地块状态
+            updatePlotAppearance(plotId);
+            
             showNotification(cropType.name + ' 成熟了！', 'success');
             
             if (plot.assignedMonster) {
@@ -109,6 +114,48 @@ function growCrop(plotId) {
             }
         }
     }, 100);
+}
+
+// 只更新特定地块的进度条
+function updatePlotProgress(plotId) {
+    var plot = gameState.plots[plotId];
+    if (!plot.crop) return;
+    
+    // 使用ID直接找到地块元素
+    var plotElement = document.getElementById('plot-' + plotId);
+    if (!plotElement) return;
+    
+    var progressFill = plotElement.querySelector('.progress-fill');
+    if (progressFill) {
+        progressFill.style.width = plot.progress + '%';
+    }
+}
+
+// 更新地块外观（用于状态变化时）
+function updatePlotAppearance(plotId) {
+    var plot = gameState.plots[plotId];
+    var plotElement = document.getElementById('plot-' + plotId);
+    
+    if (!plotElement || !plot.crop) return;
+    
+    var isReady = plot.progress >= 100;
+    
+    if (isReady) {
+        plotElement.classList.add('ready');
+        plotElement.onclick = function() { harvest(plotId); };
+        plotElement.style.animation = 'pulse 1s infinite';
+        
+        // 更新文本内容以显示可收获状态
+        var plotText = plotElement.querySelector('.plot-text');
+        if (plotText) {
+            var cropType = cropTypes.find(function(c) { return c.id === plot.crop; });
+            plotText.innerHTML = cropType.name + '<br><small style="color: #46d164;">点击收获</small>';
+        }
+    } else {
+        plotElement.classList.remove('ready');
+        plotElement.onclick = null;
+        plotElement.style.animation = '';
+    }
 }
 
 window.harvest = function(plotId) {

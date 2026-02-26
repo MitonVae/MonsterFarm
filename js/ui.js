@@ -153,7 +153,7 @@ window.renderFarm = function() {
     farmGrid.innerHTML = gameState.plots.map(function(plot) {
         if (plot.locked) {
             return `
-                <div class="plot locked" onclick="unlockPlot(${plot.id})">
+                <div class="plot locked" id="plot-${plot.id}" data-plot-id="${plot.id}" onclick="unlockPlot(${plot.id})">
                     ${createSVG('lock', 48)}
                     <div class="plot-text">
                         解锁需要:<br>
@@ -170,6 +170,7 @@ window.renderFarm = function() {
             
             return `
                 <div class="plot planted ${isReady ? 'ready' : ''}" 
+                     id="plot-${plot.id}" data-plot-id="${plot.id}"
                      onclick="${isReady ? 'harvest(' + plot.id + ')' : ''}"
                      style="${isReady ? 'animation: pulse 1s infinite;' : ''}">
                     ${createSVG('plant', 48)}
@@ -187,7 +188,7 @@ window.renderFarm = function() {
         }
         
         return `
-            <div class="plot" onclick="showPlantMenu(${plot.id})">
+            <div class="plot" id="plot-${plot.id}" data-plot-id="${plot.id}" onclick="showPlantMenu(${plot.id})">
                 ${createSVG('add', 48)}
                 <div class="plot-text">点击种植</div>
             </div>
