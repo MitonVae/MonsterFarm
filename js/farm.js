@@ -427,6 +427,59 @@ window.autoHarvestAll = function() {
     if (harvested === 0) showNotification('没有可手动收获的作物', 'info');
 };
 
+// ==================== 快捷操作：手动存档 ====================
+window.quickSave = function() {
+    autoSave();
+    showNotification('✅ 存档成功！', 'success');
+};
+
+// ==================== 快捷操作：一键召回所有怪兽 ====================
+window.recallAllMonsters = function() {
+    var recalled = 0;
+
+    // 从农田召回
+    gameState.plots.forEach(function(plot) {
+        if (plot.assignedMonster) {
+            var m = plot.assignedMonster;
+            // 停止自动循环（清除定时器由 removeMonsterFromPlot 处理）
+            plot.assignedMonster = null;
+            plot.autoCrop = null;
+            if (growIntervals[plot.id]) {
+                clearInterval(growIntervals[plot.id]);
+                delete growIntervals[plot.id];
+            }
+            // 重置怪兽状态
+            m.status = 'idle';
+            m.assignment = null;
+            recalled++;
+        }
+    });
+
+    // 从探索队召回（zoneStates 中派遣的怪兽）
+    Object.keys(gameState.zoneStates).forEach(function(zoneId) {
+        var zs = gameState.zoneStates[zoneId];
+        if (zs && zs.assignedMonsters && zs.assignedMonsters.length > 0) {
+            zs.assignedMonsters.forEach(function(m) {
+                m.status = 'idle';
+                m.assignment = null;
+                recalled++;
+            });
+            if (zs.autoTimer) {
+                clearInterval(zs.autoTimer);
+                zs.autoTimer = null;
+            }
+            zs.assignedMonsters = [];
+        }
+    });
+
+    if (recalled === 0) {
+        showNotification('没有正在工作的怪兽', 'info');
+    } else {
+        showNotification('已召回 ' + recalled + ' 只怪兽', 'success');
+        renderAll();
+    }
+};
+
 // ==================== 一键种植（手动地块）====================
 window.autoPlantAll = function() {
     var availableCrops = cropTypes.filter(function(crop) {

@@ -821,12 +821,8 @@ window.addEventListener('load', function() {
     }
     
     // 初始化快捷操作按钮图标
-    var quickActionBtns = document.querySelectorAll('.quick-action-btn .quick-action-icon');
-    quickActionBtns.forEach(function(icon, index) {
-        if (index === 0) {
-            icon.innerHTML = createSVG('harvest', 16);
-        } else if (index === 1) {
-            icon.innerHTML = createSVG('plant', 16);
-        }
-    });
+    var saveIconEl = document.getElementById('quickSaveIcon');
+    if (saveIconEl) saveIconEl.innerHTML = createSVG('save', 16);
+    var recallIconEl = document.getElementById('recallIcon');
+    if (recallIconEl) recallIconEl.innerHTML = createSVG('recall', 16);
 });
