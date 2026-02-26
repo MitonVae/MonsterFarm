@@ -216,7 +216,7 @@ body {
     right: 0;
     top: 0;
     height: 100vh;
-    overflow-y: auto;
+    overflow-y: hidden;  /* 外层不滚动，由内部 .monster-sidebar-list 滚动 */
     transition: transform 0.3s ease;
     z-index: 100;
 }

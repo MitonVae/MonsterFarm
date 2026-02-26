@@ -154,7 +154,9 @@
         leftHandle.style.left   = (leftW - 3) + 'px';
         leftHandle.style.right  = '';
 
-        rightHandle.style.left  = (window.innerWidth - rightW - 3) + 'px';
+        // 用 clientWidth 而非 innerWidth，避免因页面滚动条占位导致偏移
+        const vw = document.documentElement.clientWidth;
+        rightHandle.style.left  = (vw - rightW - 3) + 'px';
         rightHandle.style.right = '';
     }
 
