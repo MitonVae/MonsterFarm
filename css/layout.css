@@ -5,6 +5,34 @@
     box-sizing: border-box;
 }
 
+/* ==================== 全局滚动条样式 ==================== */
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(88, 166, 255, 0.25) transparent;
+}
+
+/* WebKit / Blink (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(88, 166, 255, 0.22);
+    border-radius: 100px;
+    min-height: 32px;
+    transition: background 0.2s ease;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(88, 166, 255, 0.55);
+}
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: #0d1117;
@@ -83,11 +111,7 @@ body {
     flex-direction: column;
     gap: 4px;
     padding-right: 2px;
-    scrollbar-width: thin;
-    scrollbar-color: #30363d transparent;
 }
-#briefingList::-webkit-scrollbar { width: 4px; }
-#briefingList::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
 
 .briefing-empty {
     font-size: 12px;
