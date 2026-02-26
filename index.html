@@ -18,39 +18,29 @@
             min-height: 100vh;
         }
 
+        /* 桌面端三栏由 resizer.js 用 Grid 控制，此处只保留基础样式 */
         .sidebar {
-            width: var(--left-width);
             background: #21262d;
-            position: fixed;
-            left: 0;
-            top: 0;
-            height: 100vh;
-            z-index: 100;
             display: flex;
             flex-direction: column;
+            height: 100vh;
             overflow-y: auto;
         }
 
         .monster-sidebar {
-            width: var(--right-width);
             background: #161b22;
             border-left: none;
-            position: fixed;
-            right: 0;
-            top: 0;
-            height: 100vh;
-            z-index: 100;
             display: flex;
             flex-direction: column;
-            overflow-y: auto;
+            height: 100vh;
+            overflow-y: hidden;
         }
 
         .main-container {
-            flex: 1;
-            margin-left: var(--left-width);
-            margin-right: var(--right-width);
             display: flex;
             flex-direction: column;
+            min-height: 100vh;
+            overflow: hidden auto;
         }
 
         .mobile-bottom-nav {
@@ -297,87 +287,27 @@
             }, 100);
         });
         
-        // DOMContentLoaded 备用初始化
+        // 图标后备初始化（仅处理图标，不干预布局）
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOMContentLoaded triggered');
-            
-            // 强制显示应用容器
-            var appContainer = document.querySelector('.app-container');
-            if (appContainer) {
-                appContainer.style.display = 'flex';
-                appContainer.style.minHeight = '100vh';
-                console.log('App container forced to display');
-            }
-            
-            // 强制显示侧边栏
-            var sidebar = document.getElementById('sidebar');
-            if (sidebar) {
-                sidebar.style.display = 'flex';
-                sidebar.style.flexDirection = 'column';
-                console.log('Sidebar forced to display');
-            }
-            
-            // 强制显示主容器
-            var mainContainer = document.querySelector('.main-container');
-            if (mainContainer) {
-                mainContainer.style.display = 'flex';
-                mainContainer.style.flexDirection = 'column';
-                // 注意：margin 由 CSS 变量 --left-width / --right-width 控制，勿在此硬写
-                console.log('Main container forced to display');
-            }
-
-            // 强制显示右侧怪兽侧边栏
-            var monsterSidebar = document.getElementById('monsterSidebar');
-            if (monsterSidebar) {
-                monsterSidebar.style.display = 'flex';
-                monsterSidebar.style.flexDirection = 'column';
-                console.log('Monster sidebar forced to display');
-            }
-            
-            // 如果元素存在但没有内容，强制设置
             setTimeout(function() {
-                var coinsIcon = document.getElementById('coinsIcon');
-                var foodIcon = document.getElementById('foodIcon');
-                var materialsIcon = document.getElementById('materialsIcon');
-                var researchIcon = document.getElementById('researchIcon');
-                var energyIcon = document.getElementById('energyIcon');
-                
-                // 简单的SVG创建函数作为后备
                 function createSimpleSVG(type, size) {
                     var svgMap = {
-                        coin: '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#f0c53d"/></svg>',
-                        food: '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#46d164"/></svg>',
+                        coin:     '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#f0c53d"/></svg>',
+                        food:     '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#46d164"/></svg>',
                         material: '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" fill="#8b949e"/></svg>',
                         research: '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24"><polygon points="12,2 22,20 2,20" fill="#58a6ff"/></svg>',
-                        energy: '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#2ea043"/></svg>'
+                        energy:   '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#2ea043"/></svg>'
                     };
-                    return svgMap[type] || '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#666"/></svg>';
+                    return svgMap[type] || '';
                 }
-                
-                if (coinsIcon) {
-                    coinsIcon.innerHTML = (typeof createSVG === 'function' ? createSVG('coin', 20) : createSimpleSVG('coin', 20));
-                    console.log('Coins icon set');
+                var icons = { coinsIcon:'coin', foodIcon:'food', materialsIcon:'material', researchIcon:'research', energyIcon:'energy' };
+                for (var id in icons) {
+                    var el = document.getElementById(id);
+                    if (el && !el.innerHTML.trim()) {
+                        el.innerHTML = (typeof createSVG === 'function' ? createSVG(icons[id], 20) : createSimpleSVG(icons[id], 20));
+                    }
                 }
-                if (foodIcon) {
-                    foodIcon.innerHTML = (typeof createSVG === 'function' ? createSVG('food', 20) : createSimpleSVG('food', 20));
-                    console.log('Food icon set');
-                }
-                if (materialsIcon) {
-                    materialsIcon.innerHTML = (typeof createSVG === 'function' ? createSVG('material', 20) : createSimpleSVG('material', 20));
-                    console.log('Materials icon set');
-                }
-                if (researchIcon) {
-                    researchIcon.innerHTML = (typeof createSVG === 'function' ? createSVG('research', 20) : createSimpleSVG('research', 20));
-                    console.log('Research icon set');
-                }
-                if (energyIcon) {
-                    energyIcon.innerHTML = (typeof createSVG === 'function' ? createSVG('energy', 20) : createSimpleSVG('energy', 20));
-                    console.log('Energy icon set');
-                }
-                
-                // 检查并显示调试信息
-                console.log('Layout fix applied. If you still see issues, check browser console for errors.');
-            }, 200);
+            }, 300);
         });
     </script>
 </body>

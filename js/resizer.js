@@ -15,7 +15,7 @@
         LEFT:  { min: 160, max: 400, def: 260, key: 'grd_left_w'  },
         RIGHT: { min: 180, max: 450, def: 280, key: 'grd_right_w' },
         CENTER_MIN: 320,
-        HANDLE_PX: 4,
+        HANDLE_PX: 8,
         BREAKPOINT: 1024
     };
 
@@ -45,39 +45,49 @@
         if (sl >= CONFIG.LEFT.min  && sl <= CONFIG.LEFT.max)  leftW  = sl;
         if (sr >= CONFIG.RIGHT.min && sr <= CONFIG.RIGHT.max) rightW = sr;
 
-        // 把三个已有子元素改为 Grid 流
-        // app-container 原来是 flex，现改为 grid
-        appEl.style.display = 'grid';
-        appEl.style.height  = '100vh';
-        appEl.style.overflow = 'hidden';
+        // app-container 改为 grid（直接设置各属性，避免 cssText 追加时旧 display:flex 优先级更高的问题）
+        appEl.style.setProperty('display', 'grid', 'important');
+        appEl.style.height     = '100vh';
+        appEl.style.overflow   = 'hidden';
+        appEl.style.minHeight  = 'unset';
 
-        // 侧边栏从 fixed 改为 grid 子项（普通流）
-        leftSidebar.style.position  = 'relative';
-        leftSidebar.style.left      = '';
-        leftSidebar.style.top       = '';
-        leftSidebar.style.height    = '100vh';
+        // 侧边栏：脱离 fixed，成为 grid 列子项
+        leftSidebar.style.setProperty('position', 'relative', 'important');
+        leftSidebar.style.setProperty('left', 'unset', 'important');
+        leftSidebar.style.setProperty('top', 'unset', 'important');
+        leftSidebar.style.height   = '100vh';
         leftSidebar.style.overflowY = 'auto';
-        leftSidebar.style.zIndex    = '';
+        leftSidebar.style.width    = 'auto';
+        leftSidebar.style.zIndex   = 'auto';
 
-        rightSidebar.style.position  = 'relative';
-        rightSidebar.style.right     = '';
-        rightSidebar.style.top       = '';
+        rightSidebar.style.setProperty('position', 'relative', 'important');
+        rightSidebar.style.setProperty('right', 'unset', 'important');
+        rightSidebar.style.setProperty('top', 'unset', 'important');
         rightSidebar.style.height    = '100vh';
         rightSidebar.style.overflowY = 'hidden';
-        rightSidebar.style.zIndex    = '';
+        rightSidebar.style.width     = 'auto';
+        rightSidebar.style.zIndex    = 'auto';
 
-        mainEl.style.margin   = '0';
+        mainEl.style.setProperty('margin', '0', 'important');
         mainEl.style.minHeight = '100vh';
         mainEl.style.overflow  = 'hidden auto';
+
+        // mobile-bottom-nav 排除在 grid 列之外（用 position:fixed 固定在底部）
+        var mobileNav = document.querySelector('.mobile-bottom-nav');
+        if (mobileNav) {
+            mobileNav.style.position = 'fixed';
+            // 给 grid 设置 grid-column:1/-1 让它不占列，实际我们直接让它不参与 grid 行
+            mobileNav.style.gridColumn = '1 / -1';
+            mobileNav.style.gridRow    = '2';
+        }
 
         // 创建两个手柄，插入到 DOM 正确位置
         leftHandle  = makeHandle('grd-left-resizer');
         rightHandle = makeHandle('grd-right-resizer');
 
         // Grid 顺序：leftSidebar | leftHandle | mainEl | rightHandle | rightSidebar
-        // 用 insertBefore 把手柄插到正确位置
-        appEl.insertBefore(leftHandle,  mainEl);          // leftSidebar → leftHandle → mainEl
-        appEl.insertBefore(rightHandle, rightSidebar);    // mainEl → rightHandle → rightSidebar
+        appEl.insertBefore(leftHandle,  mainEl);
+        appEl.insertBefore(rightHandle, rightSidebar);
 
         // 事件绑定
         leftHandle.addEventListener ('mousedown', function(e){ startDrag(e, 'left');  });
