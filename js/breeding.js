@@ -187,6 +187,7 @@ window.startBreeding = function() {
         gameState.monstersBreed++;
         
         showNotification('繁殖成功！获得新怪兽：' + child.name, 'success');
+        if (typeof briefBreed === 'function') briefBreed(child.name, parent1.name + ' × ' + parent2.name);
         renderBreeding();
         renderMonsters();
     }, 45000);

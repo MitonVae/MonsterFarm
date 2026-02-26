@@ -101,10 +101,20 @@ function settleZone(zone) {
     if (mats     > 0) rewardText += ' 材料+'  + mats;
     if (research > 0) rewardText += ' 研究+'  + research;
     showNotification(zone.icon + ' ' + zone.name + ' 探索完成！' + rewardText, 'success');
+
+    // 简报：探索结算（取派遣怪兽之一的名字作代表，或标为手动）
+    var repMonsterName = null;
+    if (zs.assignedMonsterIds && zs.assignedMonsterIds.length > 0) {
+        var repM = gameState.monsters.find(function(x) { return x.id === zs.assignedMonsterIds[0]; });
+        if (repM) repMonsterName = repM.name;
+    }
+    if (typeof briefExplore === 'function') briefExplore(zone.name, { coins: coins, food: food, materials: mats, research: research }, repMonsterName);
+
     if (caught) {
         var rarity = monsterTypes[caught.type].rarity;
         var rarityLabel = { common:'普通', uncommon:'优良', rare:'稀有', epic:'史诗', legendary:'传说' }[rarity] || '';
         showNotification('🎉 捕获了 [' + rarityLabel + '] ' + caught.name + '！', 'success');
+        if (typeof briefCatch === 'function') briefCatch(caught.name + '（' + rarityLabel + '）', zone.name);
         // 触发引导系统钩子
         if (typeof onTutorialMonsterCaught === 'function') onTutorialMonsterCaught();
     }

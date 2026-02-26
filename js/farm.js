@@ -257,6 +257,7 @@ function autoHarvestPlot(plotId) {
     if (Math.random() < 0.25) gameState.research += Math.floor(Math.random() * 4) + 1;
     var msg = (isQuality ? '✨ 优质 ' : '') + cropType.name + ' 自动收获！+' + yieldAmt + '食 +' + valueAmt + '金';
     showNotification(msg, isQuality ? 'success' : 'info');
+    if (typeof briefHarvest === 'function') briefHarvest((isQuality ? '✨优质' : '') + cropType.name, valueAmt, yieldAmt, monster ? monster.name : null);
     if (monster) {
         var expGain = 10 + Math.floor(monster.stats.farming * 0.5);
         gainExp(monster, expGain);
@@ -332,6 +333,7 @@ window.harvest = function(plotId) {
     gameState.totalHarvests++;
     if (Math.random() < 0.3) gameState.research += Math.floor(Math.random() * 5) + 1;
     showNotification('收获 ' + cropType.name + '！+' + yieldAmount + '食物 +' + valueAmount + '金币', 'success');
+    if (typeof briefHarvest === 'function') briefHarvest(cropType.name, valueAmount, yieldAmount, null);
     plot.crop = null;
     plot.plantedAt = null;
     plot.progress = 0;
@@ -431,6 +433,7 @@ window.autoHarvestAll = function() {
 window.quickSave = function() {
     autoSave();
     showNotification('✅ 存档成功！', 'success');
+    if (typeof briefSave === 'function') briefSave(false);
 };
 
 // ==================== 快捷操作：一键召回所有怪兽 ====================

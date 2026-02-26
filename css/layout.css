@@ -77,6 +77,77 @@ body {
     flex: 1;
 }
 
+/* ========== 实时简报 ========== */
+#briefingList {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-right: 2px;
+    scrollbar-width: thin;
+    scrollbar-color: #30363d transparent;
+}
+#briefingList::-webkit-scrollbar { width: 4px; }
+#briefingList::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
+
+.briefing-empty {
+    font-size: 12px;
+    color: #484f58;
+    text-align: center;
+    padding: 20px 0;
+    font-style: italic;
+}
+
+.briefing-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: #0d1117;
+    border-left: 3px solid transparent;
+    font-size: 11.5px;
+    line-height: 1.5;
+    animation: briefingIn 0.3s ease-out;
+    transition: background 0.15s;
+}
+.briefing-item:hover { background: #161b22; }
+
+/* 类型色带 */
+.briefing-item.type-catch   { border-left-color: #3fb950; }
+.briefing-item.type-levelup { border-left-color: #f0c53d; }
+.briefing-item.type-harvest { border-left-color: #58a6ff; }
+.briefing-item.type-explore { border-left-color: #a371f7; }
+.briefing-item.type-event   { border-left-color: #f0883e; }
+.briefing-item.type-tech    { border-left-color: #39d353; }
+.briefing-item.type-breed   { border-left-color: #ff7eb3; }
+.briefing-item.type-save    { border-left-color: #484f58; }
+.briefing-item.type-system  { border-left-color: #484f58; }
+
+.briefing-icon {
+    font-size: 13px;
+    flex-shrink: 0;
+    line-height: 1.5;
+}
+
+.briefing-text {
+    flex: 1;
+    color: #c9d1d9;
+}
+.briefing-text strong { color: #e6edf3; }
+
+.briefing-time {
+    flex-shrink: 0;
+    font-size: 10px;
+    color: #484f58;
+    white-space: nowrap;
+    margin-top: 1px;
+}
+
+@keyframes briefingIn {
+    from { opacity: 0; transform: translateX(-8px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
 .sidebar-section h3 {
     font-size: 14px;
     color: #58a6ff;

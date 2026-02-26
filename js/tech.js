@@ -69,6 +69,7 @@ window.unlockTech = function(techId) {
     }
     
     showNotification('成功解锁：' + tech.name + '！', 'success');
+    if (typeof briefTech === 'function') briefTech(tech.name);
     updateResources();
     renderTech();
     renderFarm();

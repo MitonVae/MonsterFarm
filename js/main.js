@@ -491,6 +491,7 @@ function gainExp(monster, amount) {
         });
         
         showNotification(monster.name + ' 升级到 ' + monster.level + ' 级！', 'success');
+    if (typeof briefLevelUp === 'function') briefLevelUp(monster.name, monster.level);
     }
 }
 
