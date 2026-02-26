@@ -773,11 +773,14 @@ svg[width="48"], svg[width="50"], svg[width="60"] {
     transform: translateX(-50%) translateY(30px);
     width: 360px;
     max-width: calc(100vw - 32px);
+    /* 高度自适应内容，不撑满屏幕 */
+    height: auto !important;
+    max-height: 80vh;
     background: #1c2128;
     border: 1px solid #58a6ff;
     border-radius: 16px;
     box-shadow: 0 8px 32px rgba(88,166,255,0.25), 0 2px 8px rgba(0,0,0,0.6);
-    z-index: 4100; /* 高于遮罩 4000 */
+    z-index: 4100;
     opacity: 0;
     transition: opacity 0.35s ease, transform 0.35s ease;
     overflow: hidden;

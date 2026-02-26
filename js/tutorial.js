@@ -27,15 +27,25 @@ var tutorialSteps = [
     {
         id: 'explore_first',
         title: '🌿 点击「⚡ 探索」开始探索',
-        content: '这是最近的区域——<strong style="color:#46d164;">农场边缘</strong>。<br><br>' +
-            '每次点击 <strong style="color:#58a6ff;">⚡ 探索</strong> 按钮消耗能量推进进度，<br>' +
-            '进度达到 <strong style="color:#f0c53d;">100%</strong> 后结算，<br>并有机会 <strong style="color:#f0c53d;">捕获野生怪兽</strong>！<br><br>' +
-            '现在开始点击探索吧，直到捕获一只怪兽～',
-        focusSelector: '#explorationArea',
+        content: '这是 <strong style="color:#46d164;">农场边缘</strong> 区域。<br><br>' +
+            '点击下方高亮的 <strong style="color:#58a6ff;">⚡ 探索</strong> 按钮，<br>' +
+            '消耗能量推进进度，达到 <strong style="color:#f0c53d;">100%</strong> 后结算，<br>' +
+            '并有机会 <strong style="color:#f0c53d;">捕获野生怪兽</strong>！',
+        // 精准高亮第一个区域（农场边缘）的探索按钮
+        focusSelector: 'button.expl-manual-btn[onclick*="farm_edge"]',
         allowInteract: true,
-        btnText: null,         // 等待捕获，不显示按钮
+        btnText: null,
         onShow: function() {
             tutorialState.waitingForMonster = true;
+            // 按钮是动态生成的，等 DOM 渲染完后刷新一次遮罩位置
+            setTimeout(function() {
+                if (tutorialState.active && tutorialState.currentStep === 1) {
+                    var step = tutorialSteps[1];
+                    renderOverlay(step);
+                    var bubble = document.getElementById('tutorialBubble');
+                    if (bubble) positionBubble(bubble, step);
+                }
+            }, 300);
         },
         onNext: null
     },
