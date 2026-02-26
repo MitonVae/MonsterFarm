@@ -87,7 +87,7 @@ var technologies = {
 var randomEvents = {
     farming: [
         {
-            title: '🌧️ 及时雨',
+            title: '及时雨',
             desc: '一场及时雨降临农场，作物生长速度临时提升！',
             choices: [
                 { text: '太好了！', effect: function() {
@@ -102,7 +102,7 @@ var randomEvents = {
             ]
         },
         {
-            title: '🐛 虫害',
+            title: '虫害',
             desc: '农场遭遇虫害！是否使用食物驱虫？',
             choices: [
                 { 
@@ -123,7 +123,7 @@ var randomEvents = {
             ]
         },
         {
-            title: '💨 大风',
+            title: '大风',
             desc: '大风吹过农场，散落了一些材料',
             choices: [
                 { text: '收集', effect: function() {
@@ -137,7 +137,7 @@ var randomEvents = {
     ],
     exploration: [
         {
-            title: '🗺️ 神秘商人',
+            title: '神秘商人',
             desc: '遇到神秘商人，愿意用材料交换金币',
             choices: [
                 { 
@@ -153,7 +153,7 @@ var randomEvents = {
             ]
         },
         {
-            title: '⚔️ 野生怪兽',
+            title: '野生怪兽',
             desc: '遭遇野生怪兽！是否战斗捕获？',
             choices: [
                 { 
@@ -175,7 +175,7 @@ var randomEvents = {
             ]
         },
         {
-            title: '💎 宝藏',
+            title: '宝藏',
             desc: '发现了一个宝箱！',
             choices: [
                 { text: '打开', effect: function() {
@@ -197,7 +197,7 @@ var randomEvents = {
     ],
     general: [
         {
-            title: '🎁 意外之财',
+            title: '意外之财',
             desc: '路过的旅行者给了你一些金币',
             choices: [
                 { text: '收下', effect: function() {
@@ -233,6 +233,9 @@ function initGame() {
     
     // 创建初始怪兽
     createMonster('slime');
+    
+    // 初始化UI
+    initUI();
     
     renderAll();
 }

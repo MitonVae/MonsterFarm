@@ -8,7 +8,7 @@ window.renderBreeding = function() {
         breedingContainer.innerHTML = `
             <h2>繁殖中心</h2>
             <div style="text-align: center; padding: 60px; color: #999;">
-                <div style="font-size: 48px; margin-bottom: 20px;">🔒</div>
+                <div style="font-size: 48px; margin-bottom: 20px;">${createSVG('locked_tech', 48)}</div>
                 <div>需要解锁"繁殖技术"才能使用</div>
                 <button class="btn btn-primary" style="margin-top: 20px;" onclick="switchTab('tech')">
                     前往科技树
@@ -23,22 +23,20 @@ window.renderBreeding = function() {
         <p style="color: #666; margin: 10px 0;">选择两只怪兽进行繁殖，培育更强的后代</p>
         
         <div class="breeding-slots">
-            <div class="breeding-slot" id="breedSlot1" onclick="selectBreedingMonster(1)">
-                ${gameState.breedingSlot1 ? 
-                    createSVG(gameState.breedingSlot1.type, 60) +
-                    '<div style="font-size: 12px; margin-top: 10px;">' + gameState.breedingSlot1.name + '</div>' :
-                    createSVG('add', 60) + '<div style="font-size: 12px; margin-top: 10px;">选择怪兽</div>'
-                }
+            <div class="breeding-slot" onclick="selectBreedingMonster(1)">
+                ${gameState.breedingSlot1 ? createSVG(gameState.breedingSlot1.type, 40) : createSVG('add', 40)}
+                <div style="font-size: 10px; margin-top: 5px;">
+                    ${gameState.breedingSlot1 ? gameState.breedingSlot1.name : '选择怪兽'}
+                </div>
             </div>
             
             <div class="breeding-arrow">+</div>
             
-            <div class="breeding-slot" id="breedSlot2" onclick="selectBreedingMonster(2)">
-                ${gameState.breedingSlot2 ? 
-                    createSVG(gameState.breedingSlot2.type, 60) +
-                    '<div style="font-size: 12px; margin-top: 10px;">' + gameState.breedingSlot2.name + '</div>' :
-                    createSVG('add', 60) + '<div style="font-size: 12px; margin-top: 10px;">选择怪兽</div>'
-                }
+            <div class="breeding-slot" onclick="selectBreedingMonster(2)">
+                ${gameState.breedingSlot2 ? createSVG(gameState.breedingSlot2.type, 40) : createSVG('add', 40)}
+                <div style="font-size: 10px; margin-top: 5px;">
+                    ${gameState.breedingSlot2 ? gameState.breedingSlot2.name : '选择怪兽'}
+                </div>
             </div>
             
             <div class="breeding-arrow">=</div>

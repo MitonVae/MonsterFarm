@@ -7,7 +7,7 @@ window.unlockPlot = function(plotId) {
     var cost = plot.unlockCost;
     
     if (gameState.coins >= cost.coins && gameState.materials >= cost.materials) {
-        if (confirm('解锁这块农田需要：\n💰 ' + cost.coins + ' 金币\n🔨 ' + cost.materials + ' 材料\n\n确定解锁吗？')) {
+        if (confirm('解锁这块农田需要：\n金币 ' + cost.coins + '\n材料 ' + cost.materials + '\n\n确定解锁吗？')) {
             gameState.coins -= cost.coins;
             gameState.materials -= cost.materials;
             plot.locked = false;

@@ -15,7 +15,7 @@ window.renderTech = function() {
         return `
             <div class="tech-item ${unlocked ? 'unlocked' : 'locked'}">
                 <div class="tech-title">
-                    ${unlocked ? '✅' : '🔒'} ${tech.name}
+                    <span style="display: inline-block; vertical-align: middle; margin-right: 5px;">${unlocked ? createSVG('check', 16) : createSVG('locked_tech', 16)}</span>${tech.name}
                 </div>
                 <div class="tech-desc">${tech.desc}</div>
                 ${!unlocked ? `
@@ -31,7 +31,7 @@ window.renderTech = function() {
                     </button>
                 ` : `
                     <div style="color: #4caf50; font-weight: bold; margin-top: 10px;">
-                        ✓ 已解锁
+                        <span style="display: inline-block; vertical-align: middle; margin-right: 3px;">${createSVG('check', 14)}</span>已解锁
                     </div>
                     <div style="font-size: 11px; color: #666; margin-top: 5px;">
                         ${Object.keys(tech.effects).map(function(e) {

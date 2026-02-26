@@ -20,7 +20,7 @@ window.renderDisposal = function() {
         
         <div class="disposal-options">
             <div class="disposal-option" onclick="releaseMonster()">
-                <div style="font-size: 48px;">🌊</div>
+                <div style="font-size: 48px;">${createSVG('release', 48)}</div>
                 <div class="disposal-title">放生</div>
                 <div class="disposal-desc">
                     将怪兽放归自然<br>
@@ -28,36 +28,33 @@ window.renderDisposal = function() {
                 </div>
             </div>
             
-            <div class="disposal-option" onclick="sacrificeMonster()">
-                <div style="font-size: 48px;">⚗️</div>
-                <div class="disposal-title">献祭</div>
-                <div class="disposal-desc">
-                    献祭怪兽<br>
-                    获得大量研究点
-                </div>
+            <div class="disposal-option" onclick="showSacrificePanel()">
+                <div style="font-size: 48px;">${createSVG('sacrifice', 48)}</div>
+                <div class="disposal-title">献祭仪式</div>
+                <div class="disposal-desc">献祭怪兽获得大量研究点</div>
             </div>
             
-            <div class="disposal-option" onclick="decomposeMonster()">
-                <div style="font-size: 48px;">🔧</div>
-                <div class="disposal-title">分解</div>
-                <div class="disposal-desc">
-                    分解怪兽<br>
-                    获得材料和食物
-                </div>
+            <div class="disposal-option" onclick="showLaboratoryPanel()">
+                <div style="font-size: 48px;">${createSVG('laboratory', 48)}</div>
+                <div class="disposal-title">研究实验</div>
+                <div class="disposal-desc">让怪兽参与实验获得科技点数</div>
             </div>
             
-            <div class="disposal-option" onclick="sellMonster()">
-                <div style="font-size: 48px;">💸</div>
-                <div class="disposal-title">出售</div>
-                <div class="disposal-desc">
-                    卖给商人<br>
-                    获得大量金币
-                </div>
+            <div class="disposal-option" onclick="showRecyclePanel()">
+                <div style="font-size: 48px;">${createSVG('repair', 48)}</div>
+                <div class="disposal-title">分解回收</div>
+                <div class="disposal-desc">分解怪兽获得材料和食物</div>
+            </div>
+            
+            <div class="disposal-option" onclick="showSellPanel()">
+                <div style="font-size: 48px;">${createSVG('sell', 48)}</div>
+                <div class="disposal-title">售卖交易</div>
+                <div class="disposal-desc">将怪兽卖给商人获得金币</div>
             </div>
         </div>
         
         <div style="background: #ffebee; padding: 15px; border-radius: 10px; margin-top: 20px; border-left: 4px solid #f44336;">
-            <strong>⚠️ 警告：</strong> 所有处理操作都是不可逆的，请谨慎操作！
+            <strong><span style="display: inline-block; vertical-align: middle; margin-right: 5px;">${createSVG('warning', 16)}</span>警告：</strong> 所有处理操作都是不可逆的，请谨慎操作！
         </div>
     `;
 };
@@ -138,7 +135,7 @@ window.decomposeMonster = function() {
     var materialsReward = monster.level * 8 + monster.stats.strength * 3;
     var foodReward = monster.level * 5 + monster.stats.farming * 2;
     
-    if (confirm('确定要分解 ' + monster.name + ' 吗？\n\n将获得：\n🔨 ' + materialsReward + ' 材料\n🌾 ' + foodReward + ' 食物')) {
+    if (confirm('确定要分解 ' + monster.name + ' 吗？\n\n将获得：\n材料 ' + materialsReward + '\n食物 ' + foodReward)) {
         gameState.materials += materialsReward;
         gameState.food += foodReward;
         

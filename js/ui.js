@@ -11,9 +11,48 @@ window.renderAll = function() {
     renderDisposal();
 };
 
+// 初始化界面
+function initUI() {
+    // 设置游戏标题
+    var gameTitle = document.getElementById('gameTitle');
+    if (gameTitle) {
+        gameTitle.innerHTML = '<span style="display: inline-block; vertical-align: middle; margin-right: 10px;">' + 
+                             createSVG('factory', 32) + '</span>怪兽农场';
+    }
+    
+    // 初始化资源显示
+    renderResourceCards();
+}
+
+// 渲染资源卡片
+function renderResourceCards() {
+    var resourcesContainer = document.getElementById('resources');
+    if (!resourcesContainer) return;
+    
+    var resources = [
+        { key: 'coins', label: '金币', value: gameState.coins, icon: 'coin' },
+        { key: 'food', label: '食物', value: gameState.food, icon: 'food' },
+        { key: 'materials', label: '材料', value: gameState.materials, icon: 'material' },
+        { key: 'research', label: '研究点', value: gameState.research, icon: 'research' },
+        { key: 'energy', label: '能量', value: gameState.energy + '/' + gameState.maxEnergy, icon: 'energy' },
+        { key: 'land', label: '土地', value: gameState.plots.filter(function(p) { return !p.locked; }).length + '/' + gameState.plots.length, icon: 'unlock' }
+    ];
+    
+    resourcesContainer.innerHTML = resources.map(function(res) {
+        return `
+            <div class="resource">
+                <div class="resource-label">
+                    <span style="display: inline-block; vertical-align: middle; margin-right: 5px;">${createSVG(res.icon, 16)}</span>
+                    ${res.label}
+                </div>
+                <div class="resource-value" id="res-${res.key}">${res.value}</div>
+            </div>
+        `;
+    }).join('');
+}
+
 // 更新资源显示
 window.updateResources = function() {
-    // 更新资源数字（根据你的HTML结构调整元素ID）
     var coinsEl = document.getElementById('res-coins');
     if (coinsEl) coinsEl.innerText = gameState.coins;
     
@@ -34,8 +73,6 @@ window.updateResources = function() {
     
     var energyEl = document.getElementById('res-energy');
     if (energyEl) energyEl.innerText = gameState.energy + '/' + gameState.maxEnergy;
-    
-    // 如果你有额外元素可以在这里更新
 };
 
 // 渲染农场（调用farm.js中的renderFarm，但renderFarm本身已定义为全局，这里直接调用）
@@ -50,8 +87,8 @@ window.renderFarm = function() {
                     ${createSVG('lock', 48)}
                     <div class="plot-text">
                         解锁需要:<br>
-                        💰${plot.unlockCost.coins}<br>
-                        🔨${plot.unlockCost.materials}
+                        <span style="display: inline-block; vertical-align: middle; margin-right: 3px;">${createSVG('coin', 12)}</span>${plot.unlockCost.coins}<br>
+                        <span style="display: inline-block; vertical-align: middle; margin-right: 3px;">${createSVG('material', 12)}</span>${plot.unlockCost.materials}
                     </div>
                 </div>
             `;
@@ -140,7 +177,7 @@ window.renderMonsters = function() {
                 <div style="margin-top: 10px; font-size: 11px;">
                     <div style="color: #666; margin-bottom: 3px;">特性: ${monster.traits.map(function(t) { return t.name; }).join(', ')}</div>
                     <div style="color: #666;">等级: ${monster.level} (${monster.exp}/${monster.maxExp})</div>
-                    ${isWorking ? '<div style="color: #2196f3; font-weight: bold; margin-top: 5px;">⚙️ ' + getStatusText(monster.status) + '</div>' : ''}
+                    ${isWorking ? '<div style="color: #2196f3; font-weight: bold; margin-top: 5px;"><span style="display: inline-block; vertical-align: middle; margin-right: 5px;">' + createSVG('work', 16) + '</span>' + getStatusText(monster.status) + '</div>' : ''}
                 </div>
                 
                 ${isSelected ? `
@@ -278,7 +315,7 @@ window.showRecruitModal = function() {
                             耕作 ${typeData.baseStats.farming}
                         </div>
                         <div style="font-size: 14px; color: #ff9800; margin-top: 8px; font-weight: bold;">
-                            💰 ${cost} 金币
+                            <span style="display: inline-block; vertical-align: middle; margin-right: 3px;">${createSVG('coin', 14)}</span>${cost} 金币
                         </div>
                     </div>
                 </div>

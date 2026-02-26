@@ -221,7 +221,7 @@ function completeExpedition() {
     }
     
     showNotification(
-        '探险完成！获得：💰' + coinsReward + ' 🔨' + materialsReward + ' 🔬' + researchReward,
+        '探险完成！获得：金币 ' + coinsReward + ' 材料 ' + materialsReward + ' 研究点 ' + researchReward,
         'success'
     );
     
