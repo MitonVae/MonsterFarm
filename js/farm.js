@@ -33,12 +33,12 @@ window.showPlantMenu = function(plotId) {
         <div style="display: grid; gap: 10px;">
             ${availableCrops.map(function(crop) {
                 return `
-                    <div style="padding: 15px; background: #f5f5f5; border-radius: 8px; cursor: pointer; border: 2px solid #ddd;"
+                    <div style="padding: 15px; background: #21262d; border-radius: 8px; cursor: pointer; border: 2px solid #30363d;"
                          onclick="plantCrop(${plotId}, '${crop.id}')"
-                         onmouseover="this.style.borderColor='#667eea'"
-                         onmouseout="this.style.borderColor='#ddd'">
+                         onmouseover="this.style.borderColor='#58a6ff'"
+                         onmouseout="this.style.borderColor='#30363d'">
                         <div style="font-weight: bold; margin-bottom: 5px;">${crop.name}</div>
-                        <div style="font-size: 12px; color: #666;">
+                        <div style="font-size: 12px; color: #8b949e;">
                             生长时间: ${crop.growTime/1000}秒<br>
                             产量: ${crop.yield} 食物<br>
                             售价: ${crop.value} 金币

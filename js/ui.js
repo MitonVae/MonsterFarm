@@ -131,7 +131,7 @@ window.renderMonsters = function() {
     if (!monsterGrid) return;
     
     if (gameState.monsters.length === 0) {
-        monsterGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #999;">还没有怪兽，去招募一些吧！</div>';
+        monsterGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #8b949e;">还没有怪兽，去招募一些吧！</div>';
         return;
     }
     
@@ -175,8 +175,8 @@ window.renderMonsters = function() {
                 </div>
                 
                 <div style="margin-top: 10px; font-size: 11px;">
-                    <div style="color: #666; margin-bottom: 3px;">特性: ${monster.traits.map(function(t) { return t.name; }).join(', ')}</div>
-                    <div style="color: #666;">等级: ${monster.level} (${monster.exp}/${monster.maxExp})</div>
+                    <div style="color: #8b949e; margin-bottom: 3px;">特性: ${monster.traits.map(function(t) { return t.name; }).join(', ')}</div>
+                    <div style="color: #8b949e;">等级: ${monster.level} (${monster.exp}/${monster.maxExp})</div>
                     ${isWorking ? '<div style="color: #2196f3; font-weight: bold; margin-top: 5px;"><span style="display: inline-block; vertical-align: middle; margin-right: 5px;">' + createSVG('work', 14) + '</span>' + getStatusText(monster.status) + '</div>' : ''}
                 </div>
                 
@@ -297,24 +297,24 @@ window.showRecruitModal = function() {
         var cost = typeCosts[typeId] || baseCost;
         
         return `
-            <div style="padding: 15px; margin: 10px 0; background: #f5f5f5; border-radius: 10px; border: 2px solid #ddd; cursor: pointer;"
+            <div style="padding: 15px; margin: 10px 0; background: #21262d; border-radius: 10px; border: 2px solid #30363d; cursor: pointer;"
                  onclick="recruitMonster('${typeId}', ${cost})"
                  onmouseover="this.style.borderColor='${typeData.color}'"
-                 onmouseout="this.style.borderColor='#ddd'">
+                 onmouseout="this.style.borderColor='#30363d'">
                 <div style="display: flex; align-items: center;">
                     ${createSVG(typeId, 50)}
                     <div style="margin-left: 15px; flex: 1;">
                         <div style="font-weight: bold; font-size: 16px; color: ${typeData.color};">
                             ${typeData.name}
                         </div>
-                        <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                        <div style="font-size: 12px; color: #8b949e; margin-top: 5px;">
                             基础属性：
                             力量 ${typeData.baseStats.strength} | 
                             敏捷 ${typeData.baseStats.agility} | 
                             智力 ${typeData.baseStats.intelligence} | 
                             耕作 ${typeData.baseStats.farming}
                         </div>
-                        <div style="font-size: 14px; color: #ff9800; margin-top: 8px; font-weight: bold;">
+                        <div style="font-size: 14px; color: #f0c53d; margin-top: 8px; font-weight: bold;">
                             <span style="display: inline-block; vertical-align: middle; margin-right: 3px;">${createSVG('coin', 14)}</span>${cost} 金币
                         </div>
                     </div>

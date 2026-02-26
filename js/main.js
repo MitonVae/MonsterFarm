@@ -480,7 +480,7 @@ settingsButton.addEventListener('click', function() {
         <div style="padding: 10px 0;">
             <div style="margin-bottom: 15px;">
                 <h3 style="margin-bottom: 10px;">统计数据</h3>
-                <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; font-size: 13px;">
+                <div style="background: #21262d; padding: 15px; border-radius: 8px; font-size: 13px;">
                     <div>总收获次数: ${gameState.totalHarvests}</div>
                     <div>总探索次数: ${gameState.totalExplorations}</div>
                     <div>繁殖怪兽数: ${gameState.monstersBreed}</div>
@@ -490,7 +490,7 @@ settingsButton.addEventListener('click', function() {
             
             <div style="margin-bottom: 15px;">
                 <h3 style="margin-bottom: 10px;">快捷键</h3>
-                <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; font-size: 12px;">
+                <div style="background: #21262d; padding: 15px; border-radius: 8px; font-size: 12px; color: #8b949e;">
                     <div>1-6: 切换标签页</div>
                     <div>Ctrl/Cmd + S: 手动保存</div>
                     <div>Esc: 关闭弹窗</div>

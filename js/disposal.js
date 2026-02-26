@@ -6,14 +6,14 @@ window.renderDisposal = function() {
     
     disposalContainer.innerHTML = `
         <h2>怪兽处理中心</h2>
-        <p style="color: #666; margin: 10px 0;">管理多余的怪兽（选择怪兽后可进行处理）</p>
+        <p style="color: #8b949e; margin: 10px 0;">管理多余的怪兽（选择怪兽后可进行处理）</p>
         
         ${gameState.selectedMonster ? `
             <div style="background: #fff3e0; padding: 15px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #ff9800;">
                 <strong>已选择：</strong> ${gameState.monsters.find(function(m) { return m.id === gameState.selectedMonster; })?.name || '无'}
             </div>
         ` : `
-            <div style="background: #f5f5f5; padding: 15px; border-radius: 10px; margin: 20px 0; text-align: center; color: #999;">
+            <div style="background: #21262d; padding: 15px; border-radius: 10px; margin: 20px 0; text-align: center; color: #8b949e;">
                 请先在"怪兽"标签页选择要处理的怪兽
             </div>
         `}
@@ -53,8 +53,9 @@ window.renderDisposal = function() {
             </div>
         </div>
         
-        <div style="background: #ffebee; padding: 15px; border-radius: 10px; margin-top: 20px; border-left: 4px solid #f44336;">
-            <strong><span style="display: inline-block; vertical-align: middle; margin-right: 5px;">${createSVG('warning', 14)}</span>警告：</strong> 所有处理操作都是不可逆的，请谨慎操作！
+        <div style="background: #21262d; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #f85149;">
+            <strong style="color: #f85149;">${createSVG('warning', 16)} 警告：</strong>
+            <span style="color: #e6edf3;">被释放的怪兽将永远消失，请谨慎操作！</span>
         </div>
     `;
 };

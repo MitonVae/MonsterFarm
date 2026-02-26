@@ -33,7 +33,7 @@ window.renderTech = function() {
                     <div style="color: #4caf50; font-weight: bold; margin-top: 10px;">
                         <span style="display: inline-block; vertical-align: middle; margin-right: 3px;">${createSVG('check', 14)}</span>已解锁
                     </div>
-                    <div style="font-size: 11px; color: #666; margin-top: 5px;">
+                    <div style="font-size: 11px; color: #8b949e; margin-top: 5px;">
                         ${Object.keys(tech.effects).map(function(e) {
                             return e + ': ' + tech.effects[e];
                         }).join(', ')}

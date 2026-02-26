@@ -7,7 +7,7 @@ window.renderBreeding = function() {
     if (!gameState.technologies.breeding) {
         breedingContainer.innerHTML = `
             <h2>繁殖中心</h2>
-            <div style="text-align: center; padding: 60px; color: #999;">
+            <div style="text-align: center; padding: 60px; color: #8b949e;">
                 <div style="font-size: 48px; margin-bottom: 20px;">${createSVG('locked_tech', 48)}</div>
                 <div>需要解锁"繁殖技术"才能使用</div>
                 <button class="btn btn-primary" style="margin-top: 20px;" onclick="switchTab('tech')">
@@ -20,7 +20,7 @@ window.renderBreeding = function() {
     
     breedingContainer.innerHTML = `
         <h2>繁殖中心</h2>
-        <p style="color: #666; margin: 10px 0;">选择两只怪兽进行繁殖，培育更强的后代</p>
+        <p style="color: #8b949e; margin: 10px 0;">选择两只怪兽进行繁殖，培育更强的后代</p>
         
         <div class="breeding-slots">
             <div class="breeding-slot" onclick="selectBreedingMonster(1)">
@@ -58,9 +58,9 @@ window.renderBreeding = function() {
             </button>
         </div>
         
-        <div style="background: #f5f5f5; padding: 15px; border-radius: 10px; margin-top: 20px;">
+        <div style="background: #21262d; padding: 15px; border-radius: 10px; margin-top: 20px;">
             <h3>繁殖说明</h3>
-            <ul style="margin-left: 20px; color: #666; font-size: 13px; line-height: 1.8;">
+            <ul style="margin-left: 20px; color: #8b949e; font-size: 13px; line-height: 1.8;">
                 <li>后代会继承父母的平均属性</li>
                 <li>有20%概率发生属性突变</li>
                 <li>后代类型随机继承父母之一</li>
@@ -89,18 +89,18 @@ window.selectBreedingMonster = function(slotNumber) {
             ${availableMonsters.map(function(monster) {
                 var typeData = monsterTypes[monster.type];
                 return `
-                    <div style="padding: 10px; margin: 5px 0; background: #f5f5f5; border-radius: 8px; cursor: pointer; border: 2px solid #ddd;"
+                    <div style="padding: 10px; margin: 5px 0; background: #21262d; border-radius: 8px; cursor: pointer; border: 2px solid #30363d;"
                          onclick="assignBreedingMonster(${slotNumber}, ${monster.id})"
-                         onmouseover="this.style.borderColor='#667eea'"
-                         onmouseout="this.style.borderColor='#ddd'">
+                         onmouseover="this.style.borderColor='#58a6ff'"
+                         onmouseout="this.style.borderColor='#30363d'">
                         <div style="display: flex; align-items: center;">
                             ${createSVG(monster.type, 40)}
                             <div style="margin-left: 10px; flex: 1;">
                                 <div style="font-weight: bold;">${monster.name}</div>
-                                <div style="font-size: 11px; color: #666;">
+                                <div style="font-size: 11px; color: #8b949e;">
                                     ${typeData.name} Lv.${monster.level} Gen.${monster.generation}
                                 </div>
-                                <div style="font-size: 10px; color: #999; margin-top: 3px;">
+                                <div style="font-size: 10px; color: #8b949e; margin-top: 3px;">
                                     力:${monster.stats.strength} 敏:${monster.stats.agility} 
                                     智:${monster.stats.intelligence} 农:${monster.stats.farming}
                                 </div>

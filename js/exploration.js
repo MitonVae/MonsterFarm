@@ -6,7 +6,7 @@ window.renderExploration = function() {
     
     explorationArea.innerHTML = `
         <h2>野外探索</h2>
-        <p style="color: #666; margin: 10px 0;">派遣怪兽探索野外，获取资源和新怪兽</p>
+        <p style="color: #8b949e; margin: 10px 0;">派遣怪兽探索野外，获取资源和新怪兽</p>
         
         <div class="expedition-panel">
             <h3>当前探险队</h3>
@@ -21,11 +21,11 @@ window.renderExploration = function() {
             </div>
         </div>
         
-        <div style="margin-top: 20px; background: #f5f5f5; padding: 15px; border-radius: 10px;">
+        <div style="margin-top: 20px; background: #21262d; padding: 15px; border-radius: 10px;">
             <h3>探索记录</h3>
             <div id="expeditionHistory" style="max-height: 200px; overflow-y: auto;">
                 ${gameState.totalExplorations === 0 ? 
-                    '<div style="color: #999; text-align: center; padding: 20px;">还没有探索记录</div>' : 
+                    '<div style="color: #8b949e; text-align: center; padding: 20px;">还没有探索记录</div>' :
                     '历史记录显示在这里'}
             </div>
         </div>
@@ -93,15 +93,15 @@ window.addToExpedition = function() {
             ${availableMonsters.map(function(monster) {
                 var typeData = monsterTypes[monster.type];
                 return `
-                    <div style="padding: 10px; margin: 5px 0; background: #f5f5f5; border-radius: 8px; cursor: pointer; border: 2px solid #ddd;"
+                    <div style="padding: 10px; margin: 5px 0; background: #21262d; border-radius: 8px; cursor: pointer; border: 2px solid #30363d;"
                          onclick="selectMonsterForExpedition(${monster.id})"
-                         onmouseover="this.style.borderColor='#667eea'"
-                         onmouseout="this.style.borderColor='#ddd'">
+                         onmouseover="this.style.borderColor='#58a6ff'"
+                         onmouseout="this.style.borderColor='#30363d'">
                         <div style="display: flex; align-items: center;">
                             ${createSVG(monster.type, 40)}
                             <div style="margin-left: 10px; flex: 1;">
                                 <div style="font-weight: bold;">${monster.name}</div>
-                                <div style="font-size: 11px; color: #666;">
+                                <div style="font-size: 11px; color: #8b949e;">
                                     ${typeData.name} Lv.${monster.level} | 
                                     力量:${monster.stats.strength} 敏捷:${monster.stats.agility} 智力:${monster.stats.intelligence}
                                 </div>
