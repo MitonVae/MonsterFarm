@@ -51,8 +51,9 @@ function renderResourceCards() {
     }).join('');
 }
 
-// 更新资源显示
+// 更新资源显示 (侧边栏和顶部资源)
 window.updateResources = function() {
+    // 更新顶部资源（如果存在）
     var coinsEl = document.getElementById('res-coins');
     if (coinsEl) coinsEl.innerText = gameState.coins;
     
@@ -73,7 +74,76 @@ window.updateResources = function() {
     
     var energyEl = document.getElementById('res-energy');
     if (energyEl) energyEl.innerText = gameState.energy + '/' + gameState.maxEnergy;
+    
+    // 更新侧边栏资源
+    updateSidebarResources();
+    // 更新侧边栏怪兽列表
+    renderSidebarMonsters();
 };
+
+// 更新侧边栏资源显示
+function updateSidebarResources() {
+    var resources = [
+        { id: 'coins', value: gameState.coins, icon: 'coin' },
+        { id: 'food', value: gameState.food, icon: 'food' },
+        { id: 'materials', value: gameState.materials, icon: 'material' },
+        { id: 'research', value: gameState.research, icon: 'research' },
+        { id: 'energy', value: gameState.energy + '/' + gameState.maxEnergy, icon: 'energy' }
+    ];
+    
+    resources.forEach(function(res) {
+        var iconEl = document.getElementById(res.id + 'Icon');
+        var valueEl = document.getElementById(res.id);
+        
+        if (iconEl) iconEl.innerHTML = createSVG(res.icon, 20);
+        if (valueEl) valueEl.innerText = res.value;
+    });
+}
+
+// 渲染侧边栏怪兽列表
+function renderSidebarMonsters() {
+    var sidebarMonstersEl = document.getElementById('sidebarMonsters');
+    if (!sidebarMonstersEl) return;
+    
+    if (gameState.monsters.length === 0) {
+        sidebarMonstersEl.innerHTML = '<div style="text-align: center; padding: 20px; color: #8b949e; font-size: 12px;">暂无怪兽</div>';
+        return;
+    }
+    
+    // 只显示前6只怪兽，避免侧边栏过长
+    var displayMonsters = gameState.monsters.slice(0, 6);
+    
+    sidebarMonstersEl.innerHTML = displayMonsters.map(function(monster) {
+        var isSelected = gameState.selectedMonster === monster.id;
+        var isWorking = monster.status !== 'idle';
+        var statusText = getStatusText(monster.status);
+        
+        return `
+            <div class="sidebar-monster ${isSelected ? 'selected' : ''}" 
+                 onclick="selectMonster(${monster.id}); switchTab('monsters');">
+                <div class="sidebar-monster-icon">
+                    ${createSVG(monster.type, 28)}
+                </div>
+                <div class="sidebar-monster-info">
+                    <div class="sidebar-monster-name">${monster.name}</div>
+                    <div class="sidebar-monster-status">
+                        ${isWorking ? statusText : 'Lv.' + monster.level + ' · 空闲中'}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    // 如果有更多怪兽，显示提示
+    if (gameState.monsters.length > 6) {
+        sidebarMonstersEl.innerHTML += `
+            <div style="text-align: center; padding: 10px; color: #8b949e; font-size: 11px; 
+                        border-top: 1px solid #30363d; margin-top: 8px;">
+                还有 ${gameState.monsters.length - 6} 只怪兽...
+            </div>
+        `;
+    }
+}
 
 // 渲染农场（调用farm.js中的renderFarm，但renderFarm本身已定义为全局，这里直接调用）
 window.renderFarm = function() {
@@ -371,11 +441,25 @@ window.triggerRandomEvent = function(category) {
 
 // 切换标签页
 window.switchTab = function(tabName) {
-    // 更新标签按钮
+    // 更新桌面端标签按钮
     document.querySelectorAll('.tab').forEach(function(tab) {
         tab.classList.remove('active');
     });
-    event.target.classList.add('active');
+    
+    // 尝试获取点击的标签，如果不存在则使用第一个匹配的标签
+    var clickedTab = event && event.target ? event.target : document.querySelector('.tab[onclick*="' + tabName + '"]');
+    if (clickedTab) {
+        clickedTab.classList.add('active');
+    }
+    
+    // 更新移动端底部导航按钮
+    document.querySelectorAll('.bottom-nav-item').forEach(function(item) {
+        item.classList.remove('active');
+    });
+    var mobileNavItem = document.querySelector('.bottom-nav-item[data-tab="' + tabName + '"]');
+    if (mobileNavItem) {
+        mobileNavItem.classList.add('active');
+    }
     
     // 更新内容
     document.querySelectorAll('.tab-content').forEach(function(content) {
@@ -404,4 +488,103 @@ window.switchTab = function(tabName) {
             renderDisposal();
             break;
     }
+    
+    // 初始化移动端导航图标
+    initMobileNavIcons();
 };
+
+// 初始化移动端导航图标
+function initMobileNavIcons() {
+    var farmNavIcon = document.getElementById('farmNavIcon');
+    var monstersNavIcon = document.getElementById('monstersNavIcon');
+    var explorationNavIcon = document.getElementById('explorationNavIcon');
+    var breedingNavIcon = document.getElementById('breedingNavIcon');
+    var techNavIcon = document.getElementById('techNavIcon');
+    var disposalNavIcon = document.getElementById('disposalNavIcon');
+    
+    if (farmNavIcon) farmNavIcon.innerHTML = createSVG('plant', 24);
+    if (monstersNavIcon) monstersNavIcon.innerHTML = createSVG('slime', 24);
+    if (explorationNavIcon) explorationNavIcon.innerHTML = createSVG('explore', 24);
+    if (breedingNavIcon) breedingNavIcon.innerHTML = createSVG('heart', 24);
+    if (techNavIcon) techNavIcon.innerHTML = createSVG('research', 24);
+    if (disposalNavIcon) disposalNavIcon.innerHTML = createSVG('trash', 24);
+}
+
+// 侧边栏切换（用于平板端）
+window.toggleSidebar = function() {
+    var sidebar = document.getElementById('sidebar');
+    if (sidebar) {
+        sidebar.classList.toggle('open');
+    }
+};
+
+// 一键收获功能
+window.autoHarvestAll = function() {
+    var harvested = 0;
+    gameState.plots.forEach(function(plot) {
+        if (plot.crop && plot.progress >= 100) {
+            harvest(plot.id);
+            harvested++;
+        }
+    });
+    
+    if (harvested > 0) {
+        showNotification('一键收获了 ' + harvested + ' 个作物！', 'success');
+    } else {
+        showNotification('没有可收获的作物', 'info');
+    }
+};
+
+// 自动种植功能
+window.autoPlantAll = function() {
+    var planted = 0;
+    var availableCrops = cropTypes.filter(function(crop) {
+        return gameState.food >= crop.cost && gameState.research >= (crop.requiredTech || 0);
+    });
+    
+    if (availableCrops.length === 0) {
+        showNotification('没有可种植的作物', 'info');
+        return;
+    }
+    
+    var cropToPlant = availableCrops[0]; // 种植第一个可用作物
+    
+    gameState.plots.forEach(function(plot) {
+        if (!plot.locked && !plot.crop && gameState.food >= cropToPlant.cost) {
+            gameState.food -= cropToPlant.cost;
+            plot.crop = cropToPlant.id;
+            plot.progress = 0;
+            planted++;
+        }
+    });
+    
+    if (planted > 0) {
+        showNotification('自动种植了 ' + planted + ' 个 ' + cropToPlant.name + '！', 'success');
+        updateResources();
+        renderFarm();
+    } else {
+        showNotification('没有空余的土地或资源不足', 'info');
+    }
+};
+
+// 初始化UI - 在页面加载时调用
+window.addEventListener('load', function() {
+    // 初始化移动端导航图标
+    initMobileNavIcons();
+    
+    // 绑定侧边栏切换事件
+    var sidebarToggle = document.getElementById('sidebarToggle');
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', toggleSidebar);
+    }
+    
+    // 初始化快捷操作按钮图标
+    var quickActionBtns = document.querySelectorAll('.quick-action-btn .quick-action-icon');
+    quickActionBtns.forEach(function(icon, index) {
+        if (index === 0) {
+            icon.innerHTML = createSVG('harvest', 16);
+        } else if (index === 1) {
+            icon.innerHTML = createSVG('plant', 16);
+        }
+    });
+});

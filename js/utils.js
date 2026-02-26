@@ -99,6 +99,50 @@ function createSVG(type, size) {
             <rect x="10" y="6" width="4" height="4" fill="#8b949e" opacity="0.8" rx="0.5"/>
             <rect x="16" y="6" width="4" height="4" fill="#8b949e" opacity="0.6" rx="0.5"/>
             <rect x="4" y="12" width="4" height="4" fill="#8b949e" opacity="0.8" rx="0.5"/>
+            <rect x="10" y="12" width="4" height="4" fill="#8b949e" opacity="0.6" rx="0.5"/>
+            <rect x="16" y="12" width="4" height="4" fill="#8b949e" opacity="0.8" rx="0.5"/>
+        </svg>`,
+        
+        research: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#58a6ff" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+        </svg>`,
+        
+        energy: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#f0883e" stroke-width="2">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+        </svg>`,
+        
+        land: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#795548" stroke-width="2">
+            <path d="M3 12h18l-3 9H6l-3-9z"></path>
+            <path d="M12 3v9"></path>
+        </svg>`,
+        
+        work: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="8" y1="21" x2="16" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
+        </svg>`,
+        
+        heart: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#e91e63" stroke-width="2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+        </svg>`,
+        
+        trash: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#f85149" stroke-width="2">
+            <polyline points="3,6 5,6 21,6"></polyline>
+            <path d="m19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2V6"></path>
+        </svg>`,
+        
+        harvest: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#46d164" stroke-width="2">
+            <path d="M6 2v20"></path>
+            <path d="M20 8v13a1 1 0 0 1-1 1H9.5a1 1 0 0 1-1-1V8a4 4 0 0 1 4-4H20z"></path>
+            <polyline points="6,10 9,7 11,9"></polyline>
+        </svg>`,
+        
+        factory: `<svg class="svg-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#58a6ff" stroke-width="2">
+            <path d="M9 20H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5l2 2h5a2 2 0 0 1 2 2v6.5"></path>
+            <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11a2 2 0 0 1 2-2c0 1.5.5 3 2 3s2-1.5 2-3a2 2 0 0 1 2 2v3.159c0 .538-.214 1.055-.595 1.436L24 17h-5c-.5 0-1 .5-1 1v4c0 .5.5 1 1 1h5v-1"></path>
+        </svg>
+            <rect x="4" y="12" width="4" height="4" fill="#8b949e" opacity="0.8" rx="0.5"/>
             <rect x="10" y="12" width="4" height="4" fill="#8b949e" opacity="0.9" rx="0.5"/>
             <rect x="16" y="12" width="4" height="4" fill="#8b949e" opacity="0.7" rx="0.5"/>
             <rect x="7" y="3" width="4" height="4" fill="#a0a0a0" opacity="0.9" rx="0.5"/>

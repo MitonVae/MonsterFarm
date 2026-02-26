@@ -4,62 +4,153 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>怪兽农场 - 挂机经营游戏</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/layout.css">
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1 id="gameTitle">怪兽农场</h1>
-            <p>培育怪兽，经营农场，探索未知世界</p>
-        </div>
-        
-        <div class="resources" id="resources">
-            <!-- 资源卡片由JS动态生成，但为了SEO可以先留空，或静态写占位 -->
-        </div>
-        
-        <div class="tabs">
-            <button class="tab active" onclick="switchTab('farm')">农场</button>
-            <button class="tab" onclick="switchTab('monsters')">怪兽</button>
-            <button class="tab" onclick="switchTab('exploration')">探索</button>
-            <button class="tab" onclick="switchTab('breeding')">繁殖</button>
-            <button class="tab" onclick="switchTab('tech')">科技</button>
-            <button class="tab" onclick="switchTab('disposal')">处理</button>
-        </div>
-        
-        <div id="farm-tab" class="tab-content active">
-            <div class="farm-container">
-                <h2>农场管理</h2>
-                <div class="farm-grid" id="farmGrid"></div>
+    <!-- 应用容器 -->
+    <div class="app-container">
+        <!-- 左侧栏 (桌面端和平板端) -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>Monster Farm</h2>
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 12h18M3 6h18M3 18h18"></path>
+                    </svg>
+                </button>
             </div>
-        </div>
-        
-        <div id="monsters-tab" class="tab-content">
-            <div class="farm-container">
-                <h2>怪兽管理 <span style="font-size: 14px; color: #666;">(点击选择怪兽进行分配)</span></h2>
-                <div style="margin: 15px 0;">
-                    <button class="btn btn-primary" onclick="showRecruitModal()">招募怪兽</button>
+            
+            <!-- 资源面板 -->
+            <div class="sidebar-section">
+                <h3>资源状况</h3>
+                <div class="sidebar-resources">
+                    <div class="sidebar-resource">
+                        <span class="resource-icon" id="coinsIcon"></span>
+                        <span class="resource-value" id="coins">100</span>
+                    </div>
+                    <div class="sidebar-resource">
+                        <span class="resource-icon" id="foodIcon"></span>
+                        <span class="resource-value" id="food">50</span>
+                    </div>
+                    <div class="sidebar-resource">
+                        <span class="resource-icon" id="materialsIcon"></span>
+                        <span class="resource-value" id="materials">0</span>
+                    </div>
+                    <div class="sidebar-resource">
+                        <span class="resource-icon" id="researchIcon"></span>
+                        <span class="resource-value" id="research">0</span>
+                    </div>
+                    <div class="sidebar-resource">
+                        <span class="resource-icon" id="energyIcon"></span>
+                        <span class="resource-value" id="energy">100</span>
+                    </div>
                 </div>
-                <div class="monster-grid" id="monsterGrid"></div>
+            </div>
+            
+            <!-- 怪兽列表 -->
+            <div class="sidebar-section">
+                <h3>怪兽团队</h3>
+                <div class="sidebar-monsters" id="sidebarMonsters">
+                    <!-- 怪兽列表将通过JS动态生成 -->
+                </div>
+            </div>
+            
+            <!-- 快捷操作 -->
+            <div class="sidebar-section">
+                <h3>快捷操作</h3>
+                <div class="quick-actions">
+                    <button class="quick-action-btn" onclick="autoHarvestAll()">
+                        <span class="quick-action-icon"></span>
+                        一键收获
+                    </button>
+                    <button class="quick-action-btn" onclick="autoPlantAll()">
+                        <span class="quick-action-icon"></span>
+                        自动种植
+                    </button>
+                </div>
             </div>
         </div>
         
-        <div id="exploration-tab" class="tab-content">
-            <div class="exploration-area" id="explorationArea"></div>
-        </div>
-        
-        <div id="breeding-tab" class="tab-content">
-            <div class="breeding-container" id="breedingContainer"></div>
-        </div>
-        
-        <div id="tech-tab" class="tab-content">
-            <div class="farm-container">
-                <h2>科技树</h2>
-                <div class="tech-tree" id="techTree"></div>
+        <!-- 主内容区域 -->
+        <div class="main-container">
+            <!-- 桌面端标签导航 -->
+            <div class="desktop-tabs">
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('farm')">农场</div>
+                    <div class="tab" onclick="switchTab('monsters')">怪兽</div>
+                    <div class="tab" onclick="switchTab('exploration')">探索</div>
+                    <div class="tab" onclick="switchTab('breeding')">繁殖</div>
+                    <div class="tab" onclick="switchTab('tech')">科技</div>
+                    <div class="tab" onclick="switchTab('disposal')">处理</div>
+                </div>
+            </div>
+
+            <!-- 主内容区 -->
+            <div class="main-content">
+                <div id="farm-tab" class="tab-content active">
+                    <div class="farm-container">
+                        <h2>农场管理</h2>
+                        <div class="farm-grid" id="farmGrid"></div>
+                    </div>
+                </div>
+                
+                <div id="monsters-tab" class="tab-content">
+                    <div class="farm-container">
+                        <h2>怪兽管理 <span style="font-size: 14px; color: #666;">(点击选择怪兽进行分配)</span></h2>
+                        <div style="margin: 15px 0;">
+                            <button class="btn btn-primary" onclick="showRecruitModal()">招募怪兽</button>
+                        </div>
+                        <div class="monster-grid" id="monsterGrid"></div>
+                    </div>
+                </div>
+                
+                <div id="exploration-tab" class="tab-content">
+                    <div class="exploration-area" id="explorationArea"></div>
+                </div>
+                
+                <div id="breeding-tab" class="tab-content">
+                    <div class="breeding-container" id="breedingContainer"></div>
+                </div>
+                
+                <div id="tech-tab" class="tab-content">
+                    <div class="farm-container">
+                        <h2>科技树</h2>
+                        <div class="tech-tree" id="techTree"></div>
+                    </div>
+                </div>
+                
+                <div id="disposal-tab" class="tab-content">
+                    <div class="disposal-container" id="disposalContainer"></div>
+                </div>
             </div>
         </div>
         
-        <div id="disposal-tab" class="tab-content">
-            <div class="disposal-container" id="disposalContainer"></div>
+        <!-- 移动端底部导航栏 -->
+        <div class="mobile-bottom-nav">
+            <div class="bottom-nav-item active" onclick="switchTab('farm')" data-tab="farm">
+                <span class="nav-icon" id="farmNavIcon"></span>
+                <span class="nav-label">农场</span>
+            </div>
+            <div class="bottom-nav-item" onclick="switchTab('monsters')" data-tab="monsters">
+                <span class="nav-icon" id="monstersNavIcon"></span>
+                <span class="nav-label">怪兽</span>
+            </div>
+            <div class="bottom-nav-item" onclick="switchTab('exploration')" data-tab="exploration">
+                <span class="nav-icon" id="explorationNavIcon"></span>
+                <span class="nav-label">探索</span>
+            </div>
+            <div class="bottom-nav-item" onclick="switchTab('breeding')" data-tab="breeding">
+                <span class="nav-icon" id="breedingNavIcon"></span>
+                <span class="nav-label">繁殖</span>
+            </div>
+            <div class="bottom-nav-item" onclick="switchTab('tech')" data-tab="tech">
+                <span class="nav-icon" id="techNavIcon"></span>
+                <span class="nav-label">科技</span>
+            </div>
+            <div class="bottom-nav-item" onclick="switchTab('disposal')" data-tab="disposal">
+                <span class="nav-icon" id="disposalNavIcon"></span>
+                <span class="nav-label">处理</span>
+            </div>
         </div>
     </div>
     
