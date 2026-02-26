@@ -1,12 +1,14 @@
 /**
  * resizer.js - 三栏布局可拖拽分隔条
- * 
- * 功能：
- *   - 左栏右边缘、右栏左边缘可拖拽调节宽度
- *   - 拖拽上下限：左栏 [160, 400]px，右栏 [180, 450]px
- *   - 中栏最小宽度保护：320px
- *   - 拖拽完成后自动保存到 localStorage，刷新后恢复
- *   - 移动端 (≤1023px) 禁用拖拽
+ *
+ * 核心机制：通过修改 :root 上的 CSS 自定义变量
+ *   --left-width 和 --right-width 来驱动布局，
+ *   彻底绕开内联样式优先级问题。
+ *
+ * 拖拽上下限：左栏 [160, 400]px，右栏 [180, 450]px
+ * 中栏最小宽度保护：320px
+ * 宽度持久化到 localStorage
+ * 移动端（≤1023px）自动隐藏手柄
  */
 
 (function () {
@@ -14,80 +16,58 @@
 
     // ========== 配置 ==========
     const CONFIG = {
-        LEFT: {
-            min: 160,
-            max: 400,
-            default: 260,
-            storageKey: 'panel_left_width'
-        },
-        RIGHT: {
-            min: 180,
-            max: 450,
-            default: 280,
-            storageKey: 'panel_right_width'
-        },
-        CENTER_MIN: 320,        // 中栏最小宽度
-        MOBILE_BREAKPOINT: 1023 // 小于等于此宽度时禁用拖拽
+        LEFT:  { min: 160, max: 400, default: 260, key: 'panel_left_width'  },
+        RIGHT: { min: 180, max: 450, default: 280, key: 'panel_right_width' },
+        CENTER_MIN: 320,
+        BREAKPOINT: 1024   // 小于此宽度禁用拖拽（移动/平板）
     };
 
-    // ========== 状态 ==========
-    let leftWidth = CONFIG.LEFT.default;
-    let rightWidth = CONFIG.RIGHT.default;
-    let isDragging = false;
-    let activeResizer = null;  // 'left' | 'right'
-    let startX = 0;
-    let startWidth = 0;
+    // ========== 运行时状态 ==========
+    let leftW  = CONFIG.LEFT.default;
+    let rightW = CONFIG.RIGHT.default;
 
-    // ========== DOM 引用 ==========
-    let sidebar, monsterSidebar, mainContainer;
-    let leftResizer, rightResizer;
+    let dragging    = false;
+    let side        = null;   // 'left' | 'right'
+    let dragStartX  = 0;
+    let dragStartW  = 0;
+
+    // DOM
+    let leftHandle, rightHandle;
+    const root = document.documentElement;
 
     // ========== 初始化 ==========
     function init() {
-        sidebar = document.querySelector('.sidebar');
-        monsterSidebar = document.querySelector('.monster-sidebar');
-        mainContainer = document.querySelector('.main-container');
+        // 恢复存储的宽度
+        const sl = parseInt(localStorage.getItem(CONFIG.LEFT.key));
+        const sr = parseInt(localStorage.getItem(CONFIG.RIGHT.key));
+        if (sl >= CONFIG.LEFT.min  && sl <= CONFIG.LEFT.max)  leftW  = sl;
+        if (sr >= CONFIG.RIGHT.min && sr <= CONFIG.RIGHT.max) rightW = sr;
 
-        if (!sidebar || !monsterSidebar || !mainContainer) return;
+        // 创建手柄
+        leftHandle  = makeHandle('panel-resizer-left');
+        rightHandle = makeHandle('panel-resizer-right');
+        document.body.appendChild(leftHandle);
+        document.body.appendChild(rightHandle);
 
-        // 从 localStorage 恢复宽度
-        const savedLeft = parseInt(localStorage.getItem(CONFIG.LEFT.storageKey));
-        const savedRight = parseInt(localStorage.getItem(CONFIG.RIGHT.storageKey));
-        if (savedLeft && savedLeft >= CONFIG.LEFT.min && savedLeft <= CONFIG.LEFT.max) {
-            leftWidth = savedLeft;
-        }
-        if (savedRight && savedRight >= CONFIG.RIGHT.min && savedRight <= CONFIG.RIGHT.max) {
-            rightWidth = savedRight;
-        }
+        // 鼠标事件
+        leftHandle.addEventListener ('mousedown', (e) => beginDrag(e, 'left'));
+        rightHandle.addEventListener('mousedown', (e) => beginDrag(e, 'right'));
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup',   onUp);
 
-        // 创建拖拽手柄
-        leftResizer = createResizer('leftResizer');
-        rightResizer = createResizer('rightResizer');
-        document.body.appendChild(leftResizer);
-        document.body.appendChild(rightResizer);
+        // 触摸事件
+        leftHandle.addEventListener ('touchstart', (e) => beginDrag(e.touches[0], 'left'),  { passive: false });
+        rightHandle.addEventListener('touchstart', (e) => beginDrag(e.touches[0], 'right'), { passive: false });
+        document.addEventListener('touchmove', (e) => onMove(e.touches[0]), { passive: true });
+        document.addEventListener('touchend',  onUp);
 
-        // 绑定事件
-        leftResizer.addEventListener('mousedown', (e) => startDrag(e, 'left'));
-        rightResizer.addEventListener('mousedown', (e) => startDrag(e, 'right'));
+        window.addEventListener('resize', () => applyLayout());
 
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
-
-        // 触摸支持
-        leftResizer.addEventListener('touchstart', (e) => startDrag(e.touches[0], 'left'), { passive: true });
-        rightResizer.addEventListener('touchstart', (e) => startDrag(e.touches[0], 'right'), { passive: true });
-        document.addEventListener('touchmove', (e) => onMouseMove(e.touches[0]), { passive: true });
-        document.addEventListener('touchend', onMouseUp);
-
-        // 初始应用宽度
-        applyLayout(false);
-
-        // 窗口大小变化时更新
-        window.addEventListener('resize', onWindowResize);
+        applyLayout();
     }
 
-    // ========== 创建手柄元素 ==========
-    function createResizer(id) {
+    // ========== 创建手柄 DOM ==========
+    function makeHandle(id) {
         const el = document.createElement('div');
         el.id = id;
         el.className = 'panel-resizer';
@@ -96,119 +76,93 @@
     }
 
     // ========== 开始拖拽 ==========
-    function startDrag(e, side) {
-        if (window.innerWidth <= CONFIG.MOBILE_BREAKPOINT) return;
+    function beginDrag(e, which) {
+        if (window.innerWidth < CONFIG.BREAKPOINT) return;
+        dragging   = true;
+        side       = which;
+        dragStartX = e.clientX;
+        dragStartW = which === 'left' ? leftW : rightW;
 
-        isDragging = true;
-        activeResizer = side;
-        startX = e.clientX;
-        startWidth = side === 'left' ? leftWidth : rightWidth;
-
-        // 添加拖拽样式
-        document.body.style.cursor = 'col-resize';
+        document.body.style.cursor     = 'col-resize';
         document.body.style.userSelect = 'none';
-        (side === 'left' ? leftResizer : rightResizer).classList.add('dragging');
+        (which === 'left' ? leftHandle : rightHandle).classList.add('dragging');
 
-        // 防止文字选中
         e.preventDefault && e.preventDefault();
     }
 
-    // ========== 拖拽移动 ==========
-    function onMouseMove(e) {
-        if (!isDragging) return;
+    // ========== 拖拽中 ==========
+    function onMove(e) {
+        if (!dragging) return;
 
-        const dx = e.clientX - startX;
-        const viewportWidth = window.innerWidth;
+        const dx = e.clientX - dragStartX;
+        const vw = window.innerWidth;
 
-        if (activeResizer === 'left') {
-            let newWidth = startWidth + dx;
-
-            // 左上限
-            newWidth = Math.max(CONFIG.LEFT.min, Math.min(CONFIG.LEFT.max, newWidth));
-
-            // 中栏最小宽度保护
-            const availableForCenter = viewportWidth - newWidth - rightWidth;
-            if (availableForCenter < CONFIG.CENTER_MIN) {
-                newWidth = viewportWidth - rightWidth - CONFIG.CENTER_MIN;
-                newWidth = Math.max(CONFIG.LEFT.min, newWidth);
+        if (side === 'left') {
+            let w = clamp(dragStartW + dx, CONFIG.LEFT.min, CONFIG.LEFT.max);
+            // 中栏保护
+            if (vw - w - rightW < CONFIG.CENTER_MIN) {
+                w = Math.max(CONFIG.LEFT.min, vw - rightW - CONFIG.CENTER_MIN);
             }
-
-            leftWidth = newWidth;
-
-        } else if (activeResizer === 'right') {
-            let newWidth = startWidth - dx;  // 注意右侧是反向的
-
-            // 右上限
-            newWidth = Math.max(CONFIG.RIGHT.min, Math.min(CONFIG.RIGHT.max, newWidth));
-
-            // 中栏最小宽度保护
-            const availableForCenter = viewportWidth - leftWidth - newWidth;
-            if (availableForCenter < CONFIG.CENTER_MIN) {
-                newWidth = viewportWidth - leftWidth - CONFIG.CENTER_MIN;
-                newWidth = Math.max(CONFIG.RIGHT.min, newWidth);
+            leftW = w;
+        } else {
+            // 右侧：鼠标向左 → dx 负 → 宽度增大，反之减小
+            let w = clamp(dragStartW - dx, CONFIG.RIGHT.min, CONFIG.RIGHT.max);
+            // 中栏保护
+            if (vw - leftW - w < CONFIG.CENTER_MIN) {
+                w = Math.max(CONFIG.RIGHT.min, vw - leftW - CONFIG.CENTER_MIN);
             }
-
-            rightWidth = newWidth;
+            rightW = w;
         }
 
         applyLayout(true);
     }
 
     // ========== 结束拖拽 ==========
-    function onMouseUp() {
-        if (!isDragging) return;
+    function onUp() {
+        if (!dragging) return;
+        dragging = false;
 
-        isDragging = false;
-        document.body.style.cursor = '';
+        document.body.style.cursor     = '';
         document.body.style.userSelect = '';
+        leftHandle.classList.remove('dragging');
+        rightHandle.classList.remove('dragging');
 
-        if (leftResizer) leftResizer.classList.remove('dragging');
-        if (rightResizer) rightResizer.classList.remove('dragging');
+        localStorage.setItem(CONFIG.LEFT.key,  leftW);
+        localStorage.setItem(CONFIG.RIGHT.key, rightW);
 
-        // 保存到 localStorage
-        localStorage.setItem(CONFIG.LEFT.storageKey, leftWidth);
-        localStorage.setItem(CONFIG.RIGHT.storageKey, rightWidth);
-
-        activeResizer = null;
-    }
-
-    // ========== 应用布局 ==========
-    function applyLayout(instant) {
-        if (window.innerWidth <= CONFIG.MOBILE_BREAKPOINT) {
-            // 移动端：隐藏手柄，不干预布局
-            if (leftResizer) leftResizer.style.display = 'none';
-            if (rightResizer) rightResizer.style.display = 'none';
-            return;
-        }
-
-        if (leftResizer) leftResizer.style.display = '';
-        if (rightResizer) rightResizer.style.display = '';
-
-        // 禁用/启用过渡动画（拖拽时禁用，避免卡顿）
-        const transition = instant ? 'none' : '';
-        sidebar.style.transition = instant ? 'none' : 'transform 0.3s ease';
-        monsterSidebar.style.transition = instant ? 'none' : 'transform 0.3s ease';
-        mainContainer.style.transition = instant ? 'none' : 'margin 0.05s linear';
-
-        // 设置侧栏宽度
-        sidebar.style.width = leftWidth + 'px';
-        monsterSidebar.style.width = rightWidth + 'px';
-
-        // 设置主内容区 margin
-        mainContainer.style.marginLeft = leftWidth + 'px';
-        mainContainer.style.marginRight = rightWidth + 'px';
-
-        // 定位拖拽手柄
-        leftResizer.style.left = (leftWidth - 3) + 'px';   // 居中于左栏右边缘
-        rightResizer.style.right = (rightWidth - 3) + 'px'; // 居中于右栏左边缘
-    }
-
-    // ========== 窗口大小变化处理 ==========
-    function onWindowResize() {
+        side = null;
         applyLayout(false);
     }
 
-    // ========== 等待 DOM 就绪后初始化 ==========
+    // ========== 应用布局（更新 CSS 变量 + 手柄位置）==========
+    function applyLayout(instant) {
+        const isMobile = window.innerWidth < CONFIG.BREAKPOINT;
+
+        // 手柄可见性
+        leftHandle.style.display  = isMobile ? 'none' : '';
+        rightHandle.style.display = isMobile ? 'none' : '';
+
+        if (isMobile) return;
+
+        // 更新 CSS 变量 → 驱动所有依赖它的布局
+        root.style.setProperty('--left-width',  leftW  + 'px');
+        root.style.setProperty('--right-width', rightW + 'px');
+
+        // 手柄定位：左手柄紧贴左栏右边缘，右手柄紧贴右栏左边缘
+        leftHandle.style.left   = (leftW - 3) + 'px';
+        leftHandle.style.right  = '';
+
+        // 右手柄用 left 定位（= 视口宽度 - 右栏宽度 - 3）
+        rightHandle.style.left  = (window.innerWidth - rightW - 3) + 'px';
+        rightHandle.style.right = '';
+    }
+
+    // ========== 工具函数 ==========
+    function clamp(val, min, max) {
+        return Math.max(min, Math.min(max, val));
+    }
+
+    // ========== 等待 DOM 就绪 ==========
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {

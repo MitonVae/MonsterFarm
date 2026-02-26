@@ -7,96 +7,93 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/layout.css">
     <style>
-        /* 确保布局正确显示的覆盖样式 */
-        .app-container {
-            display: flex !important;
-            min-height: 100vh !important;
-        }
-        
-        .sidebar {
-            width: 260px !important;
-            background: #21262d !important;
-            position: fixed !important;
-            left: 0 !important;
-            top: 0 !important;
-            height: 100vh !important;
-            z-index: 100 !important;
+        /* ===== CSS 变量驱动三栏布局（由 resizer.js 动态更新变量值）===== */
+        :root {
+            --left-width: 260px;
+            --right-width: 280px;
         }
 
-        /* 右侧怪兽侧边栏 */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: var(--left-width);
+            background: #21262d;
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
         .monster-sidebar {
-            width: 280px !important;
-            background: #161b22 !important;
-            border-left: 1px solid #30363d !important;
-            position: fixed !important;
-            right: 0 !important;
-            top: 0 !important;
-            height: 100vh !important;
-            z-index: 100 !important;
-            display: flex !important;
-            flex-direction: column !important;
-            overflow-y: auto !important;
+            width: var(--right-width);
+            background: #161b22;
+            border-left: 1px solid #30363d;
+            position: fixed;
+            right: 0;
+            top: 0;
+            height: 100vh;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
         }
-        
+
         .main-container {
-            flex: 1 !important;
-            margin-left: 260px !important;
-            margin-right: 280px !important;
-            display: flex !important;
-            flex-direction: column !important;
+            flex: 1;
+            margin-left: var(--left-width);
+            margin-right: var(--right-width);
+            display: flex;
+            flex-direction: column;
         }
-        
+
         .mobile-bottom-nav {
-            display: none !important;
+            display: none;
         }
-        
-        /* 桌面端显示侧边栏 */
-        @media (min-width: 1024px) {
-            .sidebar {
-                display: flex !important;
-            }
-            .monster-sidebar {
-                display: flex !important;
-            }
-        }
-        
+
         /* 平板端：左栏隐藏可切换，右栏收起 */
         @media (max-width: 1023px) and (min-width: 768px) {
             .sidebar {
-                transform: translateX(-100%) !important;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
             }
             .sidebar.open {
-                transform: translateX(0) !important;
+                transform: translateX(0);
             }
             .monster-sidebar {
-                width: 240px !important;
-                transform: translateX(100%) !important;
-                transition: transform 0.3s ease !important;
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
             }
             .monster-sidebar.open {
-                transform: translateX(0) !important;
+                transform: translateX(0);
             }
             .main-container {
-                margin-left: 0 !important;
-                margin-right: 0 !important;
+                margin-left: 0;
+                margin-right: 0;
             }
         }
-        
+
         /* 手机端：两侧边栏都隐藏，显示底部导航 */
         @media (max-width: 767px) {
             .sidebar {
-                display: none !important;
+                display: none;
             }
             .monster-sidebar {
-                display: none !important;
+                display: none;
             }
             .main-container {
-                margin-left: 0 !important;
-                margin-right: 0 !important;
-                margin-bottom: 80px !important;
+                margin-left: 0;
+                margin-right: 0;
+                margin-bottom: 80px;
             }
             .desktop-tabs {
-                display: none !important;
+                display: none;
             }
             .mobile-bottom-nav {
                 display: flex !important;
@@ -325,8 +322,7 @@
             if (mainContainer) {
                 mainContainer.style.display = 'flex';
                 mainContainer.style.flexDirection = 'column';
-                mainContainer.style.marginLeft = '260px';
-                mainContainer.style.marginRight = '280px';
+                // 注意：margin 由 CSS 变量 --left-width / --right-width 控制，勿在此硬写
                 console.log('Main container forced to display');
             }
 
