@@ -53,16 +53,16 @@ window.showPlotManagePanel = function(plotId) {
         var speedMult = calcSpeedMultiplier(plot, monster);
         var qualityChance = calcQualityChance(monster, crop);
         var isPreferred = crop.preferredMonster === monster.type;
-        var bonusTag = isPreferred ? '<span style="color:#f0c53d;font-size:10px;margin-left:5px;">★ 专长加成</span>' : '';
+        var bonusTag = isPreferred ? '<span style="color:#f0c53d;font-size:12px;margin-left:5px;">★ 专长加成</span>' : '';
         return '<div onclick="setAutoCrop(' + plotId + ', \'' + crop.id + '\')"' +
             ' style="padding:12px 15px;margin-bottom:8px;background:' + (isSelected ? '#1a3a2a' : '#0d1117') + ';' +
             'border:2px solid ' + (isSelected ? '#46d164' : '#30363d') + ';border-radius:8px;cursor:pointer;">' +
             '<div style="display:flex;justify-content:space-between;align-items:center;">' +
             '<div><span style="font-weight:bold;">' + crop.name + '</span>' + bonusTag +
-            '<div style="font-size:11px;color:#8b949e;margin-top:3px;">' + crop.desc + '</div></div>' +
+            '<div style="font-size:13px;color:#8b949e;margin-top:3px;">' + crop.desc + '</div></div>' +
             (isSelected ? '<span style="color:#46d164;font-size:18px;">✓</span>' : '') +
             '</div>' +
-            '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px;font-size:11px;">' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px;font-size:13px;">' +
             '<div style="background:#21262d;padding:4px 6px;border-radius:4px;text-align:center;"><div style="color:#8b949e;">速度倍率</div><div style="color:#58a6ff;">' + speedMult.toFixed(1) + 'x</div></div>' +
             '<div style="background:#21262d;padding:4px 6px;border-radius:4px;text-align:center;"><div style="color:#8b949e;">优质率</div><div style="color:#f0c53d;">' + (qualityChance * 100).toFixed(0) + '%</div></div>' +
             '<div style="background:#21262d;padding:4px 6px;border-radius:4px;text-align:center;"><div style="color:#8b949e;">售价</div><div style="color:#46d164;">' + crop.value + '金</div></div>' +
@@ -108,7 +108,7 @@ window.showPlantMenu = function(plotId) {
                 '<div style="font-weight: bold; margin-bottom: 5px;">' + crop.name + '</div>' +
                 '<div style="font-size: 12px; color: #8b949e;">' +
                 '生长时间: ' + crop.growTime/1000 + '秒 | 产量: ' + crop.yield + ' 食物 | 售价: ' + crop.value + ' 金币' +
-                '</div><div style="font-size:11px;color:#58a6ff;margin-top:4px;">' + crop.desc + '</div>' +
+                '</div><div style="font-size:13px;color:#58a6ff;margin-top:4px;">' + crop.desc + '</div>' +
                 '</div>';
         }).join('') +
         '</div><div class="modal-buttons"><button class="btn btn-primary" onclick="closeModal()">取消</button></div>';
@@ -409,7 +409,7 @@ window.showAssignPlotPicker = function(monsterId) {
                 ' onmouseout="this.style.borderColor=\'#30363d\';this.style.background=\'#21262d\'">' +
                 '<div style="font-size:20px;margin-bottom:5px;">🌱</div>' +
                 '<div style="font-size:12px;font-weight:bold;">地块 #' + (plot.id+1) + '</div>' +
-                '<div style="font-size:11px;color:#8b949e;">' + status + '</div></div>';
+                '<div style="font-size:13px;color:#8b949e;">' + status + '</div></div>';
         }).join('') +
         '</div><div class="modal-buttons"><button class="btn btn-primary" onclick="closeModal()">取消</button></div>';
     showModal(html);

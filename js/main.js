@@ -401,13 +401,15 @@ function initGame() {
         gameState.technologies[key] = false;
     });
     
-    // 创建初始怪兽
-    createMonster('slime');
-    
     // 初始化UI
     initUI();
-    
+
     renderAll();
+
+    // 启动教学引导（新存档才触发）
+    if (!checkTutorialDone()) {
+        setTimeout(startTutorial, 600);
+    }
 }
 
 function createMonster(type, parent1, parent2) {

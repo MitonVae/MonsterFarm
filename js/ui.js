@@ -172,12 +172,12 @@ window.renderFarm = function() {
             var isReady = plot.progress >= 100;
             var hasMonster = !!plot.assignedMonster;
             var monsterBadge = hasMonster
-                ? `<div style="position:absolute;top:4px;right:4px;background:#1a3a2a;border:1px solid #46d164;border-radius:12px;padding:2px 6px;font-size:10px;display:flex;align-items:center;gap:3px;">
+                ? `<div style="position:absolute;top:4px;right:4px;background:#1a3a2a;border:1px solid #46d164;border-radius:12px;padding:2px 6px;font-size:12px;display:flex;align-items:center;gap:3px;">
                        ${createSVG(plot.assignedMonster.type, 14)}<span style="color:#46d164;">自动</span>
                    </div>`
                 : '';
             var autoCropBadge = plot.autoCrop && hasMonster
-                ? `<div style="font-size:10px;color:#f0c53d;margin-top:2px;">▶ ${cropTypes.find(function(c){return c.id===plot.autoCrop;}).name}</div>`
+                ? `<div style="font-size:12px;color:#f0c53d;margin-top:2px;">▶ ${cropTypes.find(function(c){return c.id===plot.autoCrop;}).name}</div>`
                 : '';
             var statusText = isReady
                 ? (hasMonster ? '自动收获中...' : '点击收获')
@@ -203,7 +203,7 @@ window.renderFarm = function() {
             <div class="plot" id="plot-${plot.id}" data-plot-id="${plot.id}"
                  onclick="handlePlotClick(${plot.id})"
                  style="position:relative;">
-                ${emptyMonster ? `<div style="position:absolute;top:4px;right:4px;background:#1a3a2a;border:1px solid #46d164;border-radius:12px;padding:2px 6px;font-size:10px;display:flex;align-items:center;gap:3px;">${createSVG(emptyMonster.type, 14)}<span style="color:#46d164;">待命</span></div>` : ''}
+                ${emptyMonster ? `<div style="position:absolute;top:4px;right:4px;background:#1a3a2a;border:1px solid #46d164;border-radius:12px;padding:2px 6px;font-size:12px;display:flex;align-items:center;gap:3px;">${createSVG(emptyMonster.type, 14)}<span style="color:#46d164;">待命</span></div>` : ''}
                 ${createSVG('add', 40)}
                 <div class="plot-text">${emptyMonster ? '点击设置作物' : '点击种植'}</div>
             </div>
@@ -699,9 +699,9 @@ window.renderMonsterSidebar = function() {
         var assignInfo = '';
         if (monster.status === 'farming') {
             var farmPlot = gameState.plots.find(function(p) { return p.assignedMonster && p.assignedMonster.id === monster.id; });
-            if (farmPlot) assignInfo = '<div style="font-size:10px;color:#46d164;margin-top:4px;">🌱 地块 #' + (farmPlot.id + 1) + (farmPlot.autoCrop ? ' · 自动' : '') + '</div>';
+            if (farmPlot) assignInfo = '<div style="font-size:12px;color:#46d164;margin-top:4px;">🌱 地块 #' + (farmPlot.id + 1) + (farmPlot.autoCrop ? ' · 自动' : '') + '</div>';
         } else if (monster.status === 'exploring' || monster.status === 'preparing') {
-            assignInfo = '<div style="font-size:10px;color:#f0c53d;margin-top:4px;">🗺 探索队</div>';
+            assignInfo = '<div style="font-size:12px;color:#f0c53d;margin-top:4px;">🗺 探索队</div>';
         }
 
         // 判断操作按钮
@@ -798,9 +798,9 @@ window.showMobileMonsterPanel = function() {
                 '<div style="background:#0d1117;border-radius:8px;padding:4px;">' + createSVG(monster.type, 32) + '</div>' +
                 '<div style="flex:1;min-width:0;">' +
                 '<div style="font-weight:700;font-size:13px;">' + monster.name + '</div>' +
-                '<div style="font-size:11px;color:#8b949e;">Lv.' + monster.level + ' · ' + (monsterTypes[monster.type] ? monsterTypes[monster.type].name : '') + '</div>' +
+                '<div style="font-size:13px;color:#8b949e;">Lv.' + monster.level + ' · ' + (monsterTypes[monster.type] ? monsterTypes[monster.type].name : '') + '</div>' +
                 '</div>' +
-                '<span style="font-size:11px;color:' + (statusColor[st] || '#8b949e') + ';font-weight:600;">' + (statusMap[st] || st) + '</span>' +
+                '<span style="font-size:13px;color:' + (statusColor[st] || '#8b949e') + ';font-weight:600;">' + (statusMap[st] || st) + '</span>' +
                 '</div>';
         });
         html += '</div>';

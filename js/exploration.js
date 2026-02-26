@@ -105,6 +105,8 @@ function settleZone(zone) {
         var rarity = monsterTypes[caught.type].rarity;
         var rarityLabel = { common:'普通', uncommon:'优良', rare:'稀有', epic:'史诗', legendary:'传说' }[rarity] || '';
         showNotification('🎉 捕获了 [' + rarityLabel + '] ' + caught.name + '！', 'success');
+        // 触发引导系统钩子
+        if (typeof onTutorialMonsterCaught === 'function') onTutorialMonsterCaught();
     }
 
     // 重置进度
@@ -295,7 +297,7 @@ window.renderExploration = function() {
             var rc = rarityColor[td.rarity] || '#8b949e';
             var rn = rarityName[td.rarity]  || '';
             return '<span class="expl-monster-tag" style="border-color:' + rc + ';color:' + rc + ';">' +
-                td.name + ' <span style="opacity:.7;font-size:10px;">[' + rn + ']</span></span>';
+                td.name + ' <span style="opacity:.7;font-size:12px;">[' + rn + ']</span></span>';
         }).join('');
 
         // 已派遣怪兽
@@ -407,10 +409,10 @@ window.showDispatchPicker = function(zoneId) {
                 '<div style="background:#0d1117;border-radius:8px;padding:4px;">' + createSVG(m.type, 32) + '</div>' +
                 '<div style="flex:1;margin-left:10px;">' +
                 '<div style="font-weight:700;">' + m.name + '</div>' +
-                '<div style="font-size:11px;color:#8b949e;">Lv.' + m.level + ' · ' + (td ? td.name : m.type) +
+                '<div style="font-size:13px;color:#8b949e;">Lv.' + m.level + ' · ' + (td ? td.name : m.type) +
                 ' · 力量' + m.stats.strength + ' 敏捷' + m.stats.agility + ' 智力' + m.stats.intelligence + '</div>' +
                 '</div>' +
-                '<div style="text-align:right;font-size:11px;">' +
+                '<div style="text-align:right;font-size:13px;">' +
                 '<div style="color:#58a6ff;">+' + speedContrib + '%/s</div>' +
                 '<div style="color:#46d164;">奖励+10%</div>' +
                 '</div>' +
