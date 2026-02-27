@@ -597,10 +597,18 @@ window.showMonsterDetailModal = function(monsterId) {
     var typeData = monsterTypes[monster.type];
     var isWorking = monster.status !== 'idle';
     var statusText = getStatusText(monster.status);
-    
+    var isStarred  = !!monster.starred;
+
     var modalContent = `
-        <div class="modal-header">
-            ${createSVG(monster.type, 32)} ${monster.name}
+        <div class="modal-header" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            ${createSVG(monster.type, 32)}
+            <span id="mdl_name_${monster.id}" style="flex:1;font-weight:700;font-size:16px;cursor:pointer;border-bottom:1px dashed #444;padding-bottom:1px;"
+                title="点击重命名" onclick="window._promptRename(${monster.id})">${monster.name}</span>
+            <button onclick="window.toggleMonsterStar(${monster.id})" title="${isStarred ? '取消星标' : '添加星标'}"
+                style="background:none;border:none;font-size:20px;cursor:pointer;line-height:1;padding:0 4px;opacity:${isStarred ? '1' : '0.35'};transition:opacity 0.15s;"
+                onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='${isStarred ? '1' : '0.35'}'">⭐</button>
+            <button onclick="window._promptRename(${monster.id})" title="重命名"
+                style="background:none;border:1px solid #30363d;border-radius:5px;color:#8b949e;font-size:11px;cursor:pointer;padding:2px 8px;">✏️ 改名</button>
         </div>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
@@ -669,6 +677,9 @@ window.showMonsterDetailModal = function(monsterId) {
             <button class="btn btn-success" onclick="selectMonster(${monster.id}); closeModal();">
                 ${createSVG('check', 16)} 选中
             </button>
+            <button class="btn btn-secondary" onclick="closeModal(); showLineageModal(${monster.id});">
+                🧬 系谱
+            </button>
             <button class="btn btn-primary" onclick="closeModal()">
                 关闭
             </button>
@@ -676,6 +687,33 @@ window.showMonsterDetailModal = function(monsterId) {
     `;
     
     showModal(modalContent);
+};
+
+// ── 星标切换 ──
+window.toggleMonsterStar = function(monsterId) {
+    var monster = gameState.monsters.find(function(m){ return m.id === monsterId; });
+    if (!monster) return;
+    monster.starred = !monster.starred;
+    if (typeof autoSave === 'function') autoSave();
+    if (typeof renderMonsterSidebar === 'function') renderMonsterSidebar();
+    // 重新打开详情弹窗以刷新星标按钮状态
+    showMonsterDetailModal(monsterId);
+};
+
+// ── 重命名弹窗 ──
+window._promptRename = function(monsterId) {
+    var monster = gameState.monsters.find(function(m){ return m.id === monsterId; });
+    if (!monster) return;
+    var newName = window.prompt('请输入新名字（最长20字符）：', monster.name);
+    if (newName === null) return; // 取消
+    newName = newName.trim().slice(0, 20);
+    if (!newName) { showNotification('名字不能为空！', 'warning'); return; }
+    if (newName === monster.name) return;
+    monster.name = newName;
+    if (typeof autoSave === 'function') autoSave();
+    if (typeof renderMonsterSidebar === 'function') renderMonsterSidebar();
+    showMonsterDetailModal(monsterId); // 刷新弹窗
+    showNotification('✏️ 已重命名为 ' + newName, 'success');
 };
 
 // 获取怪兽状态文本（已接入 i18n）
@@ -1044,7 +1082,7 @@ window.renderMonsterSidebar = function() {
                 return '<div class="compact-card monster ' + (monster.status || 'idle') + '" onclick="showMonsterDetailModal(' + monster.id + ')">' +
                     '<div style="width:28px;height:28px;flex-shrink:0;">' + createSVG(monster.type, 28) + '</div>' +
                     '<div style="display:flex;flex-direction:column;min-width:0;flex:1;gap:1px;">' +
-                        '<span class="compact-name">' + monster.name + '</span>' +
+                        '<span class="compact-name">' + (monster.starred ? '<span style="color:#f0c53d;font-size:11px;">⭐</span>' : '') + monster.name + '</span>' +
                         '<span class="compact-sub">Lv.' + monster.level + ' · 力' + monster.stats.strength + ' 耕' + monster.stats.farming + '</span>' +
                     '</div>' +
                     '<div style="width:28px;height:3px;background:#21262d;border-radius:2px;overflow:hidden;align-self:center;">' +
@@ -1083,7 +1121,7 @@ window.renderMonsterSidebar = function() {
                 '<div class="msb-monster-top">' +
                 '<div class="msb-monster-icon">' + createSVG(monster.type, 28) + '</div>' +
                 '<div class="msb-monster-meta">' +
-                '<div class="msb-monster-name">' + monster.name + '</div>' +
+                '<div class="msb-monster-name">' + (monster.starred ? '<span style="color:#f0c53d;font-size:11px;margin-right:2px;">⭐</span>' : '') + monster.name + '</div>' +
                 '<div class="msb-monster-level">Lv.' + monster.level + ' · ' + (monsterTypes[monster.type] ? monsterTypes[monster.type].name : monster.type) + '</div>' +
                 assignInfo +
                 '</div>' +

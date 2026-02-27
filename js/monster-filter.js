@@ -56,7 +56,8 @@
                 maxGen:   99,
                 trait:  'all',
                 sort:   'default',
-                statusFilter: 'idle'  // idle | all
+                statusFilter: 'idle',  // idle | all
+                starOnly: false        // ⭐ 仅显示星标
             };
         }
         return _filterState[ctx];
@@ -69,6 +70,9 @@
         return monsters.filter(function(m) {
             // 状态筛选
             if (s.statusFilter === 'idle' && m.status !== 'idle') return false;
+
+            // ⭐ 星标筛选
+            if (s.starOnly && !m.starred) return false;
 
             // 搜索（名字或类型名）
             if (s.search) {
@@ -167,14 +171,20 @@
         }).join('');
 
         var idPfx = 'mf_' + ctx;
+        // 是否有星标怪兽存在（没有则不显示按钮）
+        var hasStarred = (gameState.monsters || []).some(function(m){ return m.starred; });
 
         return [
             '<div class="mf-filterbar" data-ctx="' + ctx + '">',
-            // ── 第一行：搜索 + 排序 ──
+            // ── 第一行：搜索 + 星标 + 排序 ──
             '<div class="mf-row">',
             '<input class="mf-search" id="' + idPfx + '_search" type="text" placeholder="搜索名字/品种…"',
             ' value="' + (s.search || '') + '"',
             ' oninput="window._mfUpdate(\'' + ctx + '\',\'search\',this.value)">',
+            (hasStarred
+                ? '<button class="mf-star-btn' + (s.starOnly ? ' active' : '') + '" ' +
+                  'onclick="window._mfUpdate(\'' + ctx + '\',\'starOnly\',' + (!s.starOnly) + ')" title="仅显示星标怪兽">⭐</button>'
+                : ''),
             '<select class="mf-select" id="' + idPfx + '_sort" onchange="window._mfUpdate(\'' + ctx + '\',\'sort\',this.value)">',
             sortOpts, '</select>',
             '</div>',
@@ -436,7 +446,7 @@
                         '<div style="flex-shrink:0;">' + createSVG(m.type, 40) + '</div>' +
                         '<div style="flex:1;min-width:0;">' +
                             '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;">' +
-                                '<span style="font-weight:700;color:#e6edf3;">' + m.name + '</span>' +
+                                '<span style="font-weight:700;color:#e6edf3;">' + (m.starred ? '⭐ ' : '') + m.name + '</span>' +
                                 '<span style="color:' + rc + ';font-size:11px;border:1px solid ' + rc + ';padding:0 5px;border-radius:10px;">' + rl + '</span>' +
                                 lineageTag + farmBonus +
                             '</div>' +
@@ -505,6 +515,10 @@
         '.mf-range-input{width:48px;padding:4px 6px;background:#0d1117;border:1px solid #30363d;border-radius:5px;color:#e6edf3;font-size:12px;text-align:center;}',
         '.mf-reset-btn{margin-left:auto;padding:4px 10px;background:none;border:1px solid #f85149;border-radius:5px;color:#f85149;font-size:11px;cursor:pointer;}',
         '.mf-reset-btn:hover{background:#f85149;color:#fff;}',
+        // 星标筛选按钮
+        '.mf-star-btn{padding:4px 10px;background:none;border:1px solid #30363d;border-radius:6px;color:#8b949e;font-size:14px;cursor:pointer;transition:all 0.15s;flex-shrink:0;}',
+        '.mf-star-btn:hover{border-color:#f0c53d;color:#f0c53d;}',
+        '.mf-star-btn.active{background:#2d2a12;border-color:#f0c53d;color:#f0c53d;}',
     ].join('\n');
     document.head.appendChild(style);
 

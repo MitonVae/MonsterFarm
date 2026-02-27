@@ -216,10 +216,16 @@ function createMonster(type, parent1, parent2) {
         stats[stat] = Math.max(1, value);
     });
     
+    // 使用命名库生成名字
+    var monsterName = (typeof MONSTER_NAME_DB !== 'undefined')
+        ? MONSTER_NAME_DB.generate(type, stats, typeData.rarity)
+        : (typeData.name + '#' + (gameState.nextMonsterId + 1));
+
     var monster = {
         id: gameState.nextMonsterId++,
         type: type,
-        name: typeData.name + '#' + gameState.nextMonsterId,
+        name: monsterName,
+        starred: false,          // ⭐ 星标
         stats: stats,
         level: 1,
         exp: 0,
