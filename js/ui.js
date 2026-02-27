@@ -121,6 +121,7 @@ function _updateMobTopbar() {
         { id: 'mobCoinsIcon', key: 'coin' },
         { id: 'mobFoodIcon', key: 'food' },
         { id: 'mobMaterialsIcon', key: 'material' },
+        { id: 'mobResearchIcon', key: 'research' },
         { id: 'mobEnergyIcon', key: 'energy' }
     ];
     icons.forEach(function(ic) {
@@ -130,10 +131,11 @@ function _updateMobTopbar() {
 
     // 资源值
     var el;
-    el = document.getElementById('mob-coins'); if (el) el.textContent = _fmtMobNum(gameState.coins);
-    el = document.getElementById('mob-food'); if (el) el.textContent = _fmtMobNum(gameState.food);
+    el = document.getElementById('mob-coins');     if (el) el.textContent = _fmtMobNum(gameState.coins);
+    el = document.getElementById('mob-food');      if (el) el.textContent = _fmtMobNum(gameState.food);
     el = document.getElementById('mob-materials'); if (el) el.textContent = _fmtMobNum(gameState.materials);
-    el = document.getElementById('mob-energy'); if (el) el.textContent = gameState.energy + '/' + gameState.maxEnergy;
+    el = document.getElementById('mob-research');  if (el) el.textContent = _fmtMobNum(gameState.research || 0);
+    el = document.getElementById('mob-energy');    if (el) el.textContent = gameState.energy + '/' + gameState.maxEnergy;
 
     // 资源速率（从 resource-detail 模块读取，若不可用则隐藏）
     function _setRate(elId, perMin) {
@@ -147,13 +149,14 @@ function _updateMobTopbar() {
     // 尝试从 getResourceRates 获取速率（如该函数存在）
     if (typeof getResourceRates === 'function') {
         var rates = getResourceRates();
-        _setRate('mob-coins-rate', rates.coins);
-        _setRate('mob-food-rate', rates.food);
-        _setRate('mob-materials-rate', rates.materials);
-        _setRate('mob-energy-rate', null); // 能量不显示速率
+        _setRate('mob-coins-rate',    rates.coins);
+        _setRate('mob-food-rate',     rates.food);
+        _setRate('mob-materials-rate',rates.materials);
+        _setRate('mob-research-rate', rates.research || null);
+        _setRate('mob-energy-rate',   null); // 能量不显示速率
     } else {
         // 降级：不显示速率
-        ['mob-coins-rate','mob-food-rate','mob-materials-rate','mob-energy-rate'].forEach(function(id) {
+        ['mob-coins-rate','mob-food-rate','mob-materials-rate','mob-research-rate','mob-energy-rate'].forEach(function(id) {
             var e = document.getElementById(id); if (e) e.textContent = '';
         });
     }

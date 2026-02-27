@@ -1713,7 +1713,7 @@ svg[width="48"], svg[width="50"], svg[width="60"] {
 /* 顶栏第二行：2列×2行资源网格 */
 .mobile-topbar-resources {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 0;
     border-top: 1px solid #21262d;
 }
@@ -1721,14 +1721,14 @@ svg[width="48"], svg[width="50"], svg[width="60"] {
 .mob-res {
     display: flex;
     align-items: center;
-    gap: 4px;
-    font-size: 0.7857rem;
+    gap: 2px;
+    font-size: 0.7rem;
     font-weight: 600;
     color: #e6edf3;
     background: transparent;
     border: none;
     border-right: 1px solid #21262d;
-    padding: 4px 6px;
+    padding: 3px 4px;
     cursor: pointer;
     white-space: nowrap;
     transition: background 0.12s;
@@ -1749,7 +1749,7 @@ svg[width="48"], svg[width="50"], svg[width="60"] {
 
 /* 资源变化速率 */
 .mob-res-rate {
-    font-size: 0.6429rem;
+    font-size: 0.6rem;
     color: #8b949e;
     white-space: nowrap;
     flex-shrink: 0;
