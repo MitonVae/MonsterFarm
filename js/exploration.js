@@ -436,7 +436,48 @@ window.showDispatchPicker = function(zoneId) {
     showModal(html);
 };
 
-// ── 兼容旧的 assignMonsterToExpedition（保留接口，重定向到区域0）──
-window.assignMonsterToExpedition = function(monsterId) {
-    showDispatchPicker('farm_edge');
+// ── 从怪兽详情弹窗"派去探索"：先弹区域选择器，再派遣 ──
+window.showZoneDispatchPicker = function(monsterId) {
+    var monster = gameState.monsters.find(function(m) { return m.id === monsterId; });
+    if (!monster || monster.status !== 'idle') {
+        showNotification('该怪兽当前不可用！', 'warning');
+        return;
+    }
+
+    // 过滤出已解锁且未满员（<4只）的区域
+    var availableZones = explorationZones.filter(function(z) {
+        if (!checkZoneCondition(z)) return false;
+        var zs = getZoneState(z.id);
+        return zs.assignedMonsterIds.length < 4;
+    });
+
+    if (availableZones.length === 0) {
+        showNotification('当前没有可派遣的探索区域！', 'warning');
+        return;
+    }
+
+    var html = '<div class="modal-header">🗺 选择探索区域</div>' +
+        '<p style="color:#8b949e;font-size:12px;margin:0 0 12px;">选择要将 <strong style="color:#58a6ff;">' + monster.name + '</strong> 派往的区域：</p>' +
+        '<div style="display:flex;flex-direction:column;gap:8px;max-height:380px;overflow-y:auto;">';
+
+    html += availableZones.map(function(z) {
+        var zs = getZoneState(z.id);
+        var slots = zs.assignedMonsterIds.length;
+        return '<div onclick="assignMonsterToZone(\'' + z.id + '\',' + monsterId + ');closeModal();"' +
+            ' style="display:flex;align-items:center;gap:12px;padding:12px;background:#21262d;border:1px solid #30363d;' +
+            'border-radius:10px;cursor:pointer;"' +
+            ' onmouseover="this.style.borderColor=\'#58a6ff\';this.style.background=\'#30363d\'"' +
+            ' onmouseout="this.style.borderColor=\'#30363d\';this.style.background=\'#21262d\'">' +
+            '<div style="font-size:28px;width:36px;text-align:center;">' + z.icon + '</div>' +
+            '<div style="flex:1;">' +
+            '<div style="font-weight:700;color:#e6edf3;">' + TName(z.id, 'zones') + '</div>' +
+            '<div style="font-size:12px;color:#8b949e;margin-top:2px;">' + TDesc(z.id, 'zones') + '</div>' +
+            '</div>' +
+            '<div style="font-size:12px;color:#8b949e;text-align:right;white-space:nowrap;">' +
+            slots + '/4 只<br><span style="color:#46d164;">可派遣</span></div>' +
+            '</div>';
+    }).join('');
+
+    html += '</div><div class="modal-buttons"><button class="btn btn-primary" onclick="closeModal()">取消</button></div>';
+    showModal(html);
 };

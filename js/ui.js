@@ -687,7 +687,7 @@ window.showMonsterDetailModal = function(monsterId) {
                 <button class="btn btn-primary" onclick="closeModal(); showAssignPlotPicker(${monster.id});">
                     ${createSVG('plant', 16)} 派驻农田
                 </button>
-                <button class="btn btn-warning" onclick="assignMonsterToExpedition(${monster.id}); closeModal();">
+                <button class="btn btn-warning" onclick="closeModal(); showZoneDispatchPicker(${monster.id});">
                     ${createSVG('explore', 16)} 派去探索
                 </button>
                 <button class="btn btn-danger" onclick="selectMonster(${monster.id}); switchTab('disposal'); closeModal();">
@@ -743,66 +743,36 @@ window.assignMonsterToFarm = function(monsterId) {
     renderFarm();
 };
 
-// 快速操作：派遣怪兽去探索
-window.assignMonsterToExpedition = function(monsterId) {
-    var monster = gameState.monsters.find(function(m) { return m.id === monsterId; });
-    if (!monster || monster.status !== 'idle') {
-        showNotification('该怪兽不可用！', 'warning');
-        return;
-    }
-    
-    if (!gameState.expeditions[0]) {
-        gameState.expeditions[0] = { members: [], status: 'preparing' };
-    }
-    
-    var expedition = gameState.expeditions[0];
-    
-    if (expedition.members.length >= 4) {
-        showNotification('探险队已满！', 'warning');
-        return;
-    }
-    
-    if (expedition.status === 'exploring') {
-        showNotification('探险队正在探索中！', 'warning');
-        return;
-    }
-    
-    expedition.members.push(monster);
-    monster.status = 'preparing';
-    
-    showNotification(monster.name + ' 加入探险队！', 'success');
-    renderExploration();
-};
-
-// 快速操作：召回怪兽
+// 快速操作：召回怪兽（通用，支持农田 / 探索区域）
 window.recallMonster = function(monsterId) {
     var monster = gameState.monsters.find(function(m) { return m.id === monsterId; });
     if (!monster || monster.status === 'idle') return;
-    
+
     // 从农田召回
     if (monster.status === 'farming') {
-        var plot = gameState.plots.find(function(p) { 
-            return p.assignedMonster && p.assignedMonster.id === monster.id; 
+        var plot = gameState.plots.find(function(p) {
+            return p.assignedMonster && p.assignedMonster.id === monster.id;
         });
-        if (plot) {
-            plot.assignedMonster = null;
+        if (plot) plot.assignedMonster = null;
+    }
+
+    // 从探索区域召回（exploring / preparing 均通过 zoneStates 管理）
+    if (monster.status === 'exploring' || monster.status === 'preparing') {
+        if (gameState.zoneStates && typeof recallMonsterFromZone === 'function') {
+            // 找出怪兽所在的区域
+            Object.keys(gameState.zoneStates).forEach(function(zid) {
+                var zs = gameState.zoneStates[zid];
+                if (!zs || !zs.assignedMonsterIds) return;
+                var idx = zs.assignedMonsterIds.indexOf(monsterId);
+                if (idx !== -1) recallMonsterFromZone(zid, monsterId);
+            });
+            return; // recallMonsterFromZone 已处理 status 重置和渲染
         }
     }
-    
-    // 从探险队召回
-    if (monster.status === 'preparing') {
-        var expedition = gameState.expeditions[0];
-        if (expedition) {
-            var index = expedition.members.findIndex(function(m) { return m.id === monster.id; });
-            if (index > -1) {
-                expedition.members.splice(index, 1);
-            }
-        }
-    }
-    
+
     monster.status = 'idle';
     monster.assignment = null;
-    
+
     showNotification(monster.name + ' 已召回！', 'success');
     updateResources();
     renderFarm();
