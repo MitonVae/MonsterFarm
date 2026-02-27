@@ -416,7 +416,8 @@ function _deductCost(cost) {
 }
 
 function _costStr(cost) {
-    return Object.keys(cost).map(function(k){ return cost[k] + k; }).join('/');
+    var RES_NAMES = { coins: '金币', food: '食物', materials: '材料', research: '研究点', energy: '能量' };
+    return Object.keys(cost).map(function(k){ return cost[k] + (RES_NAMES[k] || k); }).join('/');
 }
 
 // ──────────────────────────────────────────────────────────────

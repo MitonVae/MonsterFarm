@@ -29,7 +29,7 @@ function _renderTechCard(techId) {
     var prereqBlock = '';
     if (!prereqMet && tech.prereq && tech.prereq.length > 0) {
         prereqBlock = '<div style="font-size:11px;color:#f85149;margin-top:6px;">⚠ ' + T('prereqNeeded','tech') + '：' +
-            tech.prereq.map(function(p){ return TName(p,'tech') || (technologies[p] ? technologies[p].name : p); }).join('、') + '</div>';
+            tech.prereq.map(function(p){ return (technologies[p] ? technologies[p].name : null) || TName(p,'tech') || p; }).join('、') + '</div>';
     }
 
     // 全部分类时显示所属分类色条提示
