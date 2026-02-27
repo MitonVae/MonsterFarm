@@ -289,76 +289,9 @@ window.renderFarm = function() {
     }).join('');
 };
 
-// 渲染怪兽（调用monster.js中的renderMonsters）
+// renderMonsters：已合并到 renderMonsterSidebar，此函数保留为兼容别名
 window.renderMonsters = function() {
-    var monsterGrid = document.getElementById('monsterGrid');
-    if (!monsterGrid) return;
-    
-    if (gameState.monsters.length === 0) {
-        monsterGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #8b949e;">还没有怪兽，去招募一些吧！</div>';
-        return;
-    }
-    
-    monsterGrid.innerHTML = gameState.monsters.map(function(monster) {
-        var typeData = monsterTypes[monster.type];
-        var isSelected = gameState.selectedMonster === monster.id;
-        var isWorking = monster.status !== 'idle';
-        
-        return `
-            <div class="monster-card ${isWorking ? 'working' : ''} ${isSelected ? 'selected' : ''}" 
-                 onclick="selectMonster(${monster.id})">
-                <div class="monster-header">
-                    <div class="monster-icon-container">
-                        ${createSVG(monster.type, 48)}
-                    </div>
-                    <div class="monster-info">
-                        <div class="monster-name">${monster.name}</div>
-                        <div class="monster-type" style="background: ${typeData.color}; color: white;">
-                            ${typeData.name} Gen.${monster.generation}
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="monster-stats">
-                    <div class="stat">
-                        <span class="stat-label">力量</span>
-                        <span class="stat-value">${monster.stats.strength}</span>
-                    </div>
-                    <div class="stat">
-                        <span class="stat-label">敏捷</span>
-                        <span class="stat-value">${monster.stats.agility}</span>
-                    </div>
-                    <div class="stat">
-                        <span class="stat-label">智力</span>
-                        <span class="stat-value">${monster.stats.intelligence}</span>
-                    </div>
-                    <div class="stat">
-                        <span class="stat-label">耕作</span>
-                        <span class="stat-value">${monster.stats.farming}</span>
-                    </div>
-                </div>
-                
-                <div style="margin-top: 10px; font-size: 11px;">
-                    <div style="color: #8b949e; margin-bottom: 3px;">特性: ${monster.traits.map(function(t) { return t.name; }).join(', ')}</div>
-                    <div style="color: #8b949e;">等级: ${monster.level} (${monster.exp}/${monster.maxExp})</div>
-                    ${isWorking ? '<div style="color: #2196f3; font-weight: bold; margin-top: 5px;"><span style="display: inline-block; vertical-align: middle; margin-right: 5px;">' + createSVG('work', 14) + '</span>' + getStatusText(monster.status) + '</div>' : ''}
-                </div>
-                
-                ${isSelected ? `
-                    <div style="margin-top: 10px; display: flex; gap: 5px;">
-                        <button class="btn btn-primary" style="flex:1; padding: 5px; font-size: 11px;" 
-                                onclick="event.stopPropagation(); assignToFarm(${monster.id})">
-                            耕作
-                        </button>
-                        <button class="btn btn-warning" style="flex:1; padding: 5px; font-size: 11px;" 
-                                onclick="event.stopPropagation(); assignToSelling(${monster.id})">
-                            售卖
-                        </button>
-                    </div>
-                ` : ''}
-            </div>
-        `;
-    }).join('');
+    renderMonsterSidebar();
 };
 
 // ── 通知队列系统 ──
@@ -773,7 +706,7 @@ window.assignMonsterToFarm = function(monsterId) {
     monster.status = 'farming';
     monster.assignment = 'plot-' + availablePlot.id;
     
-    showNotification(monster.name + ' 被派去照看农田！', 'success');
+    // 派遣操作静默：UI 颜色/状态已体现
     updateResources();
     renderFarm();
 };
@@ -808,7 +741,7 @@ window.recallMonster = function(monsterId) {
     monster.status = 'idle';
     monster.assignment = null;
 
-    showNotification(monster.name + ' 已召回！', 'success');
+    // 召回操作静默：侧边栏状态即时体现
     updateResources();
     renderFarm();
     renderExploration();
@@ -1045,17 +978,35 @@ window.applyFontSize = function(size) {
     });
 };
 
-// ==================== 右侧怪兽侧边栏渲染 ====================
+// ==================== 右侧怪兽侧边栏渲染（支持大/小卡布局切换）====================
 window.renderMonsterSidebar = function() {
     var listEl = document.getElementById('monsterSidebarList');
     var footerEl = document.getElementById('monsterSidebarFooter');
     if (!listEl) return;
 
+    var layout = getLayoutPref('monsters');
+
+    // ── 工具栏注入到侧边栏 header ──
+    var headerEl = document.querySelector('#monsterSidebar .monster-sidebar-header');
+    if (headerEl && !document.getElementById('msb-layout-toolbar')) {
+        var tbWrap = document.createElement('div');
+        tbWrap.id = 'msb-layout-toolbar';
+        tbWrap.style.cssText = 'padding:4px 10px 6px;border-bottom:1px solid #21262d;';
+        tbWrap.innerHTML = renderLayoutToolbar('monsters', '', [], 'renderMonsterSidebar');
+        headerEl.insertAdjacentElement('afterend', tbWrap);
+    } else if (document.getElementById('msb-layout-toolbar')) {
+        document.getElementById('msb-layout-toolbar').innerHTML =
+            renderLayoutToolbar('monsters', '', [], 'renderMonsterSidebar');
+    }
+
     if (gameState.monsters.length === 0) {
         listEl.innerHTML = '<div style="text-align:center;padding:30px 15px;color:#8b949e;font-size:12px;line-height:1.8;">' +
-            '<div style="font-size:32px;margin-bottom:8px;">�</div>' +
+            '<div style="font-size:32px;margin-bottom:8px;">🐾</div>' +
             '<div>还没有怪兽</div><div style="margin-top:4px;">前往探索区域捕获野生怪兽！</div></div>';
         if (footerEl) footerEl.innerHTML = '';
+        // 同步移动端
+        var mobListEl2 = document.getElementById('mobileMonsterList');
+        if (mobListEl2) mobListEl2.innerHTML = listEl.innerHTML;
         return;
     }
 
@@ -1067,68 +1018,119 @@ window.renderMonsterSidebar = function() {
         'breeding':  [T('breeding','monsterStatus'),  'msb-status-breeding']
     };
 
-    listEl.innerHTML = gameState.monsters.map(function(monster) {
-        var sl = statusLabels[monster.status] || ['未知', 'msb-status-idle'];
-        var statusCls = monster.status || 'idle';
-        var assignInfo = '';
-        if (monster.status === 'farming') {
-            var farmPlot = gameState.plots.find(function(p) { return p.assignedMonster && p.assignedMonster.id === monster.id; });
-            if (farmPlot) assignInfo = '<div style="font-size:12px;color:#46d164;margin-top:4px;">🌱 地块 #' + (farmPlot.id + 1) + (farmPlot.autoCrop ? ' · 自动' : '') + '</div>';
-        } else if (monster.status === 'exploring' || monster.status === 'preparing') {
-            assignInfo = '<div style="font-size:12px;color:#f0c53d;margin-top:4px;">🗺 探索队</div>';
-        }
+    var cardsHtml;
 
-        // 判断操作按钮
-        var actionBtns = '';
-        if (monster.status === 'idle') {
-            actionBtns = '<button class="msb-action-btn msb-btn-assign" onclick="event.stopPropagation();closeModal&&closeModal();showAssignPlotPicker(' + monster.id + ')">派驻农田</button>';
-        } else if (monster.status === 'farming') {
-            var farmPlot2 = gameState.plots.find(function(p) { return p.assignedMonster && p.assignedMonster.id === monster.id; });
-            var plotId = farmPlot2 ? farmPlot2.id : -1;
-            actionBtns = plotId >= 0 ? '<button class="msb-action-btn msb-btn-recall" onclick="event.stopPropagation();removeMonsterFromPlot(' + plotId + ');renderMonsterSidebar();">撤回</button>' : '';
-        } else {
-            actionBtns = '<button class="msb-action-btn msb-btn-recall" onclick="event.stopPropagation();recallMonster(' + monster.id + ');">召回</button>';
-        }
+    if (layout === 'compact') {
+        // ────── 紧凑列表模式 ──────
+        cardsHtml = '<div class="compact-list msb-compact">' +
+            gameState.monsters.map(function(monster) {
+                var sl = statusLabels[monster.status] || [monster.status, 'msb-status-idle'];
+                var isWorking = monster.status !== 'idle';
+                var statusColor = {
+                    idle: '#8b949e', farming: '#46d164', exploring: '#f0c53d',
+                    preparing: '#f0c53d', breeding: '#e040fb'
+                }[monster.status] || '#8b949e';
+                var expPct = Math.floor(monster.exp / monster.maxExp * 100);
 
-        return '<div class="msb-monster-card ' + statusCls + '" onclick="showMonsterDetailModal(' + monster.id + ')">' +
-            '<div class="msb-monster-top">' +
-            '<div class="msb-monster-icon">' + createSVG(monster.type, 28) + '</div>' +
-            '<div class="msb-monster-meta">' +
-            '<div class="msb-monster-name">' + monster.name + '</div>' +
-            '<div class="msb-monster-level">Lv.' + monster.level + ' · ' + (monsterTypes[monster.type] ? monsterTypes[monster.type].name : monster.type) + '</div>' +
-            assignInfo +
-            '</div>' +
-            '<span class="msb-monster-status ' + sl[1] + '">' + sl[0] + '</span>' +
-            '</div>' +
-            '<div class="msb-monster-stats">' +
-            '<div class="msb-stat"><span class="msb-stat-label">力量</span><span class="msb-stat-value">' + monster.stats.strength + '</span></div>' +
-            '<div class="msb-stat"><span class="msb-stat-label">耕作</span><span class="msb-stat-value">' + monster.stats.farming + '</span></div>' +
-            '<div class="msb-stat"><span class="msb-stat-label">经验</span><span class="msb-stat-value">' + monster.exp + '/' + monster.maxExp + '</span></div>' +
-            '</div>' +
-            '<div class="msb-monster-actions">' + actionBtns + '</div>' +
+                // 快捷操作
+                var actionBtns = '';
+                if (monster.status === 'idle') {
+                    actionBtns = '<button class="compact-btn" onclick="event.stopPropagation();showAssignPlotPicker(' + monster.id + ')">🌾</button>' +
+                        '<button class="compact-btn" onclick="event.stopPropagation();showZoneDispatchPicker(' + monster.id + ')">🗺</button>';
+                } else {
+                    actionBtns = '<button class="compact-btn danger" onclick="event.stopPropagation();recallMonster(' + monster.id + ')">召回</button>';
+                }
+
+                return '<div class="compact-card monster ' + (monster.status || 'idle') + '" onclick="showMonsterDetailModal(' + monster.id + ')">' +
+                    '<div style="width:28px;height:28px;flex-shrink:0;">' + createSVG(monster.type, 28) + '</div>' +
+                    '<div style="display:flex;flex-direction:column;min-width:0;flex:1;gap:1px;">' +
+                        '<span class="compact-name">' + monster.name + '</span>' +
+                        '<span class="compact-sub">Lv.' + monster.level + ' · 力' + monster.stats.strength + ' 耕' + monster.stats.farming + '</span>' +
+                    '</div>' +
+                    '<div style="width:28px;height:3px;background:#21262d;border-radius:2px;overflow:hidden;align-self:center;">' +
+                        '<div style="height:100%;width:' + expPct + '%;background:#58a6ff;"></div>' +
+                    '</div>' +
+                    '<span style="font-size:11px;color:' + statusColor + ';min-width:36px;text-align:right;">' + sl[0] + '</span>' +
+                    '<div class="compact-actions" onclick="event.stopPropagation();">' + actionBtns + '</div>' +
+                    '</div>';
+            }).join('') +
             '</div>';
-    }).join('');
+    } else {
+        // ────── 大卡模式（原有样式）──────
+        cardsHtml = gameState.monsters.map(function(monster) {
+            var sl = statusLabels[monster.status] || ['未知', 'msb-status-idle'];
+            var statusCls = monster.status || 'idle';
+            var assignInfo = '';
+            if (monster.status === 'farming') {
+                var farmPlot = gameState.plots.find(function(p) { return p.assignedMonster && p.assignedMonster.id === monster.id; });
+                if (farmPlot) assignInfo = '<div style="font-size:12px;color:#46d164;margin-top:4px;">🌱 地块 #' + (farmPlot.id + 1) + (farmPlot.autoCrop ? ' · 自动' : '') + '</div>';
+            } else if (monster.status === 'exploring' || monster.status === 'preparing') {
+                assignInfo = '<div style="font-size:12px;color:#f0c53d;margin-top:4px;">🗺 探索队</div>';
+            }
+
+            var actionBtns = '';
+            if (monster.status === 'idle') {
+                actionBtns = '<button class="msb-action-btn msb-btn-assign" onclick="event.stopPropagation();closeModal&&closeModal();showAssignPlotPicker(' + monster.id + ')">派驻农田</button>';
+            } else if (monster.status === 'farming') {
+                var farmPlot2 = gameState.plots.find(function(p) { return p.assignedMonster && p.assignedMonster.id === monster.id; });
+                var plotId = farmPlot2 ? farmPlot2.id : -1;
+                actionBtns = plotId >= 0 ? '<button class="msb-action-btn msb-btn-recall" onclick="event.stopPropagation();removeMonsterFromPlot(' + plotId + ');renderMonsterSidebar();">撤回</button>' : '';
+            } else {
+                actionBtns = '<button class="msb-action-btn msb-btn-recall" onclick="event.stopPropagation();recallMonster(' + monster.id + ');">召回</button>';
+            }
+
+            return '<div class="msb-monster-card ' + statusCls + '" onclick="showMonsterDetailModal(' + monster.id + ')">' +
+                '<div class="msb-monster-top">' +
+                '<div class="msb-monster-icon">' + createSVG(monster.type, 28) + '</div>' +
+                '<div class="msb-monster-meta">' +
+                '<div class="msb-monster-name">' + monster.name + '</div>' +
+                '<div class="msb-monster-level">Lv.' + monster.level + ' · ' + (monsterTypes[monster.type] ? monsterTypes[monster.type].name : monster.type) + '</div>' +
+                assignInfo +
+                '</div>' +
+                '<span class="msb-monster-status ' + sl[1] + '">' + sl[0] + '</span>' +
+                '</div>' +
+                '<div class="msb-monster-stats">' +
+                '<div class="msb-stat"><span class="msb-stat-label">力量</span><span class="msb-stat-value">' + monster.stats.strength + '</span></div>' +
+                '<div class="msb-stat"><span class="msb-stat-label">耕作</span><span class="msb-stat-value">' + monster.stats.farming + '</span></div>' +
+                '<div class="msb-stat"><span class="msb-stat-label">经验</span><span class="msb-stat-value">' + monster.exp + '/' + monster.maxExp + '</span></div>' +
+                '</div>' +
+                '<div class="msb-monster-actions">' + actionBtns + '</div>' +
+                '</div>';
+        }).join('');
+    }
+
+    listEl.innerHTML = cardsHtml;
 
     // 底部统计
-    var statsHtml = '';
-    if (gameState.monsters.length > 0) {
-        var total = gameState.monsters.length;
-        var idle = gameState.monsters.filter(function(m) { return m.status === 'idle'; }).length;
-        var farming = gameState.monsters.filter(function(m) { return m.status === 'farming'; }).length;
-        var exploring = gameState.monsters.filter(function(m) { return m.status === 'exploring' || m.status === 'preparing'; }).length;
-        statsHtml = '<div style="display:flex;justify-content:space-between;">' +
-            '<span>共 <strong style="color:#e6edf3;">' + total + '</strong> 只</span>' +
-            '<span style="color:#46d164;">' + T('farming','monsterStatus') + ' ' + farming + '</span>' +
-            '<span style="color:#f0c53d;">' + T('exploring','monsterStatus') + ' ' + exploring + '</span>' +
-            '<span style="color:#8b949e;">' + T('idle','monsterStatus') + ' ' + idle + '</span>' +
-            '</div>';
-    }
+    var total = gameState.monsters.length;
+    var idle = gameState.monsters.filter(function(m) { return m.status === 'idle'; }).length;
+    var farming = gameState.monsters.filter(function(m) { return m.status === 'farming'; }).length;
+    var exploring = gameState.monsters.filter(function(m) { return m.status === 'exploring' || m.status === 'preparing'; }).length;
+    var statsHtml = '<div style="display:flex;justify-content:space-between;">' +
+        '<span>共 <strong style="color:#e6edf3;">' + total + '</strong> 只</span>' +
+        '<span style="color:#46d164;">' + T('farming','monsterStatus') + ' ' + farming + '</span>' +
+        '<span style="color:#f0c53d;">' + T('exploring','monsterStatus') + ' ' + exploring + '</span>' +
+        '<span style="color:#8b949e;">' + T('idle','monsterStatus') + ' ' + idle + '</span>' +
+        '</div>';
     if (footerEl) footerEl.innerHTML = statsHtml;
 
     // ── 同步移动端怪兽 tab ──
     var mobListEl = document.getElementById('mobileMonsterList');
     var mobFooterEl = document.getElementById('mobileMonsterFooter');
-    if (mobListEl) mobListEl.innerHTML = listEl.innerHTML;
+    if (mobListEl) {
+        // 移动端注入布局工具栏
+        var mobTbId = 'mob-msb-layout-toolbar';
+        var mobTb = document.getElementById(mobTbId);
+        var mobTbHtml = '<div id="' + mobTbId + '" style="padding:4px 10px 6px;border-bottom:1px solid #21262d;">' +
+            renderLayoutToolbar('monsters', '', [], 'renderMonsterSidebar') +
+            '</div>';
+        if (!mobTb) {
+            mobListEl.insertAdjacentHTML('beforebegin', mobTbHtml);
+        } else {
+            mobTb.innerHTML = renderLayoutToolbar('monsters', '', [], 'renderMonsterSidebar');
+        }
+        mobListEl.innerHTML = cardsHtml;
+    }
     if (mobFooterEl) mobFooterEl.innerHTML = statsHtml;
 };
 

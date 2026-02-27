@@ -304,10 +304,8 @@
     // ── 时间加速 ──
     window._gmSetSpeed = function(mult) {
         _speedMultiplier = mult;
-        showNotification(T('ntfSpeedSet','gm').replace('{x}', mult), 'info');
-        // 将倍速持久化到 sessionStorage
+        // 速度变更仅体现在面板刷新，无需弹窗
         try { sessionStorage.setItem(GM_SPEED_KEY, String(mult)); } catch(e) {}
-        // 应用加速（通过修改游戏主循环间隔）
         _applySpeedPatch(mult);
     };
 

@@ -362,3 +362,44 @@ function getRarityColor(rarity) {
 function getRarityLabel(rarity) {
     return T(rarity, 'rarity') || rarity;
 }
+
+// ==================== 布局偏好工具（大卡/小卡切换）====================
+// key: 'monsters' | 'exploration' | 'disposal' | 'breeding' | 'tech'
+// value: 'large' | 'compact'
+window.getLayoutPref = function(key) {
+    try { return localStorage.getItem('mf_layout_' + key) || 'large'; } catch(e) { return 'large'; }
+};
+window.setLayoutPref = function(key, val) {
+    try { localStorage.setItem('mf_layout_' + key, val); } catch(e) {}
+};
+
+/**
+ * 渲染布局切换工具栏 HTML（插入到各界面顶部）
+ * @param {string} key      - 界面标识（'monsters' 等）
+ * @param {string} title    - 左侧标题文字（可含 HTML）
+ * @param {Array}  extras   - 额外工具栏按钮 [{label, onclick, cls}]
+ * @param {string} rerenderFn - 切换后调用的全局渲染函数名（字符串）
+ */
+window.renderLayoutToolbar = function(key, title, extras, rerenderFn) {
+    var cur = getLayoutPref(key);
+    var extrasHtml = (extras || []).map(function(e) {
+        return '<button class="toolbar-quick-btn ' + (e.cls || '') + '" onclick="' + e.onclick + '">' + e.label + '</button>';
+    }).join('');
+
+    return '<div class="layout-toolbar">' +
+        '<div class="layout-toolbar-left">' +
+            (title ? '<span style="font-weight:700;font-size:1.0714rem;color:#e6edf3;">' + title + '</span>' : '') +
+            extrasHtml +
+        '</div>' +
+        '<div class="layout-toolbar-right">' +
+            '<div class="layout-toggle">' +
+                '<button class="layout-toggle-btn' + (cur === 'large'   ? ' active' : '') + '" ' +
+                    'onclick="setLayoutPref(\'' + key + '\',\'large\');' + rerenderFn + '();" ' +
+                    'title="大卡片">⊞ 大卡</button>' +
+                '<button class="layout-toggle-btn' + (cur === 'compact' ? ' active' : '') + '" ' +
+                    'onclick="setLayoutPref(\'' + key + '\',\'compact\');' + rerenderFn + '();" ' +
+                    'title="紧凑列表">☰ 小卡</button>' +
+            '</div>' +
+        '</div>' +
+    '</div>';
+};

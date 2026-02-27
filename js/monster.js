@@ -72,7 +72,8 @@ window.assignToSelling = function(monsterId) {
         monster.status = 'idle';
         updateResources();
         renderMonsters();
-        showNotification('💰 ' + monster.name + ' 回来了！赚了 ' + earnings + ' 金币', 'success');
+        // 外出赚钱归来走简报，不弹右上角
+    if (typeof briefSystem === 'function') briefSystem('💰 ' + monster.name + ' 回来了！赚了 ' + earnings + ' 金币');
     }, 30000);
     
     renderAll();
