@@ -175,7 +175,7 @@ window.assignMonsterToZone = function(zoneId, monsterId) {
 
     // 启动自动计时器
     startZoneAutoTimer(zone);
-    showNotification(monster.name + ' 前往 ' + zone.icon + zone.name + ' 探索！', 'success');
+    // 派遣探索静默
     renderMonsterSidebar();
     renderExploration();
 };
@@ -195,7 +195,7 @@ window.recallMonsterFromZone = function(zoneId, monsterId) {
         stopZoneAutoTimer(zs);
     }
 
-    showNotification((monster ? monster.name : '怪兽') + ' 已从 ' + zoneId + ' 召回', 'success');
+    // 召回探索静默
     renderMonsterSidebar();
     renderExploration();
 };

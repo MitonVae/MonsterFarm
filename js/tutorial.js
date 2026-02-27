@@ -33,13 +33,22 @@ var tutorialSteps = [
                 '.bottom-nav-item[data-tab="exploration"]'
             );
         },
-        allowInteract: false,
-        get btnText() { return T('step0_btn', 'tutorial'); },
-        onShow: null,
-        onNext: function(done) {
-            switchTab('exploration');
-            setTimeout(done, 400);
-        }
+        allowInteract: true,   // 玩家直接点击高亮的探索 tab
+        btnText: null,         // 无按钮，等待玩家自行点击
+        onShow: function() {
+            // 监听切换到探索页面后自动推进
+            window._tutWaitExploreTab = setInterval(function() {
+                var exploreTab = document.getElementById('exploration-tab');
+                if (exploreTab && exploreTab.classList.contains('active')) {
+                    clearInterval(window._tutWaitExploreTab);
+                    window._tutWaitExploreTab = null;
+                    if (typeof tutorialState !== 'undefined' && tutorialState.active && tutorialState.currentStep === 0) {
+                        showTutorialStep(1);
+                    }
+                }
+            }, 200);
+        },
+        onNext: null
     },
 
     // ── Step 1：手动探索，必定捕获 ──
@@ -317,7 +326,8 @@ function renderBubble(step) {
     // btnText 为 null 时显示等待提示
     var waitingLabel = '';
     if (step.btnText === null) {
-        if (step.id === 'explore_first')       waitingLabel = T('wait_explore',      'tutorial');
+        if (step.id === 'welcome')             waitingLabel = T('wait_click_tab',    'tutorial');
+        else if (step.id === 'explore_first')  waitingLabel = T('wait_explore',      'tutorial');
         else if (step.id === 'select_monster') waitingLabel = T('wait_select',       'tutorial');
         else if (step.id === 'assign_farm')    waitingLabel = T('wait_assign',       'tutorial');
         else if (step.id === 'pick_plot')      waitingLabel = T('wait_plot',         'tutorial');

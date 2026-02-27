@@ -36,7 +36,7 @@ window.assignToFarm = function(monsterId) {
     monster.assignment = { type: 'farm', target: availablePlot.id };
     monster.status = 'working';
     
-    showNotification(monster.name + ' 开始在农田工作！', 'success');
+    // 派驻静默
     renderAll();
     
     if (Math.random() < 0.15) {
@@ -61,7 +61,7 @@ window.assignToSelling = function(monsterId) {
     gameState.food -= 10;
     monster.status = 'selling';
     
-    showNotification(monster.name + ' 出门售卖了...', 'success');
+    // 售卖静默
     
     setTimeout(function() {
         var earnings = 20 + Math.floor(Math.random() * 30) + monster.stats.intelligence * 2;
@@ -72,7 +72,7 @@ window.assignToSelling = function(monsterId) {
         monster.status = 'idle';
         updateResources();
         renderMonsters();
-        showNotification(monster.name + ' 回来了！赚了 ' + earnings + ' 金币', 'success');
+        showNotification('💰 ' + monster.name + ' 回来了！赚了 ' + earnings + ' 金币', 'success');
     }, 30000);
     
     renderAll();

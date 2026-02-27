@@ -361,19 +361,69 @@ window.renderMonsters = function() {
     }).join('');
 };
 
-// 通知
+// ── 通知队列系统 ──
+// 支持多条通知堆叠排布，消失后自动重排
+var _notifQueue = [];
+var _NOTIF_GAP = 8;       // 通知间距px
+var _NOTIF_TOP_BASE = 20; // 初始距顶px
+
+function _repositionNotifs() {
+    var top = _NOTIF_TOP_BASE;
+    _notifQueue.forEach(function(el) {
+        el.style.top = top + 'px';
+        top += el.offsetHeight + _NOTIF_GAP;
+    });
+}
+
 window.showNotification = function(message, type) {
     type = type || 'info';
     var notification = document.createElement('div');
     notification.className = 'notification ' + type;
     notification.textContent = message;
-    
+    // 计算初始 top（入场前先定位好，避免从 top:0 弹下来）
+    var initialTop = _NOTIF_TOP_BASE + _notifQueue.reduce(function(sum, el) {
+        return sum + el.offsetHeight + _NOTIF_GAP;
+    }, 0);
+    notification.style.top = initialTop + 'px';
+
     document.body.appendChild(notification);
-    
-    setTimeout(function() {
-        notification.style.animation = 'slideIn 0.3s reverse';
-        setTimeout(function() { notification.remove(); }, 300);
-    }, 3000);
+    _notifQueue.push(notification);
+
+    var duration = type === 'achievement' ? 5000 : 3000;
+
+    var timer = setTimeout(function() {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(110%)';
+        notification.style.transition = 'opacity 0.3s, transform 0.3s';
+        setTimeout(function() {
+            notification.remove();
+            var idx = _notifQueue.indexOf(notification);
+            if (idx !== -1) _notifQueue.splice(idx, 1);
+            _repositionNotifs();
+        }, 300);
+    }, duration);
+
+    // 鼠标悬停暂停消失
+    notification.addEventListener('mouseenter', function() { clearTimeout(timer); });
+    notification.addEventListener('mouseleave', function() {
+        timer = setTimeout(function() {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateX(110%)';
+            notification.style.transition = 'opacity 0.3s, transform 0.3s';
+            setTimeout(function() {
+                notification.remove();
+                var idx = _notifQueue.indexOf(notification);
+                if (idx !== -1) _notifQueue.splice(idx, 1);
+                _repositionNotifs();
+            }, 300);
+        }, 1500);
+    });
+};
+
+// ── 重要通知过滤器（日常高频操作静默，只弹重要事件）──
+// 用于替代直接调用 showNotification 的低优先级场景
+window.showImportantNotification = function(message, type) {
+    showNotification(message, type);
 };
 
 // 模态框
@@ -1265,7 +1315,7 @@ window.showEarlyAccessNotice = function(forceShow) {
             '完整正式版本正在积极开发中，<span style="color:#58a6ff;">敬请期待！</span>' +
         '</div>' +
         '<div style="display:flex;gap:10px;">' +
-            '<button class="btn btn-primary" onclick="closeModal()" style="flex:1;padding:10px;">我知道了，开始体验</button>' +
+            '<button class="btn btn-primary" onclick="closeModal();setTimeout(function(){if(window._pendingTutorial){window._pendingTutorial=false;startTutorial();}},300);" style="flex:1;padding:10px;">我知道了，开始体验</button>' +
             '<button class="btn btn-secondary" onclick="showChangelog(function(){showEarlyAccessNotice(true);});" style="padding:10px 14px;">查看更新日志</button>' +
         '</div>';
 

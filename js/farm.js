@@ -123,7 +123,7 @@ window.plantCrop = function(plotId, cropId) {
     plot.crop = cropId;
     plot.plantedAt = Date.now();
     plot.progress = 0;
-    showNotification('种植了 ' + cropType.name, 'success');
+    // 种植静默（简报已有记录）
     renderFarm();
     startGrowTimer(plotId);
 };
@@ -138,7 +138,7 @@ window.setAutoCrop = function(plotId, cropId) {
         // 地块空闲，直接启动自动循环
         startAutoCycle(plotId);
         closeModal();
-        showNotification('已设置自动种植：' + cropName, 'success');
+        // 自动种植设置静默
     } else if (plot.crop !== cropId && plot.progress < 100) {
         // 切换了不同作物且当前作物未成熟：重置计时，种新作物
         plot.crop = cropId;
@@ -146,16 +146,16 @@ window.setAutoCrop = function(plotId, cropId) {
         plot.progress = 0;
         startGrowTimer(plotId);
         closeModal();
-        showNotification('已切换并重新种植：' + cropName, 'success');
+        // 切换作物静默
     } else if (plot.progress >= 100) {
         // 作物已成熟：立即触发收获（重启 timer 可重置 harvestScheduled 标志）
         startGrowTimer(plotId);
         closeModal();
-        showNotification('将自动收获并种植：' + cropName, 'info');
+        // 静默
     } else {
         // 相同作物且未成熟：仅更新 autoCrop，当前 timer 继续，下轮生效
         closeModal();
-        showNotification('下一轮将自动种植：' + cropName, 'info');
+        // 静默
     }
     renderFarm();
 };
@@ -326,7 +326,8 @@ function autoHarvestPlot(plotId) {
     checkMilestones();
     var extras = (matYield > 0 ? ' +' + matYield + '材' : '') + (resYield > 0 ? ' +' + resYield + '研' : '');
     var msg = (isQuality ? '✨ 优质 ' : '') + cropType.name + ' 自动收获！+' + yieldAmt + '食 +' + valueAmt + '金' + extras;
-    showNotification(msg, isQuality ? 'success' : 'info');
+    // 自动收获只推简报，优质品才弹通知
+    if (isQuality) showNotification('✨ 优质 ' + cropType.name + ' 收获！+' + yieldAmt + '食 +' + valueAmt + '金', 'success');
     if (typeof briefHarvest === 'function') briefHarvest((isQuality ? '✨优质' : '') + cropType.name, valueAmt, yieldAmt, monster ? monster.name : null);
     if (monster) {
         var expGain = 10 + Math.floor(monster.stats.farming * 0.5);

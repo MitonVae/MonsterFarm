@@ -187,9 +187,10 @@ function initGame() {
 
     renderAll();
 
-    // 启动教学引导（新存档才触发）
+    // 启动教学引导（新存档才触发，需等早期提示弹窗关闭后再启动）
     if (!checkTutorialDone()) {
-        setTimeout(startTutorial, 600);
+        // 标记教程待启动，由 showEarlyAccessNotice 关闭时触发
+        window._pendingTutorial = true;
     }
 }
 
@@ -366,7 +367,7 @@ function loadGame() {
                 }
             });
             
-            showNotification('游戏加载成功！', 'success');
+            // 加载成功静默（简报系统和设置面板已有反馈）
         } catch (e) {
             console.error('加载存档失败:', e);
             showNotification('加载存档失败，开始新游戏', 'warning');
@@ -498,7 +499,7 @@ document.addEventListener('keydown', function(e) {
     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
         autoSave();
-        showNotification('游戏已保存！', 'success');
+        showNotification('💾 游戏已保存！', 'success');
     }
     
     if (e.key === 'Escape') {
