@@ -1235,3 +1235,38 @@ window.addEventListener('load', function() {
     var recallIconEl = document.getElementById('recallIcon');
     if (recallIconEl) recallIconEl.innerHTML = createSVG('recall', 16);
 });
+
+// ==================== 早期体验版提示弹窗 ====================
+window.showEarlyAccessNotice = function() {
+    // 用 sessionStorage 保证：同一标签页内只弹一次（刷新后仍会弹）
+    if (sessionStorage.getItem('mf_early_notice_shown')) return;
+    sessionStorage.setItem('mf_early_notice_shown', '1');
+
+    var html =
+        '<div style="text-align:center;padding:8px 4px 4px;">' +
+            '<div style="font-size:36px;margin-bottom:10px;">🌱</div>' +
+            '<div style="font-size:16px;font-weight:700;color:#e6edf3;margin-bottom:6px;">早期体验版</div>' +
+            '<div style="display:inline-block;background:#1f3a1f;border:1px solid #46d164;color:#46d164;' +
+                'font-size:11px;font-weight:600;padding:2px 10px;border-radius:12px;margin-bottom:16px;">开发中 · Dev Build</div>' +
+        '</div>' +
+        '<div style="background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:#c9d1d9;line-height:1.8;">' +
+            '<p style="margin:0 0 10px;">👋 你好！感谢愿意提前体验《怪兽农场》。</p>' +
+            '<p style="margin:0 0 10px;">本作从 <strong style="color:#f0c53d;">2026 年 2 月 26 日</strong> 起利用业余时间独立开发，目前处于早期内测阶段。游戏尚不完整，数值循环、系统功能、界面布局等均可能经历较大调整。</p>' +
+            '<p style="margin:0;">⚠️ <strong style="color:#f85149;">重要提示：</strong>版本更新有时会影响存档兼容性，当前存档数据存在丢失风险，请以体验为主，不必过于在意进度。</p>' +
+        '</div>' +
+        '<div style="background:#1a2840;border:1px solid #1f6feb;border-radius:8px;padding:10px 14px;margin-bottom:20px;font-size:12px;color:#8b949e;line-height:1.7;">' +
+            '📌 如遇到 Bug 或有功能建议，欢迎随时反馈——每一条意见都将直接推动游戏迭代。<br>' +
+            '完整正式版本正在积极开发中，<span style="color:#58a6ff;">敬请期待！</span>' +
+        '</div>' +
+        '<div style="display:flex;gap:10px;">' +
+            '<button class="btn btn-primary" onclick="closeModal()" style="flex:1;padding:10px;">我知道了，开始体验</button>' +
+            '<button class="btn btn-secondary" onclick="showChangelog();/* stay on changelog */" style="padding:10px 14px;">查看更新日志</button>' +
+        '</div>';
+
+    showModal(
+        '<div class="modal-header" style="display:flex;align-items:center;justify-content:space-between;">' +
+            '<span>欢迎来到怪兽农场</span>' +
+            '<span style="font-size:11px;color:#8b949e;font-weight:400;">v0.9.5 · Early Access</span>' +
+        '</div>' + html
+    );
+};
