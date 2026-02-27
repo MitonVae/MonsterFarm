@@ -533,7 +533,7 @@ function initMobileNavIcons() {
     var iconMap = {
         farm:        'plant',
         exploration: 'explore',
-        monsters:    'slime',
+        monsters:    'wisp',
         breeding:    'heart',
         tech:        'research',
         disposal:    'recycle'

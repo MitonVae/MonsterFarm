@@ -1015,12 +1015,19 @@ body {
 }
 
 .nav-icon {
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: transform 0.15s;
+    flex-shrink: 0;
+}
+
+.nav-icon svg {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
 }
 
 .bottom-nav-item.active .nav-icon {
