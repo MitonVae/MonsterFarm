@@ -276,10 +276,72 @@
 
     function clamp(v, mn, mx) { return Math.max(mn, Math.min(mx, v)); }
 
+    /* ── 移动端提示 ── */
+    function showMobileTip() {
+        var STORAGE_KEY = 'mf_mobile_tip_shown';
+        // 只在移动端宽度下显示，且每次会话只提示一次
+        if (window.innerWidth >= CONFIG.BREAKPOINT) return;
+        if (sessionStorage.getItem(STORAGE_KEY)) return;
+        sessionStorage.setItem(STORAGE_KEY, '1');
+
+        // 构建提示浮层
+        var overlay = document.createElement('div');
+        overlay.id = 'mobileTipOverlay';
+        overlay.style.cssText = [
+            'position:fixed', 'inset:0', 'z-index:99999',
+            'display:flex', 'align-items:center', 'justify-content:center',
+            'background:rgba(0,0,0,0.65)', 'backdrop-filter:blur(4px)',
+            '-webkit-backdrop-filter:blur(4px)', 'padding:20px', 'box-sizing:border-box'
+        ].join(';');
+
+        var box = document.createElement('div');
+        box.style.cssText = [
+            'background:#161b22', 'border:1px solid #30363d', 'border-radius:14px',
+            'padding:28px 24px 22px', 'max-width:360px', 'width:100%',
+            'box-shadow:0 8px 32px rgba(0,0,0,0.5)', 'text-align:center',
+            'font-family:inherit', 'color:#c9d1d9'
+        ].join(';');
+
+        box.innerHTML =
+            '<div style="font-size:36px;margin-bottom:12px;">📱</div>' +
+            '<div style="font-size:16px;font-weight:700;color:#e6edf3;margin-bottom:12px;">移动端体验提示</div>' +
+            '<div style="font-size:13px;line-height:1.7;color:#8b949e;margin-bottom:20px;">' +
+                '当前界面为<strong style="color:#f0c53d;">移动端</strong>显示模式。' +
+                '游戏的 UI 布局和便捷性等方面在移动端还需持续优化，' +
+                '<strong style="color:#e6edf3;">建议使用 PC 端进行游玩</strong>以获得最佳体验。<br><br>' +
+                '当然，我们也非常欢迎移动端用户提供反馈，我们将持续优化！🙏' +
+            '</div>' +
+            '<button id="mobileTipClose" style="' +
+                'background:#238636;color:#fff;border:none;border-radius:8px;' +
+                'padding:10px 32px;font-size:14px;font-weight:600;cursor:pointer;' +
+                'transition:background 0.2s;width:100%;' +
+            '">我知道了，继续游玩</button>';
+
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+
+        // 关闭按钮
+        document.getElementById('mobileTipClose').addEventListener('click', function() {
+            overlay.style.opacity = '0';
+            overlay.style.transition = 'opacity 0.2s';
+            setTimeout(function() {
+                if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+            }, 220);
+        });
+
+        // 点击背景也可关闭
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) {
+                document.getElementById('mobileTipClose').click();
+            }
+        });
+    }
+
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', function() { init(); showMobileTip(); });
     } else {
         init();
+        showMobileTip();
     }
 
 })();
