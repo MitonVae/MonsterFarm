@@ -201,7 +201,7 @@ zh: {
         step3_title: '🌾 派遣怪兽驻守农田',
         step3_content: '太棒了！现在请点击高亮的 <strong style="color:#46d164;">派驻农田</strong> 按钮，<br><br>让怪兽驻守地块，实现 <strong style="color:#58a6ff;">自动种植和收获</strong>！',
         step4_title: '📋 选择一个地块',
-        step4_content: '弹出了地块选择界面！<br><br>请点击任意一个 <strong style="color:#f0c53d;">地块格子</strong>，<br>让怪兽驻守进去开始工作。',
+        step4_content: '弹出了地块选择界面！<br><br>请点击高亮的 <strong style="color:#f0c53d;">地块 #1 格子</strong>，<br>让怪兽驻守进去开始工作。',
         step5_title: '✅ 怪兽已驻守！',
         step5_content: '怪兽已经开始驻守地块了！<br><br>它会自动种植并收获作物，为你积累资源。<br><br>现在点击按钮切换到 <strong style="color:#f0c53d;">🏡 农场</strong> 查看效果！',
         step5_btn: '前往农场 →',

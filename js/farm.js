@@ -478,9 +478,12 @@ window.showAssignPlotPicker = function(monsterId) {
     var html = '<div class="modal-header">选择要驻守的地块</div>' +
         '<div style="font-size:12px;color:#8b949e;margin-bottom:12px;">派遣 <strong style="color:#58a6ff;">' + monster.name + '</strong> 驻守后，可设置自动种植作物</div>' +
         '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">' +
-        availablePlots.map(function(plot) {
+        availablePlots.map(function(plot, idx) {
             var status = plot.crop ? '生长中 ' + Math.floor(plot.progress) + '%' : '空闲';
-            return '<div onclick="assignMonsterToPlot(' + monsterId + ',' + plot.id + ');closeModal();"' +
+            // 引导模式下，第一个地块加 id 供高亮聚焦
+            var isTut = (typeof tutorialState !== 'undefined' && tutorialState.active && tutorialState.waitingForPlotPick);
+            var idAttr = (isTut && idx === 0) ? ' id="tut-first-plot"' : '';
+            return '<div' + idAttr + ' onclick="assignMonsterToPlot(' + monsterId + ',' + plot.id + ');closeModal();"' +
                 ' style="aspect-ratio:1;background:#21262d;border:2px dashed #30363d;border-radius:10px;' +
                 'display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;padding:10px;text-align:center;"' +
                 ' onmouseover="this.style.borderColor=\'#58a6ff\';this.style.background=\'#30363d\'"' +
@@ -489,7 +492,10 @@ window.showAssignPlotPicker = function(monsterId) {
                 '<div style="font-size:12px;font-weight:bold;">地块 #' + (plot.id+1) + '</div>' +
                 '<div style="font-size:13px;color:#8b949e;">' + status + '</div></div>';
         }).join('') +
-        '</div><div class="modal-buttons"><button class="btn btn-primary" onclick="closeModal()">取消</button></div>';
+        // 引导模式下隐藏取消按钮，强制玩家选择地块
+        '</div>' + ((typeof tutorialState !== 'undefined' && tutorialState.active && tutorialState.waitingForPlotPick)
+            ? ''
+            : '<div class="modal-buttons"><button class="btn btn-primary" onclick="closeModal()">取消</button></div>');
     showModal(html);
 };
 

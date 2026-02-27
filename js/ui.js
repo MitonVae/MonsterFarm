@@ -386,6 +386,11 @@ window.showModal = function(content) {
 };
 
 window.closeModal = function() {
+    // 引导期间"选地块"步骤，禁止关闭弹窗（强制玩家点地块）
+    if (typeof tutorialState !== 'undefined' &&
+        tutorialState.active && tutorialState.waitingForPlotPick) {
+        return;
+    }
     var modal = document.getElementById('modal');
     modal.classList.remove('active');
 };

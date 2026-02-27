@@ -135,24 +135,25 @@ var tutorialSteps = [
         onNext: null
     },
 
-    // ── Step 4：选择地块（强引导，等模态框出现后高亮） ──
+    // ── Step 4：选择地块（强引导，高亮第一个地块，禁止取消）──
     {
         id: 'pick_plot',
         get title()   { return T('step4_title',   'tutorial'); },
         get content() { return T('step4_content', 'tutorial'); },
-        focusSelector: '#modal .modal-content',
+        // 高亮第一个地块格子（farm.js 在引导模式下给第一格加了 id）
+        focusSelector: '#tut-first-plot',
         allowInteract: true,
-        btnText: null,      // 等玩家选择地块后触发钩子推进
+        btnText: null,      // 等玩家点击地块后触发钩子推进
         onShow: function() {
             tutorialState.waitingForPlotPick = true;
-            // 等模态框动画完成后刷新
+            // 等弹窗 DOM 完全渲染、第一格 id 出现后再刷新遮罩
             setTimeout(function() {
                 if (tutorialState.active && tutorialState.currentStep === 4) {
                     renderOverlay(tutorialSteps[4]);
                     var b = document.getElementById('tutorialBubble');
                     if (b) positionBubble(b, tutorialSteps[4]);
                 }
-            }, 350);
+            }, 500);
         },
         onNext: null
     },
