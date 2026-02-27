@@ -889,7 +889,7 @@ window.showSettingsModal = function() {
         // 隐藏版本号（长按2秒进入GM面板）
         '<div id="gmVersionHint" ' +
             'style="text-align:center;margin-top:8px;font-size:10px;color:#30363d;cursor:default;user-select:none;letter-spacing:0.3px;">' +
-            'v0.9.3' +
+            'v0.9.5' +
         '</div>';
 
     showModal(html);
