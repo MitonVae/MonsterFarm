@@ -106,7 +106,8 @@
         var html =
             // ── 标题 ──
             '<div class="modal-header" style="color:#f0c53d;">' + T('panelTitle','gm') + '</div>' +
-            '<div style="max-height:72vh;overflow-y:auto;padding-right:4px;">' +
+            // 内容直接平铺，由 showModal 的 .modal-body 统一负责滚动
+            '<div>' +
 
             // ── 区块：资源补充 ──
             _section(T('secResources','gm'),

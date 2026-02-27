@@ -363,12 +363,43 @@ window.showImportantNotification = function(message, type) {
 };
 
 // 模态框
+// 将注入的 HTML 自动拆分为三段结构：
+//   .modal-header（顶部标题，固定不滚动）
+//   .modal-body（中间内容，可滚动）
+//   .modal-buttons（底部按钮，固定不滚动）
+// 这样无论内容多长，关闭/确认按钮都始终可见。
 window.showModal = function(content) {
     var modal = document.getElementById('modal');
     var modalContent = document.getElementById('modalContent');
-    
-    modalContent.innerHTML = content;
+
+    // 用临时容器解析 HTML，提取 header / buttons / body
+    var tmp = document.createElement('div');
+    tmp.innerHTML = content;
+
+    var headerEl  = tmp.querySelector('.modal-header');
+    var buttonsEl = tmp.querySelector('.modal-buttons');
+
+    // 从 tmp 中移除已提取的节点，剩余即为 body 内容
+    if (headerEl)  headerEl.parentNode.removeChild(headerEl);
+    if (buttonsEl) buttonsEl.parentNode.removeChild(buttonsEl);
+
+    // 构建三段结构
+    modalContent.innerHTML = '';
+
+    if (headerEl) modalContent.appendChild(headerEl);
+
+    var bodyEl = document.createElement('div');
+    bodyEl.className = 'modal-body';
+    bodyEl.appendChild(tmp); // tmp 里还剩中间内容节点
+    modalContent.appendChild(bodyEl);
+
+    if (buttonsEl) modalContent.appendChild(buttonsEl);
+
     modal.classList.add('active');
+
+    // 锁定背景滚动（移动端防穿透）
+    document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
 };
 
 /**
@@ -414,6 +445,10 @@ window.closeModal = function() {
     }
     var modal = document.getElementById('modal');
     modal.classList.remove('active');
+
+    // 解锁背景滚动（移动端防穿透）
+    document.body.style.overflow = '';
+    document.body.style.touchAction = '';
 };
 
 // 事件面板
