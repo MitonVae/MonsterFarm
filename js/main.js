@@ -160,19 +160,21 @@ var randomEvents = {
 
 // ==================== 核心功能函数 ====================
 function initGame() {
-    // 创建初始地块（3块可用，其他锁定）
-    for (var i = 0; i < 9; i++) {
-        gameState.plots.push({
-            id: i,
-            locked: i >= 3,
-            unlockCost: { coins: 100 * (i - 2), materials: 50 * (i - 2) },
-            crop: null,
-            plantedAt: null,
-            progress: 0,
-            assignedMonster: null,
-            autoCrop: null,
-            growthBonus: 1
-        });
+    // 仅在没有存档地块时创建初始地块（避免覆盖 loadGame 恢复的地块）
+    if (gameState.plots.length === 0) {
+        for (var i = 0; i < 9; i++) {
+            gameState.plots.push({
+                id: i,
+                locked: i >= 3,
+                unlockCost: { coins: 100 * (i - 2), materials: 50 * (i - 2) },
+                crop: null,
+                plantedAt: null,
+                progress: 0,
+                assignedMonster: null,
+                autoCrop: null,
+                growthBonus: 1
+            });
+        }
     }
     
     // 初始化科技
@@ -293,12 +295,7 @@ function autoSave() {
         }),
         technologies: gameState.technologies,
         plots: gameState.plots.map(function(p) {
-            return {
-                ...p,
-                crop: null,
-                assignedMonster: null,
-                progress: 0
-            };
+            return { ...p };
         }),
         totalHarvests: gameState.totalHarvests,
         totalExplorations: gameState.totalExplorations,
@@ -324,6 +321,7 @@ function loadGame() {
             gameState.research = saveData.research || 0;
             gameState.energy = saveData.energy || 100;
             gameState.monsters = saveData.monsters || [];
+            gameState.plots = saveData.plots || [];
             gameState.technologies = saveData.technologies || {};
             gameState.totalHarvests = saveData.totalHarvests || 0;
             gameState.totalExplorations = saveData.totalExplorations || 0;

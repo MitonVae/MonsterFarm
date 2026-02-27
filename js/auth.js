@@ -120,8 +120,10 @@ window.cloudSaveSave = async function(silent) {
     }
 };
 
-// ── 云端下载存档（登录时自动调用，比较时间戳） ──
-window.cloudLoadSave = async function() {
+// ── 云端下载存档
+// autoTriggered=true 时为登录自动调用，会在云端旧时才静默上传本地
+// autoTriggered=false(默认) 时为用户手动点"拉取云档"，直接弹窗让用户决定
+window.cloudLoadSave = async function(autoTriggered) {
     if (!_sb || !_currentUser) return;
     try {
         var res = await _sb.from('saves')
@@ -129,10 +131,15 @@ window.cloudLoadSave = async function() {
             .eq('user_id', _currentUser.id)
             .single();
 
-        // 无云端存档 → 直接上传本地存档
+        // 无云端存档
         if (res.error && res.error.code === 'PGRST116') {
-            await cloudSaveSave(true);
-            showNotification('☁️ 首次登录，本地存档已上传云端', 'success');
+            if (autoTriggered) {
+                // 登录时首次上传
+                await cloudSaveSave(true);
+                showNotification('☁️ 首次登录，本地存档已上传云端', 'success');
+            } else {
+                showNotification('云端暂无存档，请先上传本地存档', 'warning');
+            }
             return;
         }
         if (res.error) throw res.error;
@@ -154,13 +161,16 @@ window.cloudLoadSave = async function() {
             try { localTime = new Date(JSON.parse(localRaw).savedAt || 0).getTime(); } catch(e) {}
         }
 
-        // 差值小于 5 秒视为相同，避免时钟误差反复弹窗
         var diff = cloudTime - localTime;
-        if (diff > 5000) {
-            // 云端明显更新 → 询问用户
-            _showCloudConflict(cloudGameData, cloudTime, localTime);
+
+        if (!autoTriggered) {
+            // 手动"拉取云档"：始终弹窗让用户确认，绝不自动覆盖任何一方
+            _showCloudConflict(cloudGameData, cloudTime, localTime, true);
+        } else if (diff > 5000) {
+            // 登录自动触发 & 云端明显更新 → 弹窗询问
+            _showCloudConflict(cloudGameData, cloudTime, localTime, false);
         } else {
-            // 本地更新或相同 → 静默上传到云端
+            // 登录自动触发 & 本地更新或相同 → 静默上传本地到云端
             await cloudSaveSave(true);
             showNotification('☁️ 本地存档已同步到云端', 'success');
         }
@@ -170,22 +180,27 @@ window.cloudLoadSave = async function() {
 };
 
 // ── 存档冲突弹窗 ──
-function _showCloudConflict(cloudData, cloudTime, localTime) {
-    var cloudDate = new Date(cloudTime).toLocaleString('zh-CN');
+// manualPull=true 表示用户主动点"拉取云档"，弹窗措辞不同
+function _showCloudConflict(cloudData, cloudTime, localTime, manualPull) {
+    var cloudDate = cloudTime ? new Date(cloudTime).toLocaleString('zh-CN') : '未知';
     var localDate = localTime ? new Date(localTime).toLocaleString('zh-CN') : '未知';
+    var title = manualPull ? '📥 拉取云端存档' : '☁️ 发现云端存档';
+    var desc  = manualPull
+        ? '请选择要保留的存档版本：'
+        : '检测到云端存档比本地更新，请选择：';
     showModal(
-        '<div class="modal-header">☁️ 发现云端存档</div>' +
+        '<div class="modal-header">' + title + '</div>' +
         '<div style="padding:12px 0;font-size:13px;line-height:1.8;color:#c9d1d9;">' +
-            '<p>检测到云端存档比本地更新：</p>' +
+            '<p>' + desc + '</p>' +
             '<div style="background:#21262d;border-radius:8px;padding:10px 14px;margin:10px 0;">' +
                 '<div>☁️ 云端存档时间：<strong style="color:#58a6ff;">' + cloudDate + '</strong></div>' +
                 '<div>💾 本地存档时间：<strong style="color:#8b949e;">' + localDate + '</strong></div>' +
             '</div>' +
-            '<p style="color:#f0883e;">⚠️ 使用云端存档会覆盖当前本地进度。</p>' +
+            '<p style="color:#f0883e;">⚠️ 使用云端存档会覆盖当前本地进度，操作不可撤销。</p>' +
         '</div>' +
         '<div class="modal-buttons">' +
-            '<button class="btn btn-danger" onclick="window._applyCloudSave()">使用云端存档</button>' +
-            '<button class="btn btn-primary" onclick="cloudSaveSave();closeModal();">保留本地并上传</button>' +
+            '<button class="btn btn-danger" onclick="window._applyCloudSave()">📥 使用云端存档</button>' +
+            '<button class="btn btn-primary" onclick="cloudSaveSave();closeModal();">💾 保留本地并上传</button>' +
         '</div>'
     );
     window._pendingCloudData = cloudData;
@@ -196,6 +211,8 @@ window._applyCloudSave = function() {
     if (!window._pendingCloudData) return;
     try {
         var json = JSON.stringify(window._pendingCloudData);
+        // 先移除 beforeunload 监听，防止 reload 时 autoSave 把旧数据重新写回
+        window.removeEventListener('beforeunload', autoSave);
         localStorage.setItem('monsterFarm_v1', json);
         closeModal();
         showNotification('☁️ 云端存档已应用，正在重新加载…', 'success');
