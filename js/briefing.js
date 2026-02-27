@@ -1,15 +1,15 @@
 // ==================== 实时简报系统 ====================
-// 类型 → { icon, label }
+// 类型 → { icon, get label() }
 var BRIEFING_TYPES = {
-    catch:   { icon: '🎉', label: '捕获' },
-    levelup: { icon: '⬆️', label: '升级' },
-    harvest: { icon: '🌾', label: '收获' },
-    explore: { icon: '🗺', label: '探索' },
-    event:   { icon: '⚡', label: '事件' },
-    tech:    { icon: '🔬', label: '科技' },
-    breed:   { icon: '💕', label: '繁殖' },
-    save:    { icon: '💾', label: '保存' },
-    system:  { icon: 'ℹ️', label: '系统' }
+    catch:   { icon: '🎉', get label() { return T('catch',   'briefing'); } },
+    levelup: { icon: '⬆️', get label() { return T('levelup', 'briefing'); } },
+    harvest: { icon: '🌾', get label() { return T('harvest', 'briefing'); } },
+    explore: { icon: '🗺', get label() { return T('explore', 'briefing'); } },
+    event:   { icon: '⚡', get label() { return T('event',   'briefing'); } },
+    tech:    { icon: '🔬', get label() { return T('tech',    'briefing'); } },
+    breed:   { icon: '💕', get label() { return T('breed',   'briefing'); } },
+    save:    { icon: '💾', get label() { return T('save',    'briefing'); } },
+    system:  { icon: 'ℹ️', get label() { return T('system',  'briefing'); } }
 };
 
 var _briefingLog   = [];   // 完整历史
@@ -77,45 +77,68 @@ function _flashBadge() {
 
 /** 捕获怪兽 */
 function briefCatch(monsterName, zoneName) {
-    addBriefing('catch', '在 <strong>' + zoneName + '</strong> 捕获了 <strong>' + monsterName + '</strong>！');
+    var tpl = T('catchMsg', 'briefing');
+    addBriefing('catch', tpl.replace('{name}', monsterName).replace('{zone}', zoneName));
 }
 
 /** 怪兽升级 */
 function briefLevelUp(monsterName, level) {
-    addBriefing('levelup', '<strong>' + monsterName + '</strong> 升到了 <strong>Lv.' + level + '</strong>！');
+    var tpl = T('levelupMsg', 'briefing');
+    addBriefing('levelup', tpl.replace('{name}', monsterName).replace('{lv}', level));
 }
 
 /** 作物收获（含怪兽自动收获）*/
 function briefHarvest(cropName, coins, food, byMonster) {
-    var who = byMonster ? ('<strong>' + byMonster + '</strong> 自动') : '手动';
-    addBriefing('harvest', who + '收获 <strong>' + cropName + '</strong>，+' + coins + '💰 +' + food + '🍎');
+    var tpl, text;
+    if (byMonster) {
+        tpl  = T('harvestAutoMsg', 'briefing');
+        text = tpl.replace('{who}', byMonster)
+                  .replace('{crop}', cropName)
+                  .replace('{coins}', coins)
+                  .replace('{food}', food);
+    } else {
+        tpl  = T('harvestManualMsg', 'briefing');
+        text = tpl.replace('{crop}', cropName)
+                  .replace('{coins}', coins)
+                  .replace('{food}', food);
+    }
+    addBriefing('harvest', text);
 }
 
 /** 探索区域结算 */
 function briefExplore(zoneName, rewards, monsterName) {
     var rewardStr = _fmtRewards(rewards);
-    var who = monsterName ? '<strong>' + monsterName + '</strong> 在' : '在';
-    addBriefing('explore', who + ' <strong>' + zoneName + '</strong> 完成探索，获得 ' + rewardStr);
+    var who;
+    if (monsterName) {
+        who = T('exploreWho', 'briefing').replace('{name}', monsterName);
+    } else {
+        who = T('exploreWhoManual', 'briefing');
+    }
+    var tpl = T('exploreMsg', 'briefing');
+    addBriefing('explore', tpl.replace('{who}', who).replace('{zone}', zoneName).replace('{rewards}', rewardStr));
 }
 
 /** 随机事件 */
 function briefEvent(title, result) {
-    addBriefing('event', '随机事件「<strong>' + title + '</strong>」—— ' + result);
+    var tpl = T('eventMsg', 'briefing');
+    addBriefing('event', tpl.replace('{title}', title).replace('{result}', result));
 }
 
 /** 科技解锁 */
 function briefTech(techName) {
-    addBriefing('tech', '解锁科技「<strong>' + techName + '</strong>」！');
+    var tpl = T('techMsg', 'briefing');
+    addBriefing('tech', tpl.replace('{name}', techName));
 }
 
 /** 繁殖后代 */
 function briefBreed(childName, parents) {
-    addBriefing('breed', '<strong>' + parents + '</strong> 繁殖出 <strong>' + childName + '</strong>！');
+    var tpl = T('breedMsg', 'briefing');
+    addBriefing('breed', tpl.replace('{child}', childName).replace('{parents}', parents));
 }
 
 /** 手动 / 自动保存 */
 function briefSave(auto) {
-    addBriefing('save', auto ? '自动存档完成。' : '手动存档完成。');
+    addBriefing('save', auto ? T('saveAuto', 'briefing') : T('saveManual', 'briefing'));
 }
 
 /** 系统消息（如怪兽被召回、地块解锁等）*/
@@ -130,5 +153,5 @@ function _fmtRewards(rewards) {
     if (rewards.food     > 0) parts.push('+' + rewards.food     + '🍎');
     if (rewards.materials> 0) parts.push('+' + rewards.materials+ '🪨');
     if (rewards.research > 0) parts.push('+' + rewards.research + '🔬');
-    return parts.length ? parts.join(' ') : '无';
+    return parts.length ? parts.join(' ') : T('rewardsNone', 'briefing');
 }
