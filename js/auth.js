@@ -132,12 +132,20 @@ window.cloudLoadSave = async function() {
         // 无云端存档 → 直接上传本地存档
         if (res.error && res.error.code === 'PGRST116') {
             await cloudSaveSave(true);
+            showNotification('☁️ 首次登录，本地存档已上传云端', 'success');
             return;
         }
         if (res.error) throw res.error;
 
-        var cloudData = res.data;
-        var cloudTime = new Date(cloudData.updated_at).getTime();
+        // res.data = { data: { ...游戏存档... }, updated_at: "..." }
+        var row = res.data;
+        var cloudGameData = row.data;        // 游戏存档 JSON
+        var cloudUpdatedAt = row.updated_at; // 云端行更新时间
+
+        // 优先使用存档内的 savedAt，否则退回 updated_at
+        var cloudSavedAt = (cloudGameData && cloudGameData.savedAt) ? cloudGameData.savedAt : cloudUpdatedAt;
+        var cloudTime = new Date(cloudSavedAt).getTime();
+        if (isNaN(cloudTime)) cloudTime = 0;
 
         // 比较本地存档时间戳
         var localRaw = localStorage.getItem('monsterFarm_v1');
@@ -146,9 +154,11 @@ window.cloudLoadSave = async function() {
             try { localTime = new Date(JSON.parse(localRaw).savedAt || 0).getTime(); } catch(e) {}
         }
 
-        if (cloudTime > localTime) {
-            // 云端更新 → 询问用户
-            _showCloudConflict(cloudData, cloudTime, localTime);
+        // 差值小于 5 秒视为相同，避免时钟误差反复弹窗
+        var diff = cloudTime - localTime;
+        if (diff > 5000) {
+            // 云端明显更新 → 询问用户
+            _showCloudConflict(cloudGameData, cloudTime, localTime);
         } else {
             // 本地更新或相同 → 静默上传到云端
             await cloudSaveSave(true);
@@ -185,7 +195,7 @@ function _showCloudConflict(cloudData, cloudTime, localTime) {
 window._applyCloudSave = function() {
     if (!window._pendingCloudData) return;
     try {
-        var json = JSON.stringify(window._pendingCloudData.data);
+        var json = JSON.stringify(window._pendingCloudData);
         localStorage.setItem('monsterFarm_v1', json);
         closeModal();
         showNotification('☁️ 云端存档已应用，正在重新加载…', 'success');

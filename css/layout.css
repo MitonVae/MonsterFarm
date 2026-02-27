@@ -1414,7 +1414,7 @@ svg[width="48"], svg[width="50"], svg[width="60"] {
     border-radius: 10px;
     box-shadow: 0 5px 20px rgba(0,0,0,0.6);
     animation: slideIn 0.3s ease-out;
-    z-index: 1000;
+    z-index: 99999;
     max-width: 300px;
     border-left: 4px solid #58a6ff;
     border: 1px solid #21262d;
