@@ -849,9 +849,11 @@ window.showSettingsModal = function() {
         // 存档操作
         '<div style="margin-bottom:14px;">' +
         '<h3 style="margin-bottom:8px;font-size:13px;color:#8b949e;letter-spacing:.05em;">' + _t('save','settings') + '</h3>' +
-        '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
-        '<button class="btn btn-primary" style="flex:1;min-width:100px;" onclick="quickSave();closeModal();">' + _t('saveBtn','settings') + '</button>' +
-        '<button class="btn btn-secondary" style="flex:1;min-width:100px;" onclick="confirmRecallAll();">' + _t('recallBtn','settings') + '</button>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
+        '<button class="btn btn-primary" onclick="quickSave();closeModal();">' + _t('saveBtn','settings') + '</button>' +
+        '<button class="btn btn-secondary" onclick="confirmRecallAll();">' + _t('recallBtn','settings') + '</button>' +
+        '<button class="btn btn-warning" style="background:#9a6700;border-color:#9a6700;" onclick="window._settingsExportSave();">' + _t('exportBtn','settings') + '</button>' +
+        '<button class="btn btn-secondary" style="border-color:#58a6ff;color:#58a6ff;" onclick="window._settingsImportSave();">' + _t('importBtn','settings') + '</button>' +
         '</div></div>' +
 
         // 快捷键
@@ -1114,6 +1116,87 @@ window.showMobileMonsterPanel = function() {
     }
     html += '<div class="modal-buttons"><button class="btn btn-primary" onclick="closeModal()">关闭</button></div>';
     showModal(html);
+};
+
+// ==================== 存档导出 / 导入（设置面板）====================
+
+window._settingsExportSave = function() {
+    try {
+        var data = localStorage.getItem('monsterFarmSave') || '{}';
+        // 生成带时间戳的文件名
+        var now = new Date();
+        var ts = now.getFullYear() + '-' +
+            String(now.getMonth()+1).padStart(2,'0') + '-' +
+            String(now.getDate()).padStart(2,'0') + '_' +
+            String(now.getHours()).padStart(2,'0') +
+            String(now.getMinutes()).padStart(2,'0');
+        var blob = new Blob([data], { type: 'application/json' });
+        var url  = URL.createObjectURL(blob);
+        var a    = document.createElement('a');
+        a.href   = url;
+        a.download = 'monsterfarm_' + ts + '.json';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function() { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+        showNotification(T('ntfExported','gm'), 'success');
+    } catch(e) {
+        showNotification(T('ntfExportFail','gm').replace('{err}', e.message), 'error');
+    }
+};
+
+window._settingsImportSave = function() {
+    // 弹出确认框，用户确认后再触发文件选择
+    var _t = function(k, cat) { return (typeof i18n !== 'undefined') ? i18n.t(k, cat) : k; };
+    var confirmHtml =
+        '<div class="modal-header" style="color:#f0c53d;">' + _t('importConfirmTitle','settings') + '</div>' +
+        '<div style="margin-bottom:18px;font-size:1rem;line-height:1.8;color:#e6edf3;">' +
+            _t('importConfirmDesc','settings') +
+        '</div>' +
+        '<div class="modal-buttons">' +
+            '<button class="btn btn-primary" onclick="window._settingsDoImport();">' + _t('importConfirmOk','settings') + '</button>' +
+            '<button class="btn btn-secondary" onclick="closeModal();setTimeout(showSettingsModal,80);">' + T('cancel','common') + '</button>' +
+        '</div>';
+    showModal(confirmHtml);
+};
+
+// 实际触发文件选择 → 读取 → 写入 localStorage → 刷新
+window._settingsDoImport = function() {
+    var _t = function(k, cat) { return (typeof i18n !== 'undefined') ? i18n.t(k, cat) : k; };
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json';
+    input.style.display = 'none';
+    document.body.appendChild(input);
+
+    input.addEventListener('change', function() {
+        var file = input.files[0];
+        if (!file) { document.body.removeChild(input); return; }
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                // 验证 JSON 是否合法
+                var parsed = JSON.parse(e.target.result);
+                if (typeof parsed !== 'object' || parsed === null) throw new Error('invalid format');
+                // 写入存档
+                localStorage.setItem('monsterFarmSave', e.target.result);
+                closeModal();
+                showNotification(_t('importSuccess','settings'), 'success');
+                // 短暂延迟后重载游戏以应用新存档
+                setTimeout(function() { location.reload(); }, 800);
+            } catch(err) {
+                showNotification(_t('importFail','settings').replace('{err}', err.message), 'error');
+                closeModal();
+                setTimeout(showSettingsModal, 80);
+            }
+        };
+        reader.readAsText(file);
+        document.body.removeChild(input);
+    });
+
+    // 触发文件选择对话框
+    input.click();
+    // 关闭确认弹窗
+    closeModal();
 };
 
 // 初始化UI - 在页面加载时调用

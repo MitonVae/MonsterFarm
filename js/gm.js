@@ -215,8 +215,6 @@
                         'onclick="quickSave();showNotification(T(\'ntfSaved\',\'gm\'),\'success\');">' + T('btnSaveNow','gm') + '</button>' +
                     '<button class="btn btn-warning" style="flex:1;min-width:120px;font-size:12px;" ' +
                         'onclick="window._gmExportSave()">' + T('btnExportSave','gm') + '</button>' +
-                    '<button class="btn btn-danger" style="flex:1;min-width:120px;font-size:12px;" ' +
-                        'onclick="window._gmConfirmReset()">' + T('btnResetGame','gm') + '</button>' +
                 '</div>'
             ) +
 
