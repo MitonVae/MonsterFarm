@@ -517,6 +517,13 @@ window.switchTab = function(tabName) {
     if (mobileNavItem) {
         mobileNavItem.classList.add('active');
     }
+
+    // 更新横屏左侧导航高亮
+    document.querySelectorAll('.lsc-nav-btn[id^="lsc-btn-"]').forEach(function(btn) {
+        btn.classList.remove('active');
+    });
+    var lscBtn = document.getElementById('lsc-btn-' + tabName);
+    if (lscBtn) lscBtn.classList.add('active');
     
     // 更新内容
     document.querySelectorAll('.tab-content').forEach(function(content) {
@@ -573,6 +580,14 @@ function initMobileNavIcons() {
     pcTabs.forEach(function(key) {
         var el = document.getElementById(key + 'TabIcon');
         if (el) el.innerHTML = createSVG(iconMap[key], 18);
+    });
+
+    // 横屏左侧导航图标（lsc-nav）
+    var lscIconMap = Object.assign({}, iconMap, { settings: 'settings' });
+    var lscKeys = ['farm', 'exploration', 'breeding', 'monsters', 'tech', 'disposal', 'settings'];
+    lscKeys.forEach(function(key) {
+        var el = document.getElementById('lsc' + key.charAt(0).toUpperCase() + key.slice(1) + 'Icon');
+        if (el) el.innerHTML = createSVG(lscIconMap[key] || key, 22);
     });
 }
 

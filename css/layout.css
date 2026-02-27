@@ -2436,3 +2436,197 @@ svg[width="48"], svg[width="50"], svg[width="60"] {
 .compact-card.disposal.selected .compact-name { color: #58a6ff; }
 .compact-card.disposal.locked   { opacity: 0.45; cursor: not-allowed !important; }
 
+
+/* ============================================================
+   横屏手机专用布局（landscape + 小屏高度）
+   触发条件：orientation:landscape 且 max-height ≤ 500px
+   （手机横屏通常高度在 320px ~ 430px 之间）
+   ============================================================ */
+@media screen and (orientation: landscape) and (max-height: 500px) {
+
+    /* ── 整体容器：改为横向三列 ── */
+    .app-container {
+        flex-direction: row;
+    }
+
+    /* ── 隐藏移动端顶栏和底部导航 ── */
+    .mobile-topbar   { display: none !important; }
+    .mobile-bottom-nav { display: none !important; }
+
+    /* ── 左侧：超窄资源 + 导航图标栏 ── */
+    .sidebar {
+        display: flex !important;
+        width: 56px !important;
+        min-width: 56px !important;
+        position: fixed !important;
+        left: 0; top: 0;
+        height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+        flex-direction: column;
+        z-index: 100;
+        padding: 0;
+        border-right: 1px solid #30363d;
+    }
+
+    /* 隐藏侧边栏里原本的文字标题和快捷操作区块，只留资源区 */
+    .sidebar-header,
+    .sidebar-section h3,
+    .quick-actions,
+    #farmSummarySection,
+    .resource-label,
+    .res-chevron,
+    .res-detail {
+        display: none !important;
+    }
+
+    /* 资源区块极简化 */
+    .sidebar-section {
+        padding: 4px 0;
+        border-bottom: none;
+    }
+    .sidebar-resources {
+        gap: 2px;
+    }
+    .sidebar-resource {
+        flex-direction: column;
+        align-items: center;
+        padding: 6px 4px;
+        gap: 2px;
+        border: none;
+        border-bottom: 1px solid #21262d;
+        border-radius: 0;
+        background: transparent;
+    }
+    .resource-icon {
+        font-size: 14px !important;
+        width: 20px !important;
+        height: 20px !important;
+    }
+    .resource-value {
+        font-size: 9px !important;
+        color: #c9d1d9;
+        text-align: center;
+        max-width: 50px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* ── 左侧导航图标（横屏时替代底部导航） ── */
+    .lsc-nav {
+        display: flex !important;
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+        width: 56px;
+        padding: 4px 0;
+        border-top: 1px solid #30363d;
+        margin-top: auto;
+    }
+    .lsc-nav-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        padding: 8px 4px;
+        background: none;
+        border: none;
+        color: #8b949e;
+        cursor: pointer;
+        font-size: 9px;
+        gap: 2px;
+        transition: color 0.15s, background 0.15s;
+        border-left: 2px solid transparent;
+    }
+    .lsc-nav-btn:hover  { background: #30363d; color: #e6edf3; }
+    .lsc-nav-btn.active { color: #58a6ff; background: #1c2128; border-left-color: #58a6ff; }
+    .lsc-nav-btn .nav-icon {
+        width: 22px; height: 22px;
+        display: block;
+    }
+    .lsc-nav-btn .nav-label { font-size: 8px; line-height: 1; }
+
+    /* ── 主内容区：占满剩余宽度 ── */
+    .main-container {
+        margin-left: 56px !important;
+        margin-right: 0 !important;
+        width: calc(100% - 56px) !important;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* 隐藏 PC 标签页头（改用左侧导航）*/
+    .desktop-tabs { display: none !important; }
+
+    /* 主内容区：去除顶部 padding，贴合横屏高度 */
+    .main-content {
+        padding: 6px 8px !important;
+        padding-bottom: 6px !important;
+        overflow-y: auto;
+        height: 100vh;
+    }
+
+    /* 怪兽右侧栏：隐藏（横屏空间不足，通过 monsters tab 查看）*/
+    .monster-sidebar { display: none !important; }
+    .grd-resizer     { display: none !important; }
+    .briefing-panel  { display: none !important; }
+    .briefing-v-resizer { display: none !important; }
+
+    /* ── 农场格：横屏宽度更大，增到 6 列 ── */
+    .farm-grid {
+        grid-template-columns: repeat(6, 1fr) !important;
+        gap: 5px !important;
+        margin-top: 4px !important;
+    }
+    .plot {
+        min-height: 58px !important;
+        padding: 4px 3px !important;
+    }
+    .plot-icon   { font-size: 1.1rem !important; margin-bottom: 2px !important; }
+    .plot-text   { font-size: 0.6rem !important; line-height: 1.1 !important; }
+    .progress-bar { height: 2px !important; margin-top: 3px !important; }
+
+    /* ── 探索页：探索槽 4 列保持不变，但减小内边距 ── */
+    .exploration-area { padding: 10px !important; border-radius: 8px !important; }
+    .expedition-slots { grid-template-columns: repeat(4, 1fr) !important; gap: 8px !important; margin: 8px 0 !important; }
+    .expedition-slot  { min-height: 80px !important; }
+    .expedition-panel { padding: 10px !important; margin: 8px 0 !important; }
+
+    /* ── 区域标题极致压缩 ── */
+    .farm-container h2,
+    .breeding-container h2,
+    .tech-tree-header,
+    .disposal-container h2,
+    .exploration-area h2 {
+        font-size: 0.85rem !important;
+        margin-bottom: 6px !important;
+        margin-top: 0 !important;
+        padding-bottom: 4px !important;
+    }
+
+    /* ── 繁殖页：两列 ── */
+    .breeding-slots {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+    }
+
+    /* ── 科技树：两列 ── */
+    .tech-tree {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+    }
+
+    /* ── 通知位置：不遮挡内容 ── */
+    .notification {
+        top: 8px !important;
+        bottom: auto !important;
+        right: 8px !important;
+        left: auto !important;
+    }
+}
+
+/* ── 横屏时，lsc-nav 默认在竖屏下隐藏 ── */
+.lsc-nav { display: none; }
+

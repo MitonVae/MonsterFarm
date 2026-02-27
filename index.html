@@ -87,6 +87,38 @@
                 <h3>农场概况</h3>
                 <div id="farmSummary" style="font-size:12px;color:#8b949e;line-height:1.8;"></div>
             </div>
+
+            <!-- 横屏模式专用左侧导航（竖屏时 CSS 隐藏）-->
+            <nav class="lsc-nav" id="lscNav">
+                <button class="lsc-nav-btn active" id="lsc-btn-farm" onclick="switchTab('farm')" title="农场">
+                    <span class="nav-icon" id="lscFarmIcon"></span>
+                    <span class="nav-label">农场</span>
+                </button>
+                <button class="lsc-nav-btn" id="lsc-btn-exploration" onclick="switchTab('exploration')" title="探索">
+                    <span class="nav-icon" id="lscExplorationIcon"></span>
+                    <span class="nav-label">探索</span>
+                </button>
+                <button class="lsc-nav-btn" id="lsc-btn-breeding" onclick="switchTab('breeding')" title="繁殖">
+                    <span class="nav-icon" id="lscBreedingIcon"></span>
+                    <span class="nav-label">繁殖</span>
+                </button>
+                <button class="lsc-nav-btn" id="lsc-btn-monsters" onclick="switchTab('monsters')" title="怪兽">
+                    <span class="nav-icon" id="lscMonstersIcon"></span>
+                    <span class="nav-label">怪兽</span>
+                </button>
+                <button class="lsc-nav-btn" id="lsc-btn-tech" onclick="switchTab('tech')" title="科技">
+                    <span class="nav-icon" id="lscTechIcon"></span>
+                    <span class="nav-label">科技</span>
+                </button>
+                <button class="lsc-nav-btn" id="lsc-btn-disposal" onclick="switchTab('disposal')" title="处理">
+                    <span class="nav-icon" id="lscDisposalIcon"></span>
+                    <span class="nav-label">处理</span>
+                </button>
+                <button class="lsc-nav-btn" onclick="showSettingsModal()" title="设置">
+                    <span class="nav-icon" id="lscSettingsIcon"></span>
+                    <span class="nav-label">设置</span>
+                </button>
+            </nav>
         </div>
 
         <!-- 主内容区域 -->
