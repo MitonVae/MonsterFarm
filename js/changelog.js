@@ -119,7 +119,7 @@ var _changelogTagStyle = {
 };
 
 // ── 打开更新公告弹窗 ──
-window.showChangelog = function() {
+window.showChangelog = function(onClose) {
     var UNREAD_KEY = 'mf_changelog_read';
     var lastRead   = localStorage.getItem(UNREAD_KEY) || '';
 
@@ -156,10 +156,13 @@ window.showChangelog = function() {
         html += '</ul></div>';
     });
 
+    // 关闭按钮：有回调时执行回调，否则仅关闭
+    var closeBtn = onClose
+        ? '<button class="btn btn-primary" onclick="closeModal();(' + onClose.toString() + ')();">关闭</button>'
+        : '<button class="btn btn-primary" onclick="closeModal()">关闭</button>';
+
     html += '</div>' +
-        '<div class="modal-buttons">' +
-        '<button class="btn btn-primary" onclick="closeModal()">关闭</button>' +
-        '</div>';
+        '<div class="modal-buttons">' + closeBtn + '</div>';
 
     showModal(html);
 

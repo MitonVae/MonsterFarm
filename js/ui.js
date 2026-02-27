@@ -1237,9 +1237,10 @@ window.addEventListener('load', function() {
 });
 
 // ==================== 早期体验版提示弹窗 ====================
-window.showEarlyAccessNotice = function() {
+window.showEarlyAccessNotice = function(forceShow) {
     // 用 sessionStorage 保证：同一标签页内只弹一次（刷新后仍会弹）
-    if (sessionStorage.getItem('mf_early_notice_shown')) return;
+    // forceShow=true 时跳过检查（用于从更新日志返回时重新打开）
+    if (!forceShow && sessionStorage.getItem('mf_early_notice_shown')) return;
     sessionStorage.setItem('mf_early_notice_shown', '1');
 
     var html =
@@ -1260,7 +1261,7 @@ window.showEarlyAccessNotice = function() {
         '</div>' +
         '<div style="display:flex;gap:10px;">' +
             '<button class="btn btn-primary" onclick="closeModal()" style="flex:1;padding:10px;">我知道了，开始体验</button>' +
-            '<button class="btn btn-secondary" onclick="showChangelog();/* stay on changelog */" style="padding:10px 14px;">查看更新日志</button>' +
+            '<button class="btn btn-secondary" onclick="showChangelog(function(){showEarlyAccessNotice(true);});" style="padding:10px 14px;">查看更新日志</button>' +
         '</div>';
 
     showModal(
