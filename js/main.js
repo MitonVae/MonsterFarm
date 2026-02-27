@@ -35,98 +35,98 @@ var gameState = {
 var randomEvents = {
     farming: [
         {
-            title: '及时雨',
-            desc: '一场及时雨降临农场，作物生长速度临时提升！',
+            get title() { return T('farming_rain_title','events'); },
+            get desc()  { return T('farming_rain_desc','events'); },
             choices: [
-                { text: '太好了！', effect: function() {
+                { get text() { return T('farming_rain_choice','events'); }, effect: function() {
                     gameState.plots.forEach(function(plot) {
                         if (plot.crop) plot.growthBonus = 1.5;
                     });
                     setTimeout(function() {
                         gameState.plots.forEach(function(plot) { plot.growthBonus = 1; });
                     }, 30000);
-                    showNotification('作物生长加速30秒！', 'success');
+                    showNotification(T('farming_rain_effect','events'), 'success');
                 }}
             ]
         },
         {
-            title: '虫害',
-            desc: '农场遭遇虫害！是否使用食物驱虫？',
+            get title() { return T('farming_pest_title','events'); },
+            get desc()  { return T('farming_pest_desc','events'); },
             choices: [
                 { 
-                    text: '使用食物(20)', 
+                    get text() { return T('farming_pest_choice1','events'); },
                     cost: { food: 20 },
-                    effect: function() { showNotification('成功驱虫！', 'success'); }
+                    effect: function() { showNotification(T('farming_pest_effect1','events'), 'success'); }
                 },
                 { 
-                    text: '忽略', 
+                    get text() { return T('farming_pest_choice2','events'); },
                     effect: function() {
                         var plot = gameState.plots.find(function(p) { return p.crop; });
                         if (plot) {
                             plot.progress = Math.max(0, plot.progress - 30);
-                            showNotification('作物生长受损...', 'error');
+                            showNotification(T('farming_pest_effect2','events'), 'error');
                         }
                     }
                 }
             ]
         },
         {
-            title: '大风',
-            desc: '大风吹过农场，散落了一些材料',
+            get title() { return T('farming_wind_title','events'); },
+            get desc()  { return T('farming_wind_desc','events'); },
             choices: [
-                { text: '收集', effect: function() {
+                { get text() { return T('farming_wind_choice','events'); }, effect: function() {
                     var gain = Math.floor(Math.random() * 20) + 10;
                     gameState.materials += gain;
                     updateResources();
-                    showNotification('获得 ' + gain + ' 材料！', 'success');
+                    showNotification(T('farming_wind_effect','events').replace('{n}', gain), 'success');
                 }}
             ]
         }
     ],
     exploration: [
         {
-            title: '神秘商人',
-            desc: '遇到神秘商人，愿意用材料交换金币',
+            get title() { return T('explore_merchant_title','events'); },
+            get desc()  { return T('explore_merchant_desc','events'); },
             choices: [
                 { 
-                    text: '交易(材料-50 → 金币+150)', 
+                    get text() { return T('explore_merchant_choice1','events'); },
                     cost: { materials: 50 },
                     effect: function() {
                         gameState.coins += 150;
                         updateResources();
-                        showNotification('交易成功！', 'success');
+                        showNotification(T('explore_merchant_effect','events'), 'success');
                     }
                 },
-                { text: '拒绝', effect: function() {} }
+                { get text() { return T('explore_merchant_choice2','events'); }, effect: function() {} }
             ]
         },
         {
-            title: '野生怪兽',
-            desc: '遭遇野生怪兽！是否战斗捕获？',
+            get title() { return T('explore_monster_title','events'); },
+            get desc()  { return T('explore_monster_desc','events'); },
             choices: [
                 { 
-                    text: '战斗', 
+                    get text() { return T('explore_monster_choice1','events'); },
                     effect: function() {
                         if (Math.random() > 0.5) {
                             var types = Object.keys(monsterTypes);
                             var type = types[Math.floor(Math.random() * types.length)];
                             createMonster(type);
-                            showNotification('捕获成功！获得新怪兽！', 'success');
+                            showNotification(T('explore_monster_success','events'), 'success');
                         } else {
                             gameState.energy = Math.max(0, gameState.energy - 20);
                             updateResources();
-                            showNotification('捕获失败，消耗能量...', 'error');
+                            showNotification(T('explore_monster_fail','events'), 'error');
                         }
                     }
                 },
-                { text: '逃跑', effect: function() {} }
+                { get text() { return T('explore_monster_choice2','events'); }, effect: function() {} }
             ]
         },
         {
-            title: '宝藏',
-            desc: '发现了一个宝箱！',
+            get title() { return T('explore_treasure_title','events'); },
+            get desc()  { return T('explore_treasure_desc','events'); },
             choices: [
-                { text: '打开', effect: function() {
+                { get text() { return T('explore_treasure_choice','events'); }, effect: function() {
                     var rewards = [
                         { coins: 100 },
                         { materials: 80 },
@@ -138,20 +138,20 @@ var randomEvents = {
                         gameState[key] += reward[key];
                     });
                     updateResources();
-                    showNotification('获得奖励：' + JSON.stringify(reward), 'success');
+                    showNotification(T('explore_treasure_effect','events').replace('{reward}', JSON.stringify(reward)), 'success');
                 }}
             ]
         }
     ],
     general: [
         {
-            title: '意外之财',
-            desc: '路过的旅行者给了你一些金币',
+            get title() { return T('general_windfall_title','events'); },
+            get desc()  { return T('general_windfall_desc','events'); },
             choices: [
-                { text: '收下', effect: function() {
+                { get text() { return T('general_windfall_choice','events'); }, effect: function() {
                     gameState.coins += 50;
                     updateResources();
-                    showNotification('获得 50 金币！', 'success');
+                    showNotification(T('general_windfall_effect','events'), 'success');
                 }}
             ]
         }

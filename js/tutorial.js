@@ -10,13 +10,11 @@ var tutorialSteps = [
     // ── Step 0：欢迎 ──
     {
         id: 'welcome',
-        title: '👋 欢迎来到怪兽农场！',
-        content: '这里是你的怪兽农场。<br><br>' +
-            '你需要 <strong style="color:#58a6ff;">捕获怪兽</strong> 来帮助耕作，同时探索获取资源。<br><br>' +
-            '首先，点击顶部的 <strong style="color:#f0c53d;">🗺 探索</strong> 标签前往探索界面！',
+        get title()   { return T('step0_title',   'tutorial'); },
+        get content() { return T('step0_content', 'tutorial'); },
         focusSelector: '.tab[onclick*="exploration"]',
         allowInteract: false,
-        btnText: '前往探索 →',
+        get btnText() { return T('step0_btn', 'tutorial'); },
         onShow: null,
         onNext: function(done) {
             switchTab('exploration');
@@ -27,11 +25,8 @@ var tutorialSteps = [
     // ── Step 1：手动探索，必定捕获 ──
     {
         id: 'explore_first',
-        title: '🌿 点击「⚡ 探索」开始探索',
-        content: '这是 <strong style="color:#46d164;">农场边缘</strong> 区域。<br><br>' +
-            '点击下方高亮的 <strong style="color:#58a6ff;">⚡ 探索</strong> 按钮，<br>' +
-            '消耗能量推进进度，达到 <strong style="color:#f0c53d;">100%</strong> 后结算。<br><br>' +
-            '💡 本次探索 <strong style="color:#f0c53d;">必定捕获</strong> 一只怪兽！',
+        get title()   { return T('step1_title',   'tutorial'); },
+        get content() { return T('step1_content', 'tutorial'); },
         focusSelector: 'button.expl-manual-btn[onclick*="farm_edge"]',
         allowInteract: true,
         btnText: null,      // 等待系统触发
@@ -55,10 +50,8 @@ var tutorialSteps = [
     // ── Step 2：捕获成功，指引点击怪兽卡片 ──
     {
         id: 'select_monster',
-        title: '🎉 成功捕获怪兽！',
-        content: '太棒了！你已经捕获了第一只怪兽。<br><br>' +
-            '现在请 <strong style="color:#f0c53d;">点击右侧怪兽卡片</strong> 打开详情，' +
-            '然后点击「<strong style="color:#46d164;">派驻农田</strong>」按钮。',
+        get title()   { return T('step2_title',   'tutorial'); },
+        get content() { return T('step2_content', 'tutorial'); },
         focusSelector: '#monsterSidebar .msb-monster-card',
         allowInteract: true,
         btnText: null,      // 等玩家点击怪兽卡片后触发钩子推进
@@ -78,10 +71,8 @@ var tutorialSteps = [
     // ── Step 3：点击「派驻农田」按钮（强引导） ──
     {
         id: 'assign_farm',
-        title: '🌾 派遣怪兽驻守农田',
-        content: '太棒了！现在请点击高亮的 <strong style="color:#46d164;">派驻农田</strong> 按钮，<br><br>' +
-            '让怪兽驻守地块，实现 <strong style="color:#58a6ff;">自动种植和收获</strong>！',
-        // 动态更新：onShow 时重新计算
+        get title()   { return T('step3_title',   'tutorial'); },
+        get content() { return T('step3_content', 'tutorial'); },
         focusSelector: '#monsterSidebar .msb-btn-assign',
         allowInteract: true,
         btnText: null,      // 等玩家点击耕作按钮后触发钩子推进
@@ -101,10 +92,8 @@ var tutorialSteps = [
     // ── Step 4：选择地块（强引导，等模态框出现后高亮） ──
     {
         id: 'pick_plot',
-        title: '📋 选择一个地块',
-        content: '弹出了地块选择界面！<br><br>' +
-            '请点击任意一个 <strong style="color:#f0c53d;">地块格子</strong>，<br>' +
-            '让怪兽驻守进去开始工作。',
+        get title()   { return T('step4_title',   'tutorial'); },
+        get content() { return T('step4_content', 'tutorial'); },
         focusSelector: '#modal .modal-content',
         allowInteract: true,
         btnText: null,      // 等玩家选择地块后触发钩子推进
@@ -125,13 +114,11 @@ var tutorialSteps = [
     // ── Step 5：前往农场 ──
     {
         id: 'go_farm',
-        title: '✅ 怪兽已驻守！',
-        content: '怪兽已经开始驻守地块了！<br><br>' +
-            '它会自动种植并收获作物，为你积累资源。<br><br>' +
-            '现在点击按钮切换到 <strong style="color:#f0c53d;">🏡 农场</strong> 查看效果！',
+        get title()   { return T('step5_title',   'tutorial'); },
+        get content() { return T('step5_content', 'tutorial'); },
         focusSelector: null,
         allowInteract: false,
-        btnText: '前往农场 →',
+        get btnText() { return T('step5_btn', 'tutorial'); },
         onShow: null,
         onNext: function(done) {
             switchTab('farm');
@@ -142,15 +129,11 @@ var tutorialSteps = [
     // ── Step 6：农场介绍，完成引导 ──
     {
         id: 'farm_intro',
-        title: '🏡 这是你的农场',
-        content: '地块有三种状态：<br>' +
-            '⬛ <strong>空地</strong> — 点击可手动种植作物<br>' +
-            '🟡 <strong>生长中</strong> — 等待作物成熟<br>' +
-            '🟢 <strong>可收获</strong> — 点击手动收获<br><br>' +
-            '💡 驻守的怪兽会 <strong style="color:#46d164;">自动种植和收获</strong>！',
+        get title()   { return T('step6_title',   'tutorial'); },
+        get content() { return T('step6_content', 'tutorial'); },
         focusSelector: '#farmGrid',
         allowInteract: true,
-        btnText: '明白了！开始游戏 ✓',
+        get btnText() { return T('step6_btn', 'tutorial'); },
         onShow: null,
         onNext: function(done) {
             completeTutorial();
@@ -273,11 +256,11 @@ function renderBubble(step) {
     // btnText 为 null 时显示等待提示
     var waitingLabel = '';
     if (step.btnText === null) {
-        if (step.id === 'explore_first')    waitingLabel = '⏳ 探索并捕获怪兽中…';
-        else if (step.id === 'select_monster') waitingLabel = '👆 请点击右侧怪兽卡片…';
-        else if (step.id === 'assign_farm') waitingLabel = '👆 请点击高亮的「耕作」按钮…';
-        else if (step.id === 'pick_plot')   waitingLabel = '👆 请在弹窗中选择地块…';
-        else waitingLabel = '⏳ 等待操作…';
+        if (step.id === 'explore_first')       waitingLabel = T('wait_explore',      'tutorial');
+        else if (step.id === 'select_monster') waitingLabel = T('wait_select',       'tutorial');
+        else if (step.id === 'assign_farm')    waitingLabel = T('wait_assign',       'tutorial');
+        else if (step.id === 'pick_plot')      waitingLabel = T('wait_plot',         'tutorial');
+        else                                   waitingLabel = T('wait_generic',      'tutorial');
     }
 
     var bubble = document.createElement('div');
@@ -285,7 +268,7 @@ function renderBubble(step) {
     bubble.innerHTML =
         '<div class="tut-header">' +
             '<span class="tut-title">' + step.title + '</span>' +
-            '<button class="tut-skip" onclick="skipTutorial()">✕ 跳过</button>' +
+            '<button class="tut-skip" onclick="skipTutorial()">' + T('skip_btn','tutorial') + '</button>' +
         '</div>' +
         '<div class="tut-body">' + step.content + '</div>' +
         '<div class="tut-footer">' +
@@ -404,7 +387,7 @@ window.completeTutorial = function() {
     tutorialState.active = false;
     tutorialState.completed = true;
     removeTutorialDOM();
-    showNotification('🎓 引导完成！祝你农场大丰收～', 'success');
+    showNotification(T('complete_notify', 'tutorial'), 'success');
     try { localStorage.setItem('mf_tutorial_done', '1'); } catch(e) {}
 };
 

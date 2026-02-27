@@ -1,12 +1,12 @@
 // ==================== 科技树模块 ====================
 
-// 科技分类配置
+// 科技分类配置（label 由 i18n 动态填充）
 var TECH_CATEGORIES = [
-    { id: 'farming',     label: '🌾 农业', color: '#46d164' },
-    { id: 'exploration', label: '🗺 探索', color: '#58a6ff' },
-    { id: 'monster',     label: '👾 怪兽', color: '#9c27b0' },
-    { id: 'breeding',    label: '💕 繁殖', color: '#e91e63' },
-    { id: 'expansion',   label: '🏠 扩建', color: '#f0883e' }
+    { id: 'farming',     color: '#46d164' },
+    { id: 'exploration', color: '#58a6ff' },
+    { id: 'monster',     color: '#9c27b0' },
+    { id: 'breeding',    color: '#e91e63' },
+    { id: 'expansion',   color: '#f0883e' }
 ];
 
 var _activeTechCategory = 'farming';
@@ -21,12 +21,13 @@ window.renderTech = function() {
             var isActive = _activeTechCategory === cat.id;
             var catTechs = Object.keys(technologies).filter(function(k){ return technologies[k].category === cat.id; });
             var unlockedCount = catTechs.filter(function(k){ return gameState.technologies[k]; }).length;
+            var catLabel = T(cat.id, 'tech.category') || T(cat.id, 'tech');
             return '<button onclick="switchTechCategory(\'' + cat.id + '\')" style="' +
                 'padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;' +
                 'border:2px solid ' + (isActive ? cat.color : '#30363d') + ';' +
                 'background:' + (isActive ? cat.color + '22' : 'transparent') + ';' +
                 'color:' + (isActive ? cat.color : '#8b949e') + ';">' +
-                cat.label + ' <span style="font-size:11px;opacity:0.8;">(' + unlockedCount + '/' + catTechs.length + ')</span>' +
+                catLabel + ' <span style="font-size:11px;opacity:0.8;">(' + unlockedCount + '/' + catTechs.length + ')</span>' +
                 '</button>';
         }).join('') +
         '</div>';
@@ -57,8 +58,8 @@ window.renderTech = function() {
 
         var prereqBlock = '';
         if (!prereqMet && tech.prereq && tech.prereq.length > 0) {
-            prereqBlock = '<div style="font-size:11px;color:#f85149;margin-top:6px;">⚠ 需要先解锁：' +
-                tech.prereq.map(function(p){ return technologies[p] ? technologies[p].name : p; }).join('、') + '</div>';
+            prereqBlock = '<div style="font-size:11px;color:#f85149;margin-top:6px;">⚠ ' + T('prereqNeeded','tech') + '：' +
+                tech.prereq.map(function(p){ return TName(p,'tech') || (technologies[p] ? technologies[p].name : p); }).join('、') + '</div>';
         }
 
         return '<div class="tech-item ' + (unlocked ? 'unlocked' : 'locked') + '" style="' +
@@ -73,7 +74,7 @@ window.renderTech = function() {
             '<div class="tech-desc">' + tech.desc + '</div>' +
             prereqBlock +
             (!unlocked ? (
-                '<div class="tech-cost" style="margin-top:8px;">需要：' +
+                '<div class="tech-cost" style="margin-top:8px;">' + T('cost','common') + '：' +
                 Object.keys(tech.cost).map(function(r) {
                     var have = gameState[r] || 0;
                     var need = tech.cost[r];
@@ -82,10 +83,10 @@ window.renderTech = function() {
                 }).join(' ') + '</div>' +
                 '<button class="btn btn-primary" style="margin-top:8px;" onclick="unlockTech(\'' + techId + '\')" ' +
                 (!canUnlock ? 'disabled' : '') + '>' +
-                (unlocked ? '已解锁' : (canUnlock ? '解锁' : (!prereqMet ? '前置未满足' : '资源不足'))) +
+                (unlocked ? T('unlocked','tech') : (canUnlock ? T('unlock','tech') : (!prereqMet ? T('prereqNeeded','tech') : T('notEnough','tech')))) +
                 '</button>'
             ) : (
-                '<div style="color:#46d164;font-weight:bold;margin-top:8px;font-size:13px;">✓ 已解锁</div>'
+                '<div style="color:#46d164;font-weight:bold;margin-top:8px;font-size:13px;">✓ ' + T('unlocked','tech') + '</div>'
             )) +
             '</div>';
     }).join('');
@@ -110,8 +111,17 @@ var REFORGE_CONFIG = {
 };
 // 保底机制：连续N次没有提升属性总和，触发保底
 var REFORGE_PITY_THRESHOLD = 4;
-// 各属性中文标签
-var STAT_LABELS = { strength: '力量', agility: '敏捷', intelligence: '智力', farming: '耕作' };
+// 各属性标签（由 i18n 动态获取）
+var STAT_LABELS = {};
+function _refreshStatLabels() {
+    STAT_LABELS = {
+        strength:     T('strength','monsters'),
+        agility:      T('agility','monsters'),
+        intelligence: T('intelligence','monsters'),
+        farming:      T('farming','monsters')
+    };
+}
+_refreshStatLabels();
 var STAT_KEYS   = ['strength', 'agility', 'intelligence', 'farming'];
 // 重铸弹窗的临时状态（不存档，刷新重置）
 var _reforgeState = {
@@ -124,11 +134,12 @@ var _reforgeState = {
 
 // ── 渲染"怪兽重铸"面板（嵌入科技树页底部）──
 function renderMonsterBreakthroughSection() {
+    _refreshStatLabels();
     if (gameState.monsters.length === 0) {
         return '<div class="tech-item" style="margin-top:20px;border-top:2px solid #30363d;padding-top:16px;">' +
-            '<div class="tech-title">🧬 怪兽属性重铸</div>' +
-            '<div class="tech-desc" style="color:#8b949e;">通过消耗资源随机重铸怪兽属性分配，追求更好的属性组合。<br>解锁三种重铸模式，搭配保底机制，让每次投入都有意义。</div>' +
-            '<div style="color:#8b949e;font-size:13px;margin-top:8px;">（先去探索捕获怪兽吧！）</div>' +
+            '<div class="tech-title">🧬 ' + T('reforgeTitle','monsters') + '</div>' +
+            '<div class="tech-desc" style="color:#8b949e;">' + _reforgeIntroDesc() + '</div>' +
+            '<div style="color:#8b949e;font-size:13px;margin-top:8px;">(' + T('noMonsters','ui') + ')</div>' +
             '</div>';
     }
 
@@ -144,22 +155,23 @@ function renderMonsterBreakthroughSection() {
     var monsterOptions = gameState.monsters.map(function(m){
         var idle = m.status === 'idle';
         return '<option value="' + m.id + '"' + (m.id === _reforgeState.monsterId ? ' selected' : '') + (!idle ? ' disabled' : '') + '>' +
-            m.name + ' Lv.' + m.level + (idle ? '' : ' [忙碌]') + '</option>';
+            m.name + ' Lv.' + m.level + (idle ? '' : ' [' + T('working','monsterStatus') + ']') + '</option>';
     }).join('');
 
-    // 重铸模式按钮
+    // 重铸模式按钮（使用 i18n 名称）
     var modeHtml = Object.keys(REFORGE_CONFIG).map(function(key){
         var cfg = REFORGE_CONFIG[key];
         var isActive = _reforgeState.mode === key;
         var costText = Object.keys(cfg.cost).map(function(r){
             return getResourceIcon(r, 11) + cfg.cost[r];
         }).join(' ');
+        var cfgLabel = T('reforge' + key.charAt(0).toUpperCase() + key.slice(1), 'monsters') || cfg.name;
         return '<button onclick="switchReforgeMode(\'' + key + '\')" style="' +
             'flex:1;padding:6px 4px;font-size:11px;border-radius:8px;cursor:pointer;transition:all 0.2s;' +
             'border:2px solid ' + (isActive ? cfg.color : '#30363d') + ';' +
             'background:' + (isActive ? cfg.color + '22' : '#161b22') + ';' +
             'color:' + (isActive ? cfg.color : '#8b949e') + ';">' +
-            cfg.name + '<br><span style="font-size:10px;opacity:0.85;">' + costText + '</span>' +
+            cfgLabel + '<br><span style="font-size:10px;opacity:0.85;">' + costText + '</span>' +
             '</button>';
     }).join('');
 
@@ -175,14 +187,14 @@ function renderMonsterBreakthroughSection() {
         // 属性锁定界面（精准重铸模式）
         var lockHtml = '';
         if (_reforgeState.mode === 'advanced') {
-            lockHtml = '<div style="font-size:11px;color:#58a6ff;margin:8px 0 4px;">🔒 点击一个属性将其锁定（锁定后不参与重铸）：</div>';
+            lockHtml = '<div style="font-size:11px;color:#58a6ff;margin:8px 0 4px;">🔒 ' + T('lockStat','monsters') + '：</div>';
         }
 
         statsHtml = '<div style="background:#0d1117;border-radius:8px;padding:10px;margin-top:10px;">' +
             '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
-            '<span style="font-size:12px;font-weight:bold;color:#e6edf3;">' + selMonster.name + ' 当前属性</span>' +
-            '<span style="font-size:11px;color:#8b949e;">总计 <strong style="color:#e6edf3;">' + curTotal + '</strong>' +
-            (bestStats ? ' | 最佳 <strong style="color:#ffd700;">' + bestTotal + '</strong>' : '') + '</span>' +
+            '<span style="font-size:12px;font-weight:bold;color:#e6edf3;">' + selMonster.name + ' ' + T('stats','monsters') + '</span>' +
+            '<span style="font-size:11px;color:#8b949e;">' + T('current','common') + ' <strong style="color:#e6edf3;">' + curTotal + '</strong>' +
+            (bestStats ? ' | ' + T('max','common') + ' <strong style="color:#ffd700;">' + bestTotal + '</strong>' : '') + '</span>' +
             '</div>' + lockHtml +
             '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">' +
             STAT_KEYS.map(function(k){
@@ -196,7 +208,7 @@ function renderMonsterBreakthroughSection() {
                     'background:' + (isLocked ? '#58a6ff11' : '#21262d') + ';transition:all 0.2s;">' +
                     '<div style="font-size:10px;color:#8b949e;">' + STAT_LABELS[k] + (isLocked ? ' 🔒' : '') + '</div>' +
                     '<div style="font-size:16px;font-weight:bold;color:#e6edf3;">' + curVal + '</div>' +
-                    (bestVal !== null && bestVal !== curVal ? '<div style="font-size:10px;color:#ffd700;">历史最佳:' + bestVal + '</div>' : '') +
+                    (bestVal !== null && bestVal !== curVal ? '<div style="font-size:10px;color:#ffd700;">' + T('max','common') + ':' + bestVal + '</div>' : '') +
                     '</div>';
             }).join('') +
             '</div></div>';
@@ -207,8 +219,8 @@ function renderMonsterBreakthroughSection() {
             var pityColor = pityCount >= REFORGE_PITY_THRESHOLD - 1 ? '#ffd700' : '#f0883e';
             pityHtml = '<div style="font-size:12px;color:' + pityColor + ';background:' + pityColor + '11;border-radius:6px;padding:6px 10px;margin-top:8px;border:1px solid ' + pityColor + '33;">' +
                 (pityCount >= REFORGE_PITY_THRESHOLD
-                    ? '✨ <strong>保底已触发！</strong> 下次重铸保证属性总和 ≥ 历史最佳'
-                    : '🎲 已连续 ' + pityCount + ' 次未提升，再 ' + pityRemain + ' 次触发保底') +
+                    ? '✨ <strong>' + _pityTriggeredText() + '</strong>'
+                    : '🎲 ' + _pityProgressText(pityCount, pityRemain)) +
                 '</div>';
         }
     }
@@ -221,21 +233,17 @@ function renderMonsterBreakthroughSection() {
         return '<span style="color:' + (have >= need ? '#46d164' : '#f85149') + ';">' + getResourceIcon(r, 12) + need + '</span>';
     }).join(' ');
 
-    var modeDesc = {
-        basic:    '随机重铸所有属性，新总量在原总量 <strong>85%~120%</strong> 范围内随机分配。',
-        advanced: '可锁定 <strong>1个属性</strong> 不参与重铸，其余属性在原总量 <strong>90%~125%</strong> 范围内重铸。',
-        perfect:  '一次性生成 <strong>3套备选方案</strong>，从中选择最满意的一套应用，属性范围 <strong>95%~130%</strong>。'
-    };
-    var btnLabel = cfg.rolls > 1 ? ('🎲 生成 ' + cfg.rolls + ' 套方案') : '🎲 执行重铸';
+    var modeDesc = _getReforgeModeDesca();
+    var btnLabel = cfg.rolls > 1 ? ('🎲 ' + _reforgeGenLabel(cfg.rolls)) : '🎲 ' + T('reforge','monsters');
 
     return '<div class="tech-item" style="margin-top:20px;border-top:2px solid #30363d;padding-top:16px;">' +
         '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
-        '<div class="tech-title" style="margin:0;">🧬 怪兽属性重铸</div>' +
-        '<span style="font-size:11px;color:#8b949e;">随机重铸 · 保底机制</span>' +
+        '<div class="tech-title" style="margin:0;">🧬 ' + T('reforgeTitle','monsters') + '</div>' +
+        '<span style="font-size:11px;color:#8b949e;">' + _reforgeSubtitle() + '</span>' +
         '</div>' +
         // 怪兽选择
         '<div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">' +
-        '<div style="font-size:12px;color:#8b949e;white-space:nowrap;">选择怪兽：</div>' +
+        '<div style="font-size:12px;color:#8b949e;white-space:nowrap;">' + T('title','monsters') + '：</div>' +
         '<select id="reforge-monster-select" onchange="onReforgeMonsterChange(this.value)" style="flex:1;background:#21262d;color:#e6edf3;border:1px solid #30363d;border-radius:6px;padding:5px 8px;font-size:13px;">' +
         monsterOptions + '</select>' +
         '</div>' +
@@ -248,9 +256,9 @@ function renderMonsterBreakthroughSection() {
         pityHtml +
         // 费用 + 按钮
         '<div style="margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;">' +
-        '<div style="font-size:12px;">费用：' + costDisplay + '</div>' +
+        '<div style="font-size:12px;">' + T('cost','common') + '：' + costDisplay + '</div>' +
         '<button class="btn btn-primary" onclick="openReforgeModal()" ' + (canAfford && selMonster ? '' : 'disabled') + ' style="white-space:nowrap;' + (canAfford && selMonster ? '' : 'opacity:0.5;') + '">' +
-        (canAfford && selMonster ? btnLabel : (selMonster ? '资源不足' : '无可用怪兽')) +
+        (canAfford && selMonster ? btnLabel : (selMonster ? T('notEnough','tech') : T('noMonsters','ui'))) +
         '</button>' +
         '</div>' +
         '</div>';
@@ -329,13 +337,13 @@ function generateReforgeResult(monster, mode) {
 // ── 打开重铸选择弹窗 ──
 window.openReforgeModal = function() {
     var monster = _reforgeState.monsterId ? gameState.monsters.find(function(m){ return m.id === _reforgeState.monsterId; }) : null;
-    if (!monster) { showNotification('请先选择怪兽！', 'warning'); return; }
-    if (monster.status !== 'idle') { showNotification('该怪兽正在作业中！', 'warning'); return; }
+    if (!monster) { showNotification(T('noMonsters','ui'), 'warning'); return; }
+    if (monster.status !== 'idle') { showNotification(T('working','monsterStatus'), 'warning'); return; }
 
     var cfg = REFORGE_CONFIG[_reforgeState.mode];
     // 扣费检查
     var canAfford = Object.keys(cfg.cost).every(function(r){ return (gameState[r]||0) >= cfg.cost[r]; });
-    if (!canAfford) { showNotification('资源不足！', 'error'); return; }
+    if (!canAfford) { showNotification(T('notEnoughResource','notifications'), 'error'); return; }
 
     // 扣费
     Object.keys(cfg.cost).forEach(function(r){ gameState[r] -= cfg.cost[r]; });
@@ -371,7 +379,7 @@ function renderReforgeModal(monster, rolls, activeIdx) {
                 'border:2px solid ' + (isActive ? col : '#30363d') + ';' +
                 'background:' + (isActive ? col + '22' : '#161b22') + ';' +
                 'color:' + (isActive ? col : '#8b949e') + ';">' +
-                '方案' + (i+1) + '<br><span style="font-size:11px;">' + (delta >= 0 ? '+' : '') + delta + '</span>' +
+                T('reforgeOption','monsters') + (i+1) + '<br><span style="font-size:11px;">' + (delta >= 0 ? '+' : '') + delta + '</span>' +
                 '</button>';
         }).join('') +
         '</div>'
@@ -385,8 +393,8 @@ function renderReforgeModal(monster, rolls, activeIdx) {
 
     var compHtml = '<div style="background:#0d1117;border-radius:8px;padding:10px;margin-bottom:12px;">' +
         '<div style="display:flex;justify-content:space-between;margin-bottom:8px;">' +
-        '<span style="font-size:13px;font-weight:bold;">' + monster.name + ' 属性对比</span>' +
-        '<span style="font-size:12px;color:' + totalColor + ';">总计 ' + curTotal + ' → ' + newTotal + ' (' + (totalDelta >= 0 ? '+' : '') + totalDelta + ')</span>' +
+        '<span style="font-size:13px;font-weight:bold;">' + monster.name + ' ' + T('stats','monsters') + '</span>' +
+        '<span style="font-size:12px;color:' + totalColor + ';">' + T('current','common') + ' ' + curTotal + ' → ' + newTotal + ' (' + (totalDelta >= 0 ? '+' : '') + totalDelta + ')</span>' +
         '</div>' +
         '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">' +
         STAT_KEYS.map(function(k){
@@ -401,7 +409,7 @@ function renderReforgeModal(monster, rolls, activeIdx) {
                 '<div style="font-size:11px;color:#8b949e;">' + oldV + '</div>' +
                 '<div style="font-size:18px;font-weight:bold;color:#e6edf3;">' + newV + '</div>' +
                 '<div style="font-size:11px;color:' + col + ';">' + (delta >= 0 ? '+' : '') + delta + '</div>' +
-                (bestV !== null ? '<div style="font-size:9px;color:#ffd700;">最佳:' + bestV + '</div>' : '') +
+                (bestV !== null ? '<div style="font-size:9px;color:#ffd700;">' + T('max','common') + ':' + bestV + '</div>' : '') +
                 '</div>';
         }).join('') +
         '</div></div>';
@@ -409,17 +417,18 @@ function renderReforgeModal(monster, rolls, activeIdx) {
     // 保底状态
     var pityCount = monster.reforgePityCount || 0;
     var pityInfo = '';
+    var cfgLabel = T('reforge' + _reforgeState.mode.charAt(0).toUpperCase() + _reforgeState.mode.slice(1), 'monsters') || cfg.name;
     if (pityCount >= REFORGE_PITY_THRESHOLD && totalDelta <= 0) {
         pityInfo = '<div style="color:#ffd700;background:#ffd70011;border:1px solid #ffd70033;border-radius:6px;padding:6px 10px;margin-bottom:10px;font-size:12px;">' +
-            '✨ <strong>保底激活：</strong>本次结果保证属性总和不低于历史最高值（已自动调整）</div>';
+            '✨ <strong>' + _pityTriggeredText() + '</strong></div>';
     }
 
-    var modalContent = '<div class="modal-header">🧬 属性重铸 — ' + cfg.name + '</div>' +
-        '<div style="padding:4px 0 12px;font-size:12px;color:#8b949e;">模式：' + cfg.name + '｜' + (rolls.length > 1 ? '选择最满意的方案后点击应用' : '查看重铸结果，可选择应用或放弃') + '</div>' +
+    var modalContent = '<div class="modal-header">🧬 ' + T('reforgeTitle','monsters') + ' — ' + cfgLabel + '</div>' +
+        '<div style="padding:4px 0 12px;font-size:12px;color:#8b949e;">' + T('reforgeResult','monsters') + '：' + cfgLabel + '｜' + (rolls.length > 1 ? T('chooseBest','monsters') : T('reforgeConfirm','monsters')) + '</div>' +
         tabsHtml + pityInfo + compHtml +
         '<div class="modal-buttons" style="gap:8px;">' +
-        '<button class="btn btn-primary" onclick="applyReforge(' + activeIdx + ')" style="flex:2;">✅ 应用方案' + (rolls.length > 1 ? (activeIdx+1) : '') + '</button>' +
-        '<button class="btn btn-danger" onclick="cancelReforge()" style="flex:1;">❌ 放弃（不退费）</button>' +
+        '<button class="btn btn-primary" onclick="applyReforge(' + activeIdx + ')" style="flex:2;">✅ ' + T('reforgeApply','monsters') + (rolls.length > 1 ? ' ' + T('reforgeOption','monsters') + (activeIdx+1) : '') + '</button>' +
+        '<button class="btn btn-danger" onclick="cancelReforge()" style="flex:1;">❌ ' + T('reforgeCancel','monsters') + '</button>' +
         '</div>';
 
     showModal(modalContent);
@@ -487,7 +496,7 @@ window.applyReforge = function(rollIdx) {
         var d = (newStats[k]||0) - (oldStatsCopy[k]||0);
         return STAT_LABELS[k] + (d >= 0 ? '+' : '') + d;
     }).join(' ');
-    var notification = '🧬 ' + monster.name + ' 重铸完成！总属性 ' + oldTotal + ' → ' + newTotal + '（' + diffParts + '）';
+    var notification = '🧬 ' + monster.name + ' ' + T('reforge','monsters') + '! ' + oldTotal + ' → ' + newTotal + '（' + diffParts + '）';
     showNotification(notification, newTotal >= oldTotal ? 'success' : 'warning');
 
     _reforgeState.pendingRolls = [];
@@ -501,13 +510,63 @@ window.applyReforge = function(rollIdx) {
 window.cancelReforge = function() {
     _reforgeState.pendingRolls = [];
     closeModal();
-    showNotification('已放弃重铸，资源不予退还', 'warning');
+    showNotification(T('reforgeCancel','monsters'), 'warning');
     renderTech();
 };
 
+// ── i18n 辅助函数（重铸面板用）──
+function _reforgeIntroDesc() {
+    var lang = (typeof i18n !== 'undefined') ? i18n.currentLang : 'zh';
+    if (lang === 'en') return 'Reforge monster stats randomly by consuming resources, seeking better stat distributions. Three modes available with a pity system.';
+    if (lang === 'ja') return 'リソースを消費してモンスターのステータスをランダムに再鍛造します。3つのモードと保証システムを搭載。';
+    return '通过消耗资源随机重铸怪兽属性分配，追求更好的属性组合。<br>解锁三种重铸模式，搭配保底机制，让每次投入都有意义。';
+}
+function _reforgeSubtitle() {
+    var lang = (typeof i18n !== 'undefined') ? i18n.currentLang : 'zh';
+    if (lang === 'en') return 'Random Reforge · Pity System';
+    if (lang === 'ja') return 'ランダム再鍛造 · 保証システム';
+    return '随机重铸 · 保底机制';
+}
+function _pityTriggeredText() {
+    var lang = (typeof i18n !== 'undefined') ? i18n.currentLang : 'zh';
+    if (lang === 'en') return 'Pity triggered! Next reforge guarantees stat total ≥ personal best';
+    if (lang === 'ja') return '保証発動！次の再鍛造でステータス合計が過去最高以上を保証';
+    return '保底已触发！下次重铸保证属性总和 ≥ 历史最佳';
+}
+function _pityProgressText(count, remain) {
+    var lang = (typeof i18n !== 'undefined') ? i18n.currentLang : 'zh';
+    if (lang === 'en') return count + ' consecutive reforges without improvement, ' + remain + ' more until pity';
+    if (lang === 'ja') return '連続 ' + count + ' 回改善なし、あと ' + remain + ' 回で保証発動';
+    return '已连续 ' + count + ' 次未提升，再 ' + remain + ' 次触发保底';
+}
+function _reforgeGenLabel(rolls) {
+    var lang = (typeof i18n !== 'undefined') ? i18n.currentLang : 'zh';
+    if (lang === 'en') return 'Generate ' + rolls + ' Options';
+    if (lang === 'ja') return rolls + ' 案を生成';
+    return '生成 ' + rolls + ' 套方案';
+}
+function _getReforgeModeDesca() {
+    var lang = (typeof i18n !== 'undefined') ? i18n.currentLang : 'zh';
+    if (lang === 'en') return {
+        basic:    'Randomly reforges all stats. New total is within <strong>85%~120%</strong> of the original.',
+        advanced: 'Lock <strong>1 stat</strong> from reforging. Remaining stats are within <strong>90%~125%</strong> of original.',
+        perfect:  'Generate <strong>3 options</strong> at once, then pick the one you prefer. Range: <strong>95%~130%</strong>.'
+    };
+    if (lang === 'ja') return {
+        basic:    '全ステータスをランダムに再鍛造。新合計は元の<strong>85%～120%</strong>の範囲。',
+        advanced: '<strong>1項目</strong>を固定して再鍛造から除外。残りは<strong>90%～125%</strong>の範囲。',
+        perfect:  '<strong>3案</strong>を同時生成し、好みの案を選択。範囲は<strong>95%～130%</strong>。'
+    };
+    return {
+        basic:    '随机重铸所有属性，新总量在原总量 <strong>85%~120%</strong> 范围内随机分配。',
+        advanced: '可锁定 <strong>1个属性</strong> 不参与重铸，其余属性在原总量 <strong>90%~125%</strong> 范围内重铸。',
+        perfect:  '一次性生成 <strong>3套备选方案</strong>，从中选择最满意的一套应用，属性范围 <strong>95%~130%</strong>。'
+    };
+}
+
 // ── 旧接口兼容（已废弃，保留壳以防旧存档调用）──
 window.performBreakthrough = function() {
-    showNotification('属性突破已升级为"随机重铸"系统，请使用科技树底部的重铸面板', 'info');
+    showNotification(T('reforgeTitle','monsters'), 'info');
 };
 
 window.unlockTech = function(techId) {
@@ -518,12 +577,12 @@ window.unlockTech = function(techId) {
     var prereqMet = !tech.prereq || tech.prereq.length === 0 || tech.prereq.every(function(p) {
         return gameState.technologies[p];
     });
-    if (!prereqMet) { showNotification('前置科技未满足！', 'error'); return; }
+    if (!prereqMet) { showNotification(T('prereqNeeded','tech'), 'error'); return; }
 
     var canAfford = Object.keys(tech.cost).every(function(resource) {
         return gameState[resource] >= tech.cost[resource];
     });
-    if (!canAfford) { showNotification('资源不足！', 'error'); return; }
+    if (!canAfford) { showNotification(T('notEnough','tech'), 'error'); return; }
 
     // 扣除费用
     Object.keys(tech.cost).forEach(function(resource) {
@@ -566,7 +625,7 @@ window.unlockTech = function(techId) {
         gameState.maxMonstersCapacity = effects.maxMonsters;
     }
 
-    showNotification('✅ 解锁：' + tech.name + '！', 'success');
+    showNotification('✅ ' + T('unlock','tech') + '：' + (TName(techId,'tech') || tech.name) + '！', 'success');
     if (typeof briefTech === 'function') briefTech(tech.name);
     updateResources();
     renderTech();

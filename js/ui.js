@@ -32,12 +32,12 @@ function renderResourceCards() {
     if (!resourcesContainer) return;
     
     var resources = [
-        { key: 'coins', label: '金币', value: gameState.coins, icon: 'coin' },
-        { key: 'food', label: '食物', value: gameState.food, icon: 'food' },
-        { key: 'materials', label: '材料', value: gameState.materials, icon: 'material' },
-        { key: 'research', label: '研究点', value: gameState.research, icon: 'research' },
-        { key: 'energy', label: '能量', value: gameState.energy + '/' + gameState.maxEnergy, icon: 'energy' },
-        { key: 'land', label: '土地', value: gameState.plots.filter(function(p) { return !p.locked; }).length + '/' + gameState.plots.length, icon: 'land' }
+        { key: 'coins', label: T('coins', 'resources'), value: gameState.coins, icon: 'coin' },
+        { key: 'food', label: T('food', 'resources'), value: gameState.food, icon: 'food' },
+        { key: 'materials', label: T('materials', 'resources'), value: gameState.materials, icon: 'material' },
+        { key: 'research', label: T('research', 'resources'), value: gameState.research, icon: 'research' },
+        { key: 'energy', label: T('energy', 'resources'), value: gameState.energy + '/' + gameState.maxEnergy, icon: 'energy' },
+        { key: 'land', label: T('land', 'resources'), value: gameState.plots.filter(function(p) { return !p.locked; }).length + '/' + gameState.plots.length, icon: 'land' }
     ];
     
     resourcesContainer.innerHTML = resources.map(function(res) {
@@ -186,7 +186,7 @@ function renderSidebarMonsters() {
     if (!sidebarMonstersEl) return;
     
     if (gameState.monsters.length === 0) {
-        sidebarMonstersEl.innerHTML = '<div style="text-align: center; padding: 20px; color: #8b949e; font-size: 12px;">暂无怪兽</div>';
+        sidebarMonstersEl.innerHTML = '<div style="text-align: center; padding: 20px; color: #8b949e; font-size: 12px;">' + T('noMonsters', 'ui') + '</div>';
         return;
     }
     
@@ -208,7 +208,7 @@ function renderSidebarMonsters() {
                 <div class="sidebar-monster-info">
                     <div class="sidebar-monster-name">${monster.name}</div>
                     <div class="sidebar-monster-status">
-                        ${isWorking ? statusText : 'Lv.' + monster.level + ' · 空闲中'}
+                        ${isWorking ? statusText : 'Lv.' + monster.level + ' · ' + T('idle', 'monsterStatus')}
                     </div>
                 </div>
             </div>
@@ -220,7 +220,7 @@ function renderSidebarMonsters() {
         sidebarMonstersEl.innerHTML += `
             <div style="text-align: center; padding: 10px; color: #8b949e; font-size: 11px; 
                         border-top: 1px solid #30363d; margin-top: 8px;">
-                还有 ${gameState.monsters.length - 6} 只怪兽...
+                ${T('moreMonsters','ui').replace('{n}', gameState.monsters.length - 6)}
             </div>
         `;
     }
@@ -237,7 +237,7 @@ window.renderFarm = function() {
                 <div class="plot locked" id="plot-${plot.id}" data-plot-id="${plot.id}" onclick="unlockPlot(${plot.id})">
                     ${createSVG('lock', 48)}
                     <div class="plot-text">
-                        解锁需要:<br>
+                        ${T('unlockNeeds','farm')}<br>
                         <span style="display: inline-block; vertical-align: middle; margin-right: 3px;">${createSVG('coin', 12)}</span>${plot.unlockCost.coins}<br>
                         <span style="display: inline-block; vertical-align: middle; margin-right: 3px;">${createSVG('material', 12)}</span>${plot.unlockCost.materials}
                     </div>
@@ -281,7 +281,7 @@ window.renderFarm = function() {
             <div class="plot" id="plot-${plot.id}" data-plot-id="${plot.id}"
                  onclick="handlePlotClick(${plot.id})"
                  style="position:relative;">
-                ${emptyMonster ? `<div style="position:absolute;top:4px;right:4px;background:#1a3a2a;border:1px solid #46d164;border-radius:12px;padding:2px 6px;font-size:12px;display:flex;align-items:center;gap:3px;">${createSVG(emptyMonster.type, 14)}<span style="color:#46d164;">待命</span></div>` : ''}
+                ${emptyMonster ? `<div style="position:absolute;top:4px;right:4px;background:#1a3a2a;border:1px solid #46d164;border-radius:12px;padding:2px 6px;font-size:12px;display:flex;align-items:center;gap:3px;">${createSVG(emptyMonster.type, 14)}<span style="color:#46d164;">${T('preparing','monsterStatus')}</span></div>` : ''}
                 ${createSVG('add', 40)}
                 <div class="plot-text">${emptyMonster ? '点击设置作物' : '点击种植'}</div>
             </div>
@@ -585,7 +585,7 @@ window.showMonsterDetailModal = function(monsterId) {
                     <div><strong>等级：</strong> ${monster.level}</div>
                     <div><strong>世代：</strong> ${monster.generation}</div>
                     <div><strong>经验：</strong> ${monster.exp}/${monster.maxExp}</div>
-                    <div><strong>状态：</strong> <span class="${isWorking ? 'status-working' : 'status-idle'}">${isWorking ? statusText : '空闲中'}</span></div>
+                    <div><strong>状态：</strong> <span class="${isWorking ? 'status-working' : 'status-idle'}">${isWorking ? statusText : T('idle','monsterStatus')}</span></div>
                 </div>
             </div>
             
@@ -652,16 +652,9 @@ window.showMonsterDetailModal = function(monsterId) {
     showModal(modalContent);
 };
 
-// 获取怪兽状态文本
+// 获取怪兽状态文本（已接入 i18n）
 window.getStatusText = function(status) {
-    var statusMap = {
-        'idle': '空闲中',
-        'farming': '耕作中',
-        'exploring': '探索中',
-        'preparing': '准备中',
-        'working': '工作中'
-    };
-    return statusMap[status] || '未知状态';
+    return T(status, 'monsterStatus') || T('unknown', 'common');
 };
 
 // 快速操作：派遣怪兽去耕作
@@ -978,11 +971,11 @@ window.renderMonsterSidebar = function() {
     }
 
     var statusLabels = {
-        'idle': ['空闲', 'msb-status-idle'],
-        'farming': ['耕作中', 'msb-status-farming'],
-        'exploring': ['探索中', 'msb-status-exploring'],
-        'preparing': ['待命', 'msb-status-exploring'],
-        'breeding': ['繁殖中', 'msb-status-breeding']
+        'idle':      [T('idle','monsterStatus'),      'msb-status-idle'],
+        'farming':   [T('farming','monsterStatus'),   'msb-status-farming'],
+        'exploring': [T('exploring','monsterStatus'), 'msb-status-exploring'],
+        'preparing': [T('preparing','monsterStatus'), 'msb-status-exploring'],
+        'breeding':  [T('breeding','monsterStatus'),  'msb-status-breeding']
     };
 
     listEl.innerHTML = gameState.monsters.map(function(monster) {
@@ -1039,9 +1032,9 @@ window.renderMonsterSidebar = function() {
         var exploring = gameState.monsters.filter(function(m) { return m.status === 'exploring' || m.status === 'preparing'; }).length;
         statsHtml = '<div style="display:flex;justify-content:space-between;">' +
             '<span>共 <strong style="color:#e6edf3;">' + total + '</strong> 只</span>' +
-            '<span style="color:#46d164;">耕作 ' + farming + '</span>' +
-            '<span style="color:#f0c53d;">探索 ' + exploring + '</span>' +
-            '<span style="color:#8b949e;">空闲 ' + idle + '</span>' +
+            '<span style="color:#46d164;">' + T('farming','monsterStatus') + ' ' + farming + '</span>' +
+            '<span style="color:#f0c53d;">' + T('exploring','monsterStatus') + ' ' + exploring + '</span>' +
+            '<span style="color:#8b949e;">' + T('idle','monsterStatus') + ' ' + idle + '</span>' +
             '</div>';
     }
     if (footerEl) footerEl.innerHTML = statsHtml;
@@ -1091,7 +1084,12 @@ window.showMobileMonsterPanel = function() {
     } else {
         html += '<div style="max-height:60vh;overflow-y:auto;">';
         gameState.monsters.forEach(function(monster) {
-            var statusMap = { idle: '空闲', farming: '耕作中', exploring: '探索中', preparing: '待命' };
+            var statusMap = {
+                idle: T('idle','monsterStatus'),
+                farming: T('farming','monsterStatus'),
+                exploring: T('exploring','monsterStatus'),
+                preparing: T('preparing','monsterStatus')
+            };
             var statusColor = { idle: '#8b949e', farming: '#46d164', exploring: '#f0c53d', preparing: '#f0c53d' };
             var st = monster.status || 'idle';
             html += '<div style="background:#21262d;border:1px solid #30363d;border-radius:10px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;" onclick="closeModal();showMonsterDetailModal(' + monster.id + ');">' +

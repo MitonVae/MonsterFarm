@@ -33,20 +33,20 @@
     // ========== 鉴权弹窗 ==========
     function _renderAuthDialog() {
         var html =
-            '<div class="modal-header" style="color:#f85149;">🔒 开发者验证</div>' +
+            '<div class="modal-header" style="color:#f85149;">' + T('authTitle','gm') + '</div>' +
             '<div style="margin-bottom:16px;font-size:13px;color:#8b949e;line-height:1.7;">' +
-                '此面板为开发者 GM 工具，请输入开发者验证密码以继续。' +
+                T('authDesc','gm') +
             '</div>' +
             '<div style="margin-bottom:16px;">' +
-                '<input id="gmPwdInput" type="password" placeholder="输入验证密码…" ' +
+                '<input id="gmPwdInput" type="password" placeholder="' + T('authPlaceholder','gm') + '" ' +
                     'style="width:100%;box-sizing:border-box;padding:9px 12px;background:#0d1117;' +
                     'border:1px solid #30363d;border-radius:6px;color:#e6edf3;font-size:14px;" ' +
                     'onkeydown="if(event.key===\'Enter\')window._gmVerify()" />' +
-                '<div id="gmPwdErr" style="color:#f85149;font-size:12px;margin-top:6px;display:none;">密码错误，请重试。</div>' +
+                '<div id="gmPwdErr" style="color:#f85149;font-size:12px;margin-top:6px;display:none;">' + T('authWrongPwd','gm') + '</div>' +
             '</div>' +
             '<div class="modal-buttons">' +
-                '<button class="btn btn-primary" onclick="window._gmVerify()">验证</button>' +
-                '<button class="btn btn-secondary" onclick="closeModal()">取消</button>' +
+                '<button class="btn btn-primary" onclick="window._gmVerify()">' + T('authVerify','gm') + '</button>' +
+                '<button class="btn btn-secondary" onclick="closeModal()">' + T('cancel','common') + '</button>' +
             '</div>';
         showModal(html);
         setTimeout(function() {
@@ -99,63 +99,63 @@
 
         var html =
             // ── 标题 ──
-            '<div class="modal-header" style="color:#f0c53d;">⚙️ GM 开发者面板</div>' +
+            '<div class="modal-header" style="color:#f0c53d;">' + T('panelTitle','gm') + '</div>' +
             '<div style="max-height:72vh;overflow-y:auto;padding-right:4px;">' +
 
             // ── 区块：资源补充 ──
-            _section('💰 资源补充',
+            _section(T('secResources','gm'),
                 '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
-                    _resBtn('金币',    'coins',     [500,2000,10000]) +
-                    _resBtn('食物',    'food',      [100,500,2000]) +
-                    _resBtn('材料',    'materials', [100,500,2000]) +
-                    _resBtn('研究点',  'research',  [50,200,500]) +
-                    _resBtn('能量',    'energy',    [50,100,'full']) +
+                    _resBtn(T('resCoins','gm'),     'coins',     [500,2000,10000]) +
+                    _resBtn(T('resFood','gm'),       'food',      [100,500,2000]) +
+                    _resBtn(T('resMaterials','gm'),  'materials', [100,500,2000]) +
+                    _resBtn(T('resResearch','gm'),   'research',  [50,200,500]) +
+                    _resBtn(T('resEnergy','gm'),     'energy',    [50,100,'full']) +
                 '</div>'
             ) +
 
             // ── 区块：时间加速 ──
-            _section('⏩ 时间流速',
-                '<div style="font-size:12px;color:#8b949e;margin-bottom:8px;">当前倍速：<strong style="color:#f0c53d;">×' + curSpeed + '</strong>　（影响所有 setInterval 游戏循环）</div>' +
+            _section(T('secSpeed','gm'),
+                '<div style="font-size:12px;color:#8b949e;margin-bottom:8px;">' + T('speedCurrent','gm') + '<strong style="color:#f0c53d;">×' + curSpeed + '</strong>　' + T('speedDesc','gm') + '</div>' +
                 '<div style="display:flex;gap:6px;">' + speedBtns + '</div>' +
                 '<div style="margin-top:10px;display:flex;gap:8px;">' +
                     '<button class="btn btn-warning" style="flex:1;font-size:12px;" ' +
-                        'onclick="window._gmTick(1);window.openGMPanel();">⚡ 触发1次游戏循环</button>' +
+                        'onclick="window._gmTick(1);window.openGMPanel();">' + T('speedTick1','gm') + '</button>' +
                     '<button class="btn btn-warning" style="flex:1;font-size:12px;" ' +
-                        'onclick="window._gmTick(10);window.openGMPanel();">⚡×10 触发10次循环</button>' +
+                        'onclick="window._gmTick(10);window.openGMPanel();">' + T('speedTick10','gm') + '</button>' +
                 '</div>'
             ) +
 
             // ── 区块：获得怪兽 ──
-            _section('👾 获得怪兽',
+            _section(T('secMonster','gm'),
                 '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">' +
                     '<div>' +
-                        '<label style="font-size:12px;color:#8b949e;">怪兽类型</label>' +
+                        '<label style="font-size:12px;color:#8b949e;">' + T('monsterType','gm') + '</label>' +
                         '<select id="gmMonsterType" style="width:100%;margin-top:4px;padding:7px 8px;' +
                             'background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3;font-size:13px;">' +
                             typeOpts +
                         '</select>' +
                     '</div>' +
                     '<div>' +
-                        '<label style="font-size:12px;color:#8b949e;">等级</label>' +
+                        '<label style="font-size:12px;color:#8b949e;">' + T('monsterLevel','gm') + '</label>' +
                         '<input id="gmMonsterLevel" type="number" min="1" max="50" value="1" ' +
                             'style="width:100%;box-sizing:border-box;margin-top:4px;padding:7px 8px;' +
                             'background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3;font-size:13px;">' +
                     '</div>' +
                 '</div>' +
                 '<div style="margin-bottom:8px;">' +
-                    '<label style="font-size:12px;color:#8b949e;">自定义名称（留空则随机）</label>' +
-                    '<input id="gmMonsterName" type="text" placeholder="怪兽名称…" ' +
+                    '<label style="font-size:12px;color:#8b949e;">' + T('monsterName','gm') + '</label>' +
+                    '<input id="gmMonsterName" type="text" placeholder="' + T('monsterNamePH','gm') + '" ' +
                         'style="width:100%;box-sizing:border-box;margin-top:4px;padding:7px 8px;' +
                         'background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3;font-size:13px;">' +
                 '</div>' +
                 '<div style="display:flex;gap:8px;">' +
-                    '<button class="btn btn-primary" style="flex:1;font-size:13px;" onclick="window._gmAddMonster();">✅ 添加怪兽</button>' +
-                    '<button class="btn btn-warning" style="flex:1;font-size:13px;" onclick="window._gmAddAllMonsters();">⭐ 各类型各一只</button>' +
+                    '<button class="btn btn-primary" style="flex:1;font-size:13px;" onclick="window._gmAddMonster();">' + T('btnAddMonster','gm') + '</button>' +
+                    '<button class="btn btn-warning" style="flex:1;font-size:13px;" onclick="window._gmAddAllMonsters();">' + T('btnAddAllMonsters','gm') + '</button>' +
                 '</div>'
             ) +
 
             // ── 区块：科技解锁 ──
-            _section('🔬 科技管理',
+            _section(T('secTech','gm'),
                 '<div style="margin-bottom:8px;">' +
                     '<select id="gmTechKey" style="width:100%;padding:7px 8px;' +
                         'background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3;font-size:13px;">' +
@@ -163,13 +163,13 @@
                     '</select>' +
                 '</div>' +
                 '<div style="display:flex;gap:8px;">' +
-                    '<button class="btn btn-primary" style="flex:1;font-size:13px;" onclick="window._gmUnlockTech()">🔓 解锁选中科技</button>' +
-                    '<button class="btn btn-warning" style="flex:1;font-size:13px;" onclick="window._gmUnlockAllTech()">⭐ 解锁全部科技</button>' +
+                    '<button class="btn btn-primary" style="flex:1;font-size:13px;" onclick="window._gmUnlockTech()">' + T('btnUnlockTech','gm') + '</button>' +
+                    '<button class="btn btn-warning" style="flex:1;font-size:13px;" onclick="window._gmUnlockAllTech()">' + T('btnUnlockAllTech','gm') + '</button>' +
                 '</div>'
             ) +
 
             // ── 区块：探索区域解锁 ──
-            _section('🗺 探索区域管理',
+            _section(T('secZone','gm'),
                 '<div style="margin-bottom:8px;">' +
                     '<select id="gmZoneKey" style="width:100%;padding:7px 8px;' +
                         'background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3;font-size:13px;">' +
@@ -177,64 +177,64 @@
                     '</select>' +
                 '</div>' +
                 '<div style="display:flex;gap:8px;">' +
-                    '<button class="btn btn-primary" style="flex:1;font-size:13px;" onclick="window._gmUnlockZone()">🔓 解锁选中区域</button>' +
-                    '<button class="btn btn-warning" style="flex:1;font-size:13px;" onclick="window._gmUnlockAllZones()">⭐ 解锁全部区域</button>' +
+                    '<button class="btn btn-primary" style="flex:1;font-size:13px;" onclick="window._gmUnlockZone()">' + T('btnUnlockZone','gm') + '</button>' +
+                    '<button class="btn btn-warning" style="flex:1;font-size:13px;" onclick="window._gmUnlockAllZones()">' + T('btnUnlockAllZones','gm') + '</button>' +
                 '</div>'
             ) +
 
             // ── 区块：农场管理 ──
-            _section('🌾 农场管理',
+            _section(T('secFarm','gm'),
                 '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
                     '<button class="btn btn-primary" style="flex:1;min-width:120px;font-size:12px;" ' +
-                        'onclick="window._gmUnlockAllPlots()">🔓 解锁全部地块</button>' +
+                        'onclick="window._gmUnlockAllPlots()">' + T('btnUnlockAllPlots','gm') + '</button>' +
                     '<button class="btn btn-primary" style="flex:1;min-width:120px;font-size:12px;" ' +
-                        'onclick="window._gmHarvestAll()">🌟 立即收获所有作物</button>' +
+                        'onclick="window._gmHarvestAll()">' + T('btnHarvestAll','gm') + '</button>' +
                     '<button class="btn btn-warning" style="flex:1;min-width:120px;font-size:12px;" ' +
-                        'onclick="window._gmClearAllPlots()">🧹 清空全部地块</button>' +
+                        'onclick="window._gmClearAllPlots()">' + T('btnClearAllPlots','gm') + '</button>' +
                 '</div>'
             ) +
 
             // ── 区块：统计数据作弊 ──
-            _section('📊 统计数据',
+            _section(T('secStats','gm'),
                 '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
                     '<button class="btn btn-secondary" style="font-size:12px;" ' +
-                        'onclick="gameState.totalExplorations=30;showNotification(\'探索次数→30\',\'success\');window.openGMPanel();">探索次数→30</button>' +
+                        'onclick="gameState.totalExplorations=30;showNotification(T(\'btnExplore30\',\'gm\'),\'success\');window.openGMPanel();">' + T('btnExplore30','gm') + '</button>' +
                     '<button class="btn btn-secondary" style="font-size:12px;" ' +
-                        'onclick="gameState.totalHarvests=50;showNotification(\'收获次数→50\',\'success\');window.openGMPanel();">收获次数→50</button>' +
+                        'onclick="gameState.totalHarvests=50;showNotification(T(\'btnHarvest50\',\'gm\'),\'success\');window.openGMPanel();">' + T('btnHarvest50','gm') + '</button>' +
                     '<button class="btn btn-secondary" style="font-size:12px;" ' +
-                        'onclick="gameState.monstersBreed=10;showNotification(\'繁殖次数→10\',\'success\');window.openGMPanel();">繁殖次数→10</button>' +
+                        'onclick="gameState.monstersBreed=10;showNotification(T(\'btnBreed10\',\'gm\'),\'success\');window.openGMPanel();">' + T('btnBreed10','gm') + '</button>' +
                     '<button class="btn btn-danger" style="font-size:12px;" ' +
-                        'onclick="window._gmResetStats()">🔄 重置全部统计</button>' +
+                        'onclick="window._gmResetStats()">' + T('btnResetStats','gm') + '</button>' +
                 '</div>'
             ) +
 
             // ── 区块：存档管理 ──
-            _section('💾 存档管理',
+            _section(T('secSave','gm'),
                 '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
                     '<button class="btn btn-primary" style="flex:1;min-width:120px;font-size:12px;" ' +
-                        'onclick="quickSave();showNotification(\'已手动存档\',\'success\');">💾 立即存档</button>' +
+                        'onclick="quickSave();showNotification(T(\'ntfSaved\',\'gm\'),\'success\');">' + T('btnSaveNow','gm') + '</button>' +
                     '<button class="btn btn-warning" style="flex:1;min-width:120px;font-size:12px;" ' +
-                        'onclick="window._gmExportSave()">📤 导出存档</button>' +
+                        'onclick="window._gmExportSave()">' + T('btnExportSave','gm') + '</button>' +
                     '<button class="btn btn-danger" style="flex:1;min-width:120px;font-size:12px;" ' +
-                        'onclick="window._gmConfirmReset()">💣 重置游戏</button>' +
+                        'onclick="window._gmConfirmReset()">' + T('btnResetGame','gm') + '</button>' +
                 '</div>'
             ) +
 
             // ── 区块：游戏状态快照 ──
-            _section('🔍 当前状态快照',
+            _section(T('secSnapshot','gm'),
                 '<div id="gmSnapshot" style="font-size:12px;color:#8b949e;background:#0d1117;' +
                     'border:1px solid #21262d;border-radius:6px;padding:10px;line-height:2;' +
                     'font-family:monospace;max-height:140px;overflow-y:auto;">' +
                     _buildSnapshot() +
                 '</div>' +
                 '<button class="btn btn-secondary" style="width:100%;margin-top:8px;font-size:12px;" ' +
-                    'onclick="document.getElementById(\'gmSnapshot\').innerHTML=window._gmSnapshot();">🔄 刷新快照</button>'
+                    'onclick="document.getElementById(\'gmSnapshot\').innerHTML=window._gmSnapshot();">' + T('btnRefreshSnapshot','gm') + '</button>'
             ) +
 
             '</div>' + // end scroll container
 
             '<div class="modal-buttons" style="margin-top:12px;">' +
-                '<button class="btn btn-secondary" onclick="closeModal()">关闭</button>' +
+                '<button class="btn btn-secondary" onclick="closeModal()">' + T('close','gm') + '</button>' +
             '</div>';
 
         showModal(html);
@@ -253,7 +253,7 @@
     // ========== 辅助：资源按钮组 ==========
     function _resBtn(label, key, amounts) {
         var btns = amounts.map(function(amt) {
-            var display = amt === 'full' ? '满' : '+' + amt;
+            var display = amt === 'full' ? T('resFull','gm') : '+' + amt;
             var call = amt === 'full'
                 ? 'gameState.' + key + '=gameState.max' + key.charAt(0).toUpperCase() + key.slice(1) + '||gameState.' + key + ';'
                 : 'gameState.' + key + '+=' + amt + ';';
@@ -281,16 +281,16 @@
         var techCount = Object.keys(gameState.technologies).filter(function(k){return gameState.technologies[k];}).length;
         var totalTech = Object.keys(technologies).length;
         return [
-            '<span style="color:#58a6ff;">金币</span>: ' + gameState.coins,
-            '<span style="color:#46d164;">食物</span>: ' + gameState.food,
-            '<span style="color:#c9d1d9;">材料</span>: ' + gameState.materials,
-            '<span style="color:#58a6ff;">研究</span>: ' + gameState.research,
-            '<span style="color:#46d164;">能量</span>: ' + gameState.energy + '/' + gameState.maxEnergy,
-            '<span style="color:#f0c53d;">怪兽</span>: ' + m + '只 (空闲:' + idle + ' 耕作:' + farming + ')',
-            '<span style="color:#f0c53d;">地块</span>: ' + unlocked + '/' + gameState.plots.length + ' 已解锁',
-            '<span style="color:#bc8cff;">科技</span>: ' + techCount + '/' + totalTech + ' 已研究',
-            '<span style="color:#8b949e;">探索次数</span>: ' + gameState.totalExplorations,
-            '<span style="color:#8b949e;">倍速</span>: ×' + _speedMultiplier
+            '<span style="color:#58a6ff;">' + T('resCoins','gm') + '</span>: ' + gameState.coins,
+            '<span style="color:#46d164;">' + T('resFood','gm') + '</span>: ' + gameState.food,
+            '<span style="color:#c9d1d9;">' + T('resMaterials','gm') + '</span>: ' + gameState.materials,
+            '<span style="color:#58a6ff;">' + T('resResearch','gm') + '</span>: ' + gameState.research,
+            '<span style="color:#46d164;">' + T('resEnergy','gm') + '</span>: ' + gameState.energy + '/' + gameState.maxEnergy,
+            '<span style="color:#f0c53d;">' + T('snapshotMonsters','gm') + '</span>: ' + m + T('snapshotUnit','gm') + ' (' + T('snapshotIdle','gm') + ':' + idle + ' ' + T('snapshotFarming','gm') + ':' + farming + ')',
+            '<span style="color:#f0c53d;">' + T('snapshotPlots','gm') + '</span>: ' + unlocked + '/' + gameState.plots.length + ' ' + T('snapshotUnlocked','gm'),
+            '<span style="color:#bc8cff;">' + T('secTech','gm') + '</span>: ' + techCount + '/' + totalTech + ' ' + T('snapshotResearched','gm'),
+            '<span style="color:#8b949e;">' + T('snapshotExplore','gm') + '</span>: ' + gameState.totalExplorations,
+            '<span style="color:#8b949e;">' + T('snapshotSpeed','gm') + '</span>: ×' + _speedMultiplier
         ].join('<br>');
     }
     window._gmSnapshot = _genSnapshot;
@@ -300,8 +300,7 @@
     // ── 时间加速 ──
     window._gmSetSpeed = function(mult) {
         _speedMultiplier = mult;
-        // 通知并刷新
-        showNotification('⏩ 时间倍速已设为 ×' + mult, 'info');
+        showNotification(T('ntfSpeedSet','gm').replace('{x}', mult), 'info');
         // 将倍速持久化到 sessionStorage
         try { sessionStorage.setItem(GM_SPEED_KEY, String(mult)); } catch(e) {}
         // 应用加速（通过修改游戏主循环间隔）
@@ -337,7 +336,7 @@
         for (var i = 0; i < n; i++) {
             _triggerGameTick();
         }
-        showNotification('⚡ 已触发 ' + n + ' 次游戏循环', 'info');
+        showNotification(T('ntfTickDone','gm').replace('{n}', n), 'info');
     };
 
     // ── 触发一次游戏循环（综合所有子系统）──
@@ -393,7 +392,7 @@
                 var prevFood = gameState.food;
                 gameState.food = Math.max(0, gameState.food - Math.ceil(busyCount * 0.5));
                 if (prevFood > 0 && gameState.food === 0) {
-                    showNotification('⚠️ 食物已耗尽！怪兽效率下降50%！', 'warning');
+                    showNotification(T('ntfFoodOut','common'), 'warning');
                 }
             }
             // 金币维护费
@@ -402,7 +401,7 @@
                 var prevCoins = gameState.coins;
                 gameState.coins = Math.max(0, gameState.coins - maintenanceCost);
                 if (prevCoins > 0 && gameState.coins === 0) {
-                    showNotification('⚠️ 金币耗尽！怪兽维护费无法支付！', 'warning');
+                    showNotification(T('ntfCoinsOut','common'), 'warning');
                 }
             }
         }
@@ -422,7 +421,7 @@
         Object.keys(monsterTypes).forEach(function(k) {
             _spawnMonster(k, 1, null);
         });
-        showNotification('✅ 已添加全部 ' + Object.keys(monsterTypes).length + ' 种怪兽', 'success');
+        showNotification(T('ntfAddAllMonsters','gm').replace('{count}', Object.keys(monsterTypes).length), 'success');
         if (typeof renderMonsterSidebar === 'function') renderMonsterSidebar();
         window.openGMPanel();
     };
@@ -475,7 +474,7 @@
 
         gameState.monsters.push(monster);
         if (typeof renderMonsterSidebar === 'function') renderMonsterSidebar();
-        showNotification('✅ 已添加 ' + typeData.name + '「' + name + '」Lv.' + level, 'success');
+        showNotification(T('ntfAddMonster','gm').replace('{type}',typeData.name).replace('{name}',name).replace('{lv}',level), 'success');
         window.openGMPanel();
     }
 
@@ -496,14 +495,14 @@
         if (!key) return;
         gameState.technologies[key] = true;
         if (typeof renderTech === 'function') renderTech();
-        showNotification('🔓 科技「' + (technologies[key] ? technologies[key].name : key) + '」已解锁', 'success');
+        showNotification(T('ntfUnlockTech','gm').replace('{name}', technologies[key] ? technologies[key].name : key), 'success');
         setTimeout(function() { window.openGMPanel(); }, 300);
     };
 
     window._gmUnlockAllTech = function() {
         Object.keys(technologies).forEach(function(k) { gameState.technologies[k] = true; });
         if (typeof renderTech === 'function') renderTech();
-        showNotification('⭐ 全部科技已解锁', 'success');
+        showNotification(T('ntfUnlockAllTech','gm'), 'success');
         setTimeout(function() { window.openGMPanel(); }, 300);
     };
 
@@ -517,7 +516,7 @@
         gameState.purchasedZones[zoneId] = true;
         var zone = explorationZones.find(function(z) { return z.id === zoneId; });
         if (typeof renderExploration === 'function') renderExploration();
-        showNotification('🔓 区域「' + (zone ? zone.name : zoneId) + '」已解锁', 'success');
+        showNotification(T('ntfUnlockZone','gm').replace('{name}', zone ? zone.name : zoneId), 'success');
         setTimeout(function() { window.openGMPanel(); }, 300);
     };
 
@@ -528,7 +527,7 @@
             gameState.purchasedZones[z.id] = true;
         });
         if (typeof renderExploration === 'function') renderExploration();
-        showNotification('⭐ 全部探索区域已解锁', 'success');
+        showNotification(T('ntfUnlockAllZones','gm'), 'success');
         setTimeout(function() { window.openGMPanel(); }, 300);
     };
 
@@ -536,7 +535,7 @@
     window._gmUnlockAllPlots = function() {
         gameState.plots.forEach(function(p) { p.locked = false; });
         if (typeof renderFarm === 'function') renderFarm();
-        showNotification('🔓 全部地块已解锁', 'success');
+        showNotification(T('ntfUnlockAllPlots','gm'), 'success');
         setTimeout(function() { window.openGMPanel(); }, 300);
     };
 
@@ -572,7 +571,7 @@
             }
         });
         if (typeof renderFarm === 'function') renderFarm();
-        showNotification('🌟 已催熟 ' + ripened + ' 块，收获 ' + harvested + ' 块作物', 'success');
+        showNotification(T('ntfHarvestAll','gm').replace('{r}',ripened).replace('{h}',harvested), 'success');
         setTimeout(function() { window.openGMPanel(); }, 300);
     };
 
@@ -589,7 +588,7 @@
         });
         if (typeof renderFarm === 'function') renderFarm();
         if (typeof renderMonsterSidebar === 'function') renderMonsterSidebar();
-        showNotification('🧹 全部地块已清空', 'success');
+        showNotification(T('ntfClearAllPlots','gm'), 'success');
         setTimeout(function() { window.openGMPanel(); }, 300);
     };
 
@@ -598,7 +597,7 @@
         gameState.totalHarvests    = 0;
         gameState.totalExplorations = 0;
         gameState.monstersBreed    = 0;
-        showNotification('🔄 统计数据已重置', 'info');
+        showNotification(T('ntfResetStats','gm'), 'info');
         window.openGMPanel();
     };
 
@@ -614,27 +613,23 @@
             document.body.appendChild(a);
             a.click();
             setTimeout(function() { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
-            showNotification('📤 存档已导出', 'success');
+            showNotification(T('ntfExported','gm'), 'success');
         } catch(e) {
-            showNotification('导出失败: ' + e.message, 'error');
+            showNotification(T('ntfExportFail','gm').replace('{err}', e.message), 'error');
         }
     };
 
     // ── 重置游戏 ──
     window._gmConfirmReset = function() {
         var html =
-            '<div class="modal-header" style="color:#f85149;">⚠️ 确认重置游戏</div>' +
+            '<div class="modal-header" style="color:#f85149;">' + T('resetTitle','gm') + '</div>' +
             '<div style="margin-bottom:16px;font-size:14px;line-height:1.8;color:#e6edf3;">' +
-                '这将 <strong style="color:#f85149;">清除所有存档数据</strong>，包括：<br>' +
-                '• 所有资源、怪兽、科技<br>' +
-                '• 探索进度和农场地块<br>' +
-                '• 所有统计数据<br><br>' +
-                '<strong style="color:#f0c53d;">此操作不可撤销！</strong>' +
+                T('resetDesc','gm') +
             '</div>' +
             '<div class="modal-buttons">' +
                 '<button class="btn btn-danger" onclick="try{localStorage.removeItem(\'monsterFarmSave\');}catch(e){}' +
-                    'try{sessionStorage.clear();}catch(e){}location.reload();">💣 确认重置</button>' +
-                '<button class="btn btn-secondary" onclick="window.openGMPanel()">取消</button>' +
+                    'try{sessionStorage.clear();}catch(e){}location.reload();">' + T('resetConfirm','gm') + '</button>' +
+                '<button class="btn btn-secondary" onclick="window.openGMPanel()">' + T('cancel','common') + '</button>' +
             '</div>';
         showModal(html);
     };
@@ -661,7 +656,7 @@
         _gmBadgeInjected = true;
         var badge = document.createElement('div');
         badge.id = 'gmCornerBadge';
-        badge.title = 'GM面板 (Ctrl+Shift+G)';
+        badge.title = T('badgeTitle','gm');
         badge.onclick = function() { window.openGMPanel(); };
         badge.style.cssText =
             'position:fixed;bottom:72px;left:8px;z-index:9000;' +
