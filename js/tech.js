@@ -43,7 +43,7 @@ function _renderTechCard(techId) {
         }
     }
 
-    return '<div class="tech-item ' + (unlocked ? 'unlocked' : 'locked') + '" style="' +
+    return '<div class="tech-item ' + (unlocked ? 'unlocked' : (canUnlock ? 'locked can-unlock' : 'locked')) + '" style="' +
         'break-inside:avoid;' +
         'border-left:3px solid ' + tierColor + ';opacity:' + (!prereqMet && !unlocked ? '0.55' : '1') + ';">' +
         '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;gap:4px;flex-wrap:wrap;">' +
@@ -102,7 +102,7 @@ function _renderTechCompactRow(techId) {
         }
     }
 
-    return '<div class="compact-card' + (unlocked ? ' auto-running' : '') + '" style="' +
+    return '<div class="compact-card' + (unlocked ? ' auto-running' : (canUnlock ? ' can-unlock-row' : '')) + '" style="' +
         'border-left:3px solid ' + tierColor + ';' +
         'opacity:' + (!prereqMet && !unlocked ? '0.5' : '1') + ';' +
         'cursor:' + (canUnlock ? 'pointer' : 'default') + ';"' +

@@ -471,9 +471,17 @@ window.renderExploration = function() {
                     return '<div class="expl-cond ' + (met ? 'met' : '') + '">' + (met ? '✅' : '🔒') + ' ' + _condLabel(c) + '</div>';
                 }).join('');
             } else if (cond.type === 'purchase') {
-                condHtml = '<div class="expl-cond">💰 ' + _condLabel(cond) + '</div>' +
-                    '<button class="btn btn-warning expl-purchase-btn" onclick="purchaseZonePass(\'' + zone.id + '\')">' +
-                    '花费 ' + cond.value + ' 金币解锁</button>';
+                var canBuy = gameState.coins >= cond.value;
+                var shortage = cond.value - gameState.coins;
+                condHtml = '<div class="expl-cond ' + (canBuy ? 'met' : '') + '">' +
+                    (canBuy ? '✅' : '💰') + ' ' + _condLabel(cond) +
+                    (!canBuy ? ' <span style="color:#f85149;font-size:11px;">（差 ' + shortage + '）</span>' : '') +
+                    '</div>' +
+                    '<button class="btn ' + (canBuy ? 'btn-warning' : 'btn-secondary') + ' expl-purchase-btn"' +
+                    (canBuy ? '' : ' disabled style="opacity:0.5;cursor:not-allowed;"') +
+                    ' onclick="purchaseZonePass(\'' + zone.id + '\')">' +
+                    (canBuy ? '✅ 花费 ' + cond.value + ' 金币解锁' : '💰 需 ' + cond.value + ' 金币') +
+                    '</button>';
             } else {
                 var met = checkZoneCondition(zone);
                 condHtml = '<div class="expl-cond ' + (met ? 'met' : '') + '">' + (met ? '✅' : '🔒') + ' ' + _condLabel(cond) + '</div>';
