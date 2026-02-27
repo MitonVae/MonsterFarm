@@ -163,10 +163,24 @@ var tutorialSteps = [
         id: 'go_farm',
         get title()   { return T('step5_title',   'tutorial'); },
         get content() { return T('step5_content', 'tutorial'); },
-        focusSelector: null,
-        allowInteract: false,
+        // 高亮农场Tab按钮（PC顶部tab或移动端底部导航）
+        get focusSelector() {
+            return _tutGetSelector(
+                '.tab[onclick*="farm"]',
+                '.bottom-nav-item[data-tab="farm"]'
+            );
+        },
+        allowInteract: true,
         get btnText() { return T('step5_btn', 'tutorial'); },
-        onShow: null,
+        onShow: function() {
+            setTimeout(function() {
+                if (tutorialState.active && tutorialState.currentStep === 5) {
+                    renderOverlay(tutorialSteps[5]);
+                    var b = document.getElementById('tutorialBubble');
+                    if (b) positionBubble(b, tutorialSteps[5]);
+                }
+            }, 300);
+        },
         onNext: function(done) {
             switchTab('farm');
             setTimeout(done, 400);
