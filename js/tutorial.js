@@ -441,6 +441,8 @@ window.onTutorialAssignFarm = function() {
     if (tutorialState.waitingForMonsterSelect) {
         tutorialState.waitingForMonsterSelect = false;
         tutorialState.waitingForAssign = false;
+        // ★ 同步设置，确保 showAssignPlotPicker 生成 HTML 时已为 true
+        tutorialState.waitingForPlotPick = true;
         setTimeout(function() {
             showTutorialStep(4); // pick_plot
         }, 350);
@@ -448,6 +450,8 @@ window.onTutorialAssignFarm = function() {
     }
     if (!tutorialState.waitingForAssign) return;
     tutorialState.waitingForAssign = false;
+    // ★ 同步设置，确保 showAssignPlotPicker 生成 HTML 时已为 true
+    tutorialState.waitingForPlotPick = true;
     // 等待 showAssignPlotPicker 模态框渲染完毕
     setTimeout(function() {
         showTutorialStep(4); // pick_plot

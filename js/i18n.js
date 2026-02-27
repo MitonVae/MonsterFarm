@@ -717,6 +717,7 @@ ja: {
         waitAssignFarm: '👆 ハイライトされた配置ボタンをクリック…', wait_assign: '👆 ハイライトされた配置ボタンをクリック…',
         waitPickPlot: '👆 ポップアップで区画を選択…',    wait_plot: '👆 ポップアップで区画を選択…',
         waitDefault: '⏳ 操作待ち…',                     wait_generic: '⏳ 操作待ち…',
+        wait_click_tab: '👆 ハイライトされた「探索」タブをクリックしてください',
         completedMsg: '🎓 チュートリアル完了！農場を楽しんでください～', complete_notify: '🎓 チュートリアル完了！農場を楽しんでください～',
         step0_title: '👋 モンスターファームへようこそ！',
         step0_content: 'ここはあなたのモンスターファームです。<br><br><strong style="color:#58a6ff;">モンスターを捕獲</strong>して農耕を手伝わせ、探索でリソースを集めましょう。<br><br>まず、上部の<strong style="color:#f0c53d;">🗺 探索</strong>タブをクリック！',
