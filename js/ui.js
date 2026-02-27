@@ -911,6 +911,14 @@ window.showSettingsModal = function() {
         '<div id="authSection">' + (typeof _buildLoggedInUI !== 'undefined' && typeof getCurrentUser === 'function' && getCurrentUser() ? '' : '') + '</div>' +
         '</div>' +
 
+        // 数字格式
+        (typeof renderNumFormatSetting === 'function' ? (function() {
+            return '<div style="margin-bottom:14px;">' +
+            '<h3 style="margin-bottom:8px;font-size:13px;color:#8b949e;letter-spacing:.05em;">🔢 数字显示格式</h3>' +
+            renderNumFormatSetting() +
+            '</div>';
+        })() : '') +
+
         // 快捷键
         '<div style="margin-bottom:14px;">' +
         '<h3 style="margin-bottom:8px;font-size:13px;color:#8b949e;letter-spacing:.05em;">' + _t('shortcuts','settings') + '</h3>' +

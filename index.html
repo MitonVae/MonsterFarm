@@ -285,6 +285,8 @@
     <script src="js/resource-detail.js"></script>
     <script src="js/i18n.js"></script>
     <script src="js/gamedata.js"></script>
+    <script src="js/balance.js"></script>
+    <script src="js/numformat.js"></script>
     <script src="js/main.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/farm.js"></script>
@@ -299,10 +301,13 @@
     <script src="js/resizer.js"></script>
     <script src="js/tutorial.js"></script>
     <script src="js/gm.js"></script>
+    <script src="js/monster-names.js"></script>
     <script>
         window.addEventListener('load', function() {
             // 初始化 Supabase（需在 loadGame 之前，以便会话恢复后触发 onAuthStateChange）
             if (typeof initSupabase === 'function') initSupabase();
+            // 应用平衡配置（在loadGame/initGame之前，确保数值倍率生效）
+            if (typeof initBalance === 'function') initBalance();
             loadGame();
             initGame();
             setTimeout(function() {
