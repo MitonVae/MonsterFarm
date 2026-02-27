@@ -177,9 +177,11 @@ function initGame() {
         }
     }
     
-    // 初始化科技
+    // 初始化科技（仅补充尚未存在的 key，不覆盖已解锁的存档数据）
     Object.keys(technologies).forEach(function(key) {
-        gameState.technologies[key] = false;
+        if (!(key in gameState.technologies)) {
+            gameState.technologies[key] = false;
+        }
     });
     
     // 初始化UI
