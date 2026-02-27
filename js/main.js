@@ -278,6 +278,7 @@ function gainExp(monster, amount) {
 
 function autoSave() {
     var saveData = {
+        savedAt: new Date().toISOString(),
         coins: gameState.coins,
         food: gameState.food,
         materials: gameState.materials,
@@ -306,6 +307,8 @@ function autoSave() {
     };
     
     localStorage.setItem('monsterFarm_v1', JSON.stringify(saveData));
+    // 登录状态下触发云端同步（节流3秒）
+    if (typeof triggerCloudSync === 'function') triggerCloudSync();
 }
 
 function loadGame() {

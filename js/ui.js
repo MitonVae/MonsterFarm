@@ -856,6 +856,12 @@ window.showSettingsModal = function() {
         '<button class="btn btn-secondary" style="border-color:#58a6ff;color:#58a6ff;" onclick="window._settingsImportSave();">' + _t('importBtn','settings') + '</button>' +
         '</div></div>' +
 
+        // 云账号
+        '<div style="margin-bottom:14px;">' +
+        '<h3 style="margin-bottom:8px;font-size:13px;color:#8b949e;letter-spacing:.05em;">☁️ 云账号 & 跨设备存档</h3>' +
+        '<div id="authSection">' + (typeof _buildLoggedInUI !== 'undefined' && typeof getCurrentUser === 'function' && getCurrentUser() ? '' : '') + '</div>' +
+        '</div>' +
+
         // 快捷键
         '<div style="margin-bottom:14px;">' +
         '<h3 style="margin-bottom:8px;font-size:13px;color:#8b949e;letter-spacing:.05em;">' + _t('shortcuts','settings') + '</h3>' +
@@ -882,6 +888,10 @@ window.showSettingsModal = function() {
         '</div>';
 
     showModal(html);
+    // 填充账号登录区（auth.js 提供）
+    setTimeout(function() {
+        if (typeof refreshAuthUI === 'function') refreshAuthUI();
+    }, 0);
     // 为版本号注册 GM 入口事件：
     //   · 已验证 → 单击直接打开
     //   · 未验证 → 长按2秒激活
