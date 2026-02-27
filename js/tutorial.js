@@ -67,25 +67,28 @@ var tutorialSteps = [
         onNext: null
     },
 
-    // ── Step 2：捕获成功，指引点击怪兽卡片 ──
+    // ── Step 2：捕获成功，直接引导点击「派驻农田」按钮 ──
     {
         id: 'select_monster',
         get title()   { return T('step2_title',   'tutorial'); },
         get content() { return T('step2_content', 'tutorial'); },
-        // PC: 右侧侧边栏卡片；移动端: 怪兽 tab 里的卡片
+        // 直接高亮「派驻农田」按钮，PC侧边栏或移动端详情弹窗均适配
         get focusSelector() {
             return _tutGetSelector(
-                '#monsterSidebar .msb-monster-card',
-                '#monsters-tab .msb-monster-card'
+                '#monsterSidebar .msb-btn-assign',
+                '.modal-content .msb-btn-assign'
             );
         },
         allowInteract: true,
         btnText: null,
         onShow: function() {
             tutorialState.waitingForMonsterSelect = true;
-            // 移动端：自动切到怪兽 tab，让卡片出现
-            if (_tutIsMobile()) {
-                switchTab('monsters');
+            // 移动端：自动打开第一只怪兽详情弹窗，让弹窗内的派驻按钮出现
+            if (_tutIsMobile() && gameState.monsters && gameState.monsters.length > 0) {
+                var firstId = gameState.monsters[0].id;
+                if (typeof showMonsterDetailModal === 'function') {
+                    showMonsterDetailModal(firstId);
+                }
             }
             setTimeout(function() {
                 if (tutorialState.active && tutorialState.currentStep === 2) {
@@ -406,9 +409,19 @@ window.onTutorialMonsterSelected = function() {
     }, 350);
 };
 
-// ── 点击耕作按钮钩子（monster.js 中 assignToFarm 调用）── Step3 → Step4
+// ── 点击耕作按钮钩子（farm.js 中 showAssignPlotPicker 调用）── Step3→Step4，或 Step2 直接跳 Step4
 window.onTutorialAssignFarm = function() {
-    if (!tutorialState.active || !tutorialState.waitingForAssign) return;
+    if (!tutorialState.active) return;
+    // 玩家在 Step2 时直接点了"派驻农田"，跳过 Step3，直接进 Step4
+    if (tutorialState.waitingForMonsterSelect) {
+        tutorialState.waitingForMonsterSelect = false;
+        tutorialState.waitingForAssign = false;
+        setTimeout(function() {
+            showTutorialStep(4); // pick_plot
+        }, 350);
+        return;
+    }
+    if (!tutorialState.waitingForAssign) return;
     tutorialState.waitingForAssign = false;
     // 等待 showAssignPlotPicker 模态框渲染完毕
     setTimeout(function() {

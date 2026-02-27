@@ -197,7 +197,7 @@ zh: {
         step1_title: '🌿 点击「⚡ 探索」开始探索',
         step1_content: '这是 <strong style="color:#46d164;">农场边缘</strong> 区域。<br><br>点击下方高亮的 <strong style="color:#58a6ff;">⚡ 探索</strong> 按钮，<br>消耗能量推进进度，达到 <strong style="color:#f0c53d;">100%</strong> 后结算。<br><br>💡 本次探索 <strong style="color:#f0c53d;">必定捕获</strong> 一只怪兽！',
         step2_title: '🎉 成功捕获怪兽！',
-        step2_content: '太棒了！你已经捕获了第一只怪兽。<br><br>现在请 <strong style="color:#f0c53d;">点击右侧怪兽卡片</strong> 打开详情，然后点击「<strong style="color:#46d164;">派驻农田</strong>」按钮。',
+        step2_content: '太棒了！你已经捕获了第一只怪兽。<br><br>现在请直接点击右侧高亮的 <strong style="color:#46d164;">派驻农田</strong> 按钮，让怪兽驻守地块！',
         step3_title: '🌾 派遣怪兽驻守农田',
         step3_content: '太棒了！现在请点击高亮的 <strong style="color:#46d164;">派驻农田</strong> 按钮，<br><br>让怪兽驻守地块，实现 <strong style="color:#58a6ff;">自动种植和收获</strong>！',
         step4_title: '📋 选择一个地块',
