@@ -287,6 +287,8 @@
     <script src="js/gamedata.js"></script>
     <script src="js/balance.js"></script>
     <script src="js/numformat.js"></script>
+    <script src="js/event-db.js"></script>
+    <script src="js/events.js"></script>
     <script src="js/main.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/farm.js"></script>
@@ -318,6 +320,8 @@
                 applyFontSize(localStorage.getItem('mf_font_size') || 'medium');
                 // 恢复存档中正在生长/已成熟的地块计时器（必须在 renderAll 之后调用）
                 if (typeof restoreGrowTimers === 'function') restoreGrowTimers();
+                // 启动事件系统（好感度 & 怪兽日志 & 随机事件）
+                if (typeof EventSystem !== 'undefined') EventSystem.start();
                 // 开发期早期体验提示（每次启动均显示）
                 showEarlyAccessNotice();
             }, 100);

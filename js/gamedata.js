@@ -104,122 +104,205 @@ var monsterTypes = {
 
 // ========== 探索区域（20个，分阶段解锁）==========
 var explorationZones = [
-    // ── 阶段1：新手区域（0~3次探索）──
-    { id:'farm_edge',      name:'农场边缘',     icon:'🌿', tier:1, desc:'农场周围的草地，安全且容易探索。',
-      unlockCondition:null, energyCostManual:5, progressPerClick:[12,20],
+    // ══════════════════════════════════════════════
+    // 阶段1：新手区域 ── 无门槛 / 极低门槛
+    // ══════════════════════════════════════════════
+    { id:'farm_edge',      name:'农场边缘',   icon:'🌿', tier:1,
+      desc:'农场周围的草地，安全且容易探索。',
+      unlockCondition:null,
+      energyCostManual:5, progressPerClick:[12,20],
       monsters:['slime','sprout'], catchChance:0.25,
       rewards:{ coins:[15,40], food:[10,25], materials:[0,5], research:[0,2] } },
-    { id:'shallow_forest', name:'浅林',         icon:'🌲', tier:1, desc:'农场附近的小树林，散布着零散资源。',
-      unlockCondition:{ type:'coins', value:200, label:'拥有金币 ≥ 200' }, energyCostManual:5, progressPerClick:[10,18],
+
+    { id:'shallow_forest', name:'浅林',       icon:'🌲', tier:1,
+      desc:'农场附近的小树林，散布着零散资源。',
+      unlockCondition:{ type:'coins', value:500, label:'拥有金币 ≥ 500' },
+      energyCostManual:5, progressPerClick:[10,18],
       monsters:['goblin'], catchChance:0.22,
       rewards:{ coins:[30,70], food:[5,15], materials:[10,25], research:[0,5] } },
 
-    // ── 阶段2：早期区域（1~10次探索）──
-    { id:'wild_plain',     name:'野外草原',     icon:'🏞', tier:2, desc:'一望无际的草原，偶尔有精灵出没。',
-      unlockCondition:{ type:'totalExplorations', value:3, label:'完成探索 ≥ 3 次' }, energyCostManual:8, progressPerClick:[8,16],
+    // ══════════════════════════════════════════════
+    // 阶段2：早期区域 ── 探索次数 / 资源积累
+    // ══════════════════════════════════════════════
+    { id:'wild_plain',     name:'野外草原',   icon:'🏞', tier:2,
+      desc:'一望无际的草原，偶尔有精灵出没。',
+      unlockCondition:{ type:'totalExplorations', value:8, label:'完成探索 ≥ 8 次' },
+      energyCostManual:8, progressPerClick:[8,16],
       monsters:['sprite','slime','firefly'], catchChance:0.20,
       rewards:{ coins:[20,60], food:[15,30], materials:[5,15], research:[8,20] } },
-    { id:'rocky_hills',    name:'碎石丘陵',     icon:'🪨', tier:2, desc:'坚硬的岩石地带，石像鬼在此栖息。',
-      unlockCondition:{ type:'materials', value:100, label:'拥有材料 ≥ 100' }, energyCostManual:8, progressPerClick:[8,15],
+
+    { id:'rocky_hills',    name:'碎石丘陵',   icon:'🪨', tier:2,
+      desc:'坚硬的岩石地带，石像鬼在此栖息。',
+      unlockCondition:{ type:'compound', conditions:[
+        { type:'materials', value:300 }, { type:'totalExplorations', value:12 }
+      ], label:'材料 ≥ 300 且完成探索 ≥ 12 次' },
+      energyCostManual:8, progressPerClick:[8,15],
       monsters:['golem','goblin','pebble','stoneback'], catchChance:0.18,
       rewards:{ coins:[40,90], food:[0,10], materials:[30,60], research:[5,15] } },
-    { id:'mist_forest',    name:'迷雾森林',     icon:'🌫', tier:2, desc:'笼罩在神秘迷雾中的古老森林，幽灵在此游荡。',
-      unlockCondition:{ type:'monsterCount', value:3, label:'拥有怪兽 ≥ 3 只' }, energyCostManual:10, progressPerClick:[7,14],
+
+    { id:'mist_forest',    name:'迷雾森林',   icon:'🌫', tier:2,
+      desc:'笼罩在神秘迷雾中的古老森林，幽灵在此游荡。',
+      unlockCondition:{ type:'compound', conditions:[
+        { type:'monsterCount', value:4 }, { type:'totalExplorations', value:18 }
+      ], label:'拥有怪兽 ≥ 4 只 且完成探索 ≥ 18 次' },
+      energyCostManual:10, progressPerClick:[7,14],
       monsters:['wisp','sprite','deepmoss','firefly'], catchChance:0.16,
       rewards:{ coins:[30,80], food:[0,20], materials:[10,30], research:[20,45] } },
 
-    // ── 阶段3：中期区域（5~20次探索）──
-    { id:'crystal_cave',   name:'水晶洞穴',     icon:'💎', tier:3, desc:'闪烁水晶的神秘洞穴，蕴含丰富矿产。',
+    // ══════════════════════════════════════════════
+    // 阶段3：中期区域 ── 复合条件，需要科技加持
+    // ══════════════════════════════════════════════
+    { id:'crystal_cave',   name:'水晶洞穴',   icon:'💎', tier:3,
+      desc:'闪烁水晶的神秘洞穴，蕴含丰富矿产。',
       unlockCondition:{ type:'compound', conditions:[
-        { type:'totalExplorations', value:8 }, { type:'materials', value:200 }
-      ], label:'完成探索≥8次且材料≥200' }, energyCostManual:10, progressPerClick:[6,13],
+        { type:'totalExplorations', value:25 }, { type:'materials', value:800 }
+      ], label:'完成探索 ≥ 25 次 且材料 ≥ 800' },
+      energyCostManual:10, progressPerClick:[6,13],
       monsters:['crystal','pebble','stoneback'], catchChance:0.15,
       rewards:{ coins:[60,120], food:[0,10], materials:[50,100], research:[15,40] } },
-    { id:'volcano_foot',   name:'火山麓',       icon:'🌋', tier:3, desc:'炽热的火山脚下，危险但充满财富。',
-      unlockCondition:{ type:'tech', value:'exploration', label:'解锁科技「探索技术」' }, energyCostManual:12, progressPerClick:[6,13],
+
+    { id:'volcano_foot',   name:'火山麓',     icon:'🌋', tier:3,
+      desc:'炽热的火山脚下，危险但充满财富。',
+      unlockCondition:{ type:'compound', conditions:[
+        { type:'tech', value:'exploration' }, { type:'totalExplorations', value:30 },
+        { type:'coins', value:3000 }
+      ], label:'解锁探索科技 且 探索≥30次 且 金币≥3000' },
+      energyCostManual:12, progressPerClick:[6,13],
       monsters:['ifrit','golem','ashgolem','phoenix'], catchChance:0.14,
       rewards:{ coins:[80,180], food:[0,5], materials:[20,50], research:[10,25] } },
-    { id:'swamp',          name:'沼泽地带',     icon:'🌊', tier:3, desc:'泥泞危险的沼泽，毒液蛙在此繁衍。',
-      unlockCondition:{ type:'totalExplorations', value:15, label:'完成探索 ≥ 15 次' }, energyCostManual:12, progressPerClick:[6,12],
+
+    { id:'swamp',          name:'沼泽地带',   icon:'🌊', tier:3,
+      desc:'泥泞危险的沼泽，毒液蛙在此繁衍。',
+      unlockCondition:{ type:'compound', conditions:[
+        { type:'totalExplorations', value:40 }, { type:'monsterCount', value:6 }
+      ], label:'完成探索 ≥ 40 次 且怪兽 ≥ 6 只' },
+      energyCostManual:12, progressPerClick:[6,12],
       monsters:['toxfrog','wisp','mudcrab'], catchChance:0.13,
       rewards:{ coins:[50,120], food:[5,20], materials:[40,80], research:[15,35] } },
-    { id:'haunted_marsh',  name:'鬼沼',         icon:'💀', tier:3, desc:'古老的死亡沼泽，传说有史诗级怪兽出没。',
+
+    { id:'haunted_marsh',  name:'鬼沼',       icon:'💀', tier:3,
+      desc:'古老的死亡沼泽，传说有史诗级怪兽出没。',
       unlockCondition:{ type:'compound', conditions:[
-        { type:'totalExplorations', value:20 }, { type:'monsterCount', value:5 }
-      ], label:'完成探索≥20次且怪兽≥5只' }, energyCostManual:14, progressPerClick:[5,11],
+        { type:'totalExplorations', value:55 }, { type:'monsterCount', value:8 },
+        { type:'research', value:500 }
+      ], label:'探索≥55次 且怪兽≥8只 且研究点≥500' },
+      energyCostManual:14, progressPerClick:[5,11],
       monsters:['wisp','shadow','deepkraken'], catchChance:0.12,
       rewards:{ coins:[80,160], food:[0,15], materials:[30,70], research:[30,60] } },
 
-    // ── 阶段4：中后期区域（15~40次探索）──
-    { id:'snow_plateau',   name:'雪域高原',     icon:'❄️', tier:4, desc:'白雪皑皑的高原，冰晶在极寒中修炼。',
+    // ══════════════════════════════════════════════
+    // 阶段4：中后期区域 ── 高资源门槛 + 科技双重要求
+    // ══════════════════════════════════════════════
+    { id:'snow_plateau',   name:'雪域高原',   icon:'❄️', tier:4,
+      desc:'白雪皑皑的高原，冰晶在极寒中修炼。',
       unlockCondition:{ type:'compound', conditions:[
-        { type:'monsterCount', value:5 }, { type:'coins', value:1000 }
-      ], label:'拥有5只怪兽且金币≥1000' }, energyCostManual:15, progressPerClick:[5,11],
+        { type:'monsterCount', value:10 }, { type:'coins', value:8000 },
+        { type:'totalExplorations', value:70 }
+      ], label:'怪兽≥10只 且 金币≥8000 且 探索≥70次' },
+      energyCostManual:15, progressPerClick:[5,11],
       monsters:['crystal','sprite','thunderbird','windsprite'], catchChance:0.11,
       rewards:{ coins:[60,140], food:[0,10], materials:[20,60], research:[40,80] } },
-    { id:'thunder_peak',   name:'雷霆山巅',     icon:'⚡', tier:4, desc:'常年雷暴的山峰，雷鸟在此翱翔。',
+
+    { id:'thunder_peak',   name:'雷霆山巅',   icon:'⚡', tier:4,
+      desc:'常年雷暴的山峰，雷鸟在此翱翔。',
       unlockCondition:{ type:'compound', conditions:[
-        { type:'totalExplorations', value:25 }, { type:'tech', value:'exploration' }
-      ], label:'完成探索≥25次且有探索科技' }, energyCostManual:15, progressPerClick:[5,10],
+        { type:'totalExplorations', value:90 }, { type:'tech', value:'cartography' },
+        { type:'coins', value:15000 }
+      ], label:'探索≥90次 且解锁制图学 且 金币≥15000' },
+      energyCostManual:15, progressPerClick:[5,10],
       monsters:['thunderbird','windsprite','phoenix'], catchChance:0.10,
       rewards:{ coins:[100,200], food:[5,15], materials:[30,70], research:[50,100] } },
-    { id:'dark_cave',      name:'暗黑洞窟',     icon:'🌑', tier:4, desc:'深入地下的漆黑洞窟，暗影在此沉眠。需购买探险通行证。',
-      unlockCondition:{ type:'purchase', value:2000, label:'花费 2000 金币购买通行证' }, energyCostManual:18, progressPerClick:[4,10],
+
+    { id:'dark_cave',      name:'暗黑洞窟',   icon:'🌑', tier:4,
+      desc:'深入地下的漆黑洞窟，暗影在此沉眠。需购买探险通行证。',
+      unlockCondition:{ type:'purchase', value:10000, label:'花费 10000 金币购买通行证' },
+      energyCostManual:18, progressPerClick:[4,10],
       monsters:['shadow','wisp','deepkraken','voidwalker'], catchChance:0.10,
       rewards:{ coins:[100,220], food:[0,15], materials:[50,100], research:[50,100] } },
-    { id:'deep_ocean',     name:'深海秘境',     icon:'🌀', tier:4, desc:'传说中的深海，克拉肯在此统治。',
+
+    { id:'deep_ocean',     name:'深海秘境',   icon:'🌀', tier:4,
+      desc:'传说中的深海，克拉肯在此统治。',
       unlockCondition:{ type:'compound', conditions:[
-        { type:'totalExplorations', value:35 }, { type:'coins', value:5000 }
-      ], label:'完成探索≥35次且金币≥5000' }, energyCostManual:18, progressPerClick:[4,9],
+        { type:'totalExplorations', value:110 }, { type:'coins', value:25000 },
+        { type:'monsterCount', value:12 }
+      ], label:'探索≥110次 且 金币≥25000 且怪兽≥12只' },
+      energyCostManual:18, progressPerClick:[4,9],
       monsters:['deepkraken','toxfrog','mudcrab'], catchChance:0.09,
       rewards:{ coins:[150,300], food:[10,25], materials:[60,120], research:[60,120] } },
 
-    // ── 阶段5：后期区域（30~60次探索）──
-    { id:'ancient_ruins',  name:'远古遗迹',     icon:'🐉', tier:5, desc:'传说中存在古龙的神秘遗迹。',
+    // ══════════════════════════════════════════════
+    // 阶段5：后期区域 ── 全面成长验证
+    // ══════════════════════════════════════════════
+    { id:'ancient_ruins',  name:'远古遗迹',   icon:'🐉', tier:5,
+      desc:'传说中存在古龙的神秘遗迹。',
       unlockCondition:{ type:'compound', conditions:[
-        { type:'allTech', label:'解锁全部基础科技' },
-        { type:'totalExplorations', value:30, label:'完成探索≥30次' }
-      ], label:'解锁全部基础科技且完成探索≥30次' }, energyCostManual:20, progressPerClick:[3,8],
+        { type:'totalExplorations', value:140 }, { type:'monsterCount', value:15 },
+        { type:'coins', value:50000 }, { type:'research', value:3000 }
+      ], label:'探索≥140次 且怪兽≥15只 且金币≥50000 且研究≥3000' },
+      energyCostManual:20, progressPerClick:[3,8],
       monsters:['ancient','ironwarden','celestial','titan'], catchChance:0.07,
       rewards:{ coins:[200,500], food:[20,60], materials:[80,150], research:[80,150] } },
-    { id:'void_rift',      name:'虚空裂缝',     icon:'🕳', tier:5, desc:'空间破裂之处，虚空行者在此穿梭。',
+
+    { id:'void_rift',      name:'虚空裂缝',   icon:'🕳', tier:5,
+      desc:'空间破裂之处，虚空行者在此穿梭。',
       unlockCondition:{ type:'compound', conditions:[
-        { type:'totalExplorations', value:45 }, { type:'monsterCount', value:10 }
-      ], label:'完成探索≥45次且怪兽≥10只' }, energyCostManual:20, progressPerClick:[3,7],
+        { type:'totalExplorations', value:180 }, { type:'monsterCount', value:18 },
+        { type:'tech', value:'explorationT5' }
+      ], label:'探索≥180次 且怪兽≥18只 且解锁T5探索科技' },
+      energyCostManual:20, progressPerClick:[3,7],
       monsters:['voidwalker','shadow','spiritking'], catchChance:0.06,
       rewards:{ coins:[250,550], food:[0,20], materials:[100,200], research:[100,200] } },
-    { id:'celestial_isle', name:'天界之岛',     icon:'☁️', tier:5, desc:'漂浮云端的神圣岛屿，天界使者居住于此。',
+
+    { id:'celestial_isle', name:'天界之岛',   icon:'☁️', tier:5,
+      desc:'漂浮云端的神圣岛屿，天界使者居住于此。',
       unlockCondition:{ type:'compound', conditions:[
-        { type:'totalExplorations', value:50 }, { type:'tech', value:'explorationT5' }
-      ], label:'完成探索≥50次且有高阶探索科技' }, energyCostManual:22, progressPerClick:[3,7],
+        { type:'totalExplorations', value:220 }, { type:'tech', value:'explorationT5' },
+        { type:'coins', value:100000 }, { type:'monstersBreed', value:15 }
+      ], label:'探索≥220次 且T5探索科技 且金币≥100000 且繁殖≥15次' },
+      energyCostManual:22, progressPerClick:[3,7],
       monsters:['celestial','sprite','phoenix'], catchChance:0.06,
       rewards:{ coins:[300,600], food:[10,30], materials:[80,160], research:[150,300] } },
 
-    // ── 阶段6：顶级区域（50次+探索）──
-    { id:'void_realm',     name:'虚空领域',     icon:'🌌', tier:6, desc:'超越现实的终极区域，传说级怪兽的家园。',
+    // ══════════════════════════════════════════════
+    // 阶段6：顶级区域 ── 终局内容，条件极为苛刻
+    // ══════════════════════════════════════════════
+    { id:'void_realm',     name:'虚空领域',   icon:'🌌', tier:6,
+      desc:'超越现实的终极区域，传说级怪兽的家园。',
       unlockCondition:{ type:'compound', conditions:[
-        { type:'totalExplorations', value:60 },
-        { type:'monsterCount', value:15 },
-        { type:'coins', value:20000 }
-      ], label:'探索≥60次、怪兽≥15只、金币≥20000' }, energyCostManual:25, progressPerClick:[2,6],
+        { type:'totalExplorations', value:280 }, { type:'monsterCount', value:25 },
+        { type:'coins', value:300000 }, { type:'research', value:15000 }
+      ], label:'探索≥280次 且怪兽≥25只 且金币≥300000 且研究≥15000' },
+      energyCostManual:25, progressPerClick:[2,6],
       monsters:['spiritking','worldtree','timeghost','ancient'], catchChance:0.05,
       rewards:{ coins:[500,1000], food:[30,80], materials:[150,300], research:[200,400] } },
-    { id:'titan_fortress', name:'泰坦要塞',     icon:'🏰', tier:6, desc:'泰坦巨人的古老要塞，蕴含最终的力量。',
+
+    { id:'titan_fortress', name:'泰坦要塞',   icon:'🏰', tier:6,
+      desc:'泰坦巨人的古老要塞，蕴含最终的力量。',
       unlockCondition:{ type:'compound', conditions:[
-        { type:'totalExplorations', value:70 }, { type:'allTech', label:'解锁全部科技' }
-      ], label:'探索≥70次且解锁全部科技' }, energyCostManual:25, progressPerClick:[2,5],
+        { type:'totalExplorations', value:350 }, { type:'allTech', label:'解锁全部科技' },
+        { type:'coins', value:500000 }
+      ], label:'探索≥350次 且解锁全部科技 且金币≥500000' },
+      energyCostManual:25, progressPerClick:[2,5],
       monsters:['titan','ironwarden','ancient'], catchChance:0.04,
       rewards:{ coins:[800,1500], food:[20,60], materials:[200,400], research:[150,300] } },
-    { id:'dream_garden',   name:'梦境花园',     icon:'🌸', tier:6, desc:'只存在于梦中的永恒花园，世界树精在此沉睡。',
+
+    { id:'dream_garden',   name:'梦境花园',   icon:'🌸', tier:6,
+      desc:'只存在于梦中的永恒花园，世界树精在此沉睡。',
       unlockCondition:{ type:'compound', conditions:[
-        { type:'totalExplorations', value:80 }, { type:'monstersBreed', value:10 }
-      ], label:'探索≥80次且繁殖≥10次' }, energyCostManual:22, progressPerClick:[2,6],
+        { type:'totalExplorations', value:400 }, { type:'monstersBreed', value:30 },
+        { type:'monsterCount', value:30 }
+      ], label:'探索≥400次 且繁殖≥30次 且怪兽≥30只' },
+      energyCostManual:22, progressPerClick:[2,6],
       monsters:['worldtree','leafkin','deepmoss','celestial'], catchChance:0.04,
       rewards:{ coins:[400,800], food:[100,200], materials:[100,200], research:[200,400] } },
-    { id:'time_labyrinth', name:'时间迷宫',     icon:'⏳', tier:6, desc:'时间扭曲的迷宫，时间幽灵在此游荡。',
+
+    { id:'time_labyrinth', name:'时间迷宫',   icon:'⏳', tier:6,
+      desc:'时间扭曲的迷宫，时间幽灵在此游荡。',
       unlockCondition:{ type:'compound', conditions:[
-        { type:'totalExplorations', value:100 }, { type:'monstersBreed', value:20 }
-      ], label:'探索≥100次且繁殖≥20次' }, energyCostManual:28, progressPerClick:[2,5],
+        { type:'totalExplorations', value:500 }, { type:'monstersBreed', value:50 },
+        { type:'research', value:50000 }, { type:'coins', value:1000000 }
+      ], label:'探索≥500次 且繁殖≥50次 且研究≥50000 且金币≥1000000' },
+      energyCostManual:28, progressPerClick:[2,5],
       monsters:['timeghost','voidwalker','spiritking'], catchChance:0.03,
       rewards:{ coins:[1000,2000], food:[50,150], materials:[300,600], research:[500,1000] } }
 ];

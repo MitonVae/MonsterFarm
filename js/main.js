@@ -328,7 +328,9 @@ function autoSave() {
         // ── 探索系统状态 ──
         zoneStates:     zoneStatesData,
         purchasedZones: Object.assign({}, gameState.purchasedZones || {}),
-        expeditions:    JSON.parse(JSON.stringify(gameState.expeditions || []))
+        expeditions:    JSON.parse(JSON.stringify(gameState.expeditions || [])),
+        // ── 事件 & 好感度系统 ──
+        eventSystem:    (typeof EventSystem !== 'undefined') ? EventSystem.save() : null
     };
     
     localStorage.setItem('monsterFarm_v1', JSON.stringify(saveData));
@@ -377,6 +379,11 @@ function loadGame() {
                     gameState.technologies[key] = false;
                 }
             });
+
+            // ── 恢复事件 & 好感度系统 ──
+            if (saveData.eventSystem && typeof EventSystem !== 'undefined') {
+                EventSystem.load(saveData.eventSystem);
+            }
             
             // 加载成功静默（简报系统和设置面板已有反馈）
         } catch (e) {

@@ -266,6 +266,84 @@ window.purchaseZonePass = function(zoneId) {
     renderExploration();
 };
 
+// ── 一键派遣：将所有空闲怪兽分配到有空位的已解锁区域 ──
+window.dispatchAllIdle = function() {
+    var idleMonsters = gameState.monsters.filter(function(m) { return m.status === 'idle'; });
+    if (idleMonsters.length === 0) { showNotification('没有空闲怪兽可派遣！', 'info'); return; }
+
+    var unlockedZones = explorationZones.filter(function(z) {
+        if (!checkZoneCondition(z)) return false;
+        var zs = getZoneState(z.id);
+        return zs.assignedMonsterIds.length < 4;
+    });
+    if (unlockedZones.length === 0) { showNotification('所有已解锁区域均已满员！', 'info'); return; }
+
+    var dispatched = 0;
+    var zi = 0; // zone index
+    idleMonsters.forEach(function(m) {
+        // 找下一个有空位的区域
+        while (zi < unlockedZones.length) {
+            var zs = getZoneState(unlockedZones[zi].id);
+            if (zs.assignedMonsterIds.length < 4) break;
+            zi++;
+        }
+        if (zi >= unlockedZones.length) return;
+        assignMonsterToZone(unlockedZones[zi].id, m.id);
+        dispatched++;
+        // 如果该区域已满，移向下一个
+        var zs2 = getZoneState(unlockedZones[zi].id);
+        if (zs2.assignedMonsterIds.length >= 4) zi++;
+    });
+
+    if (dispatched > 0) {
+        showNotification('已一键派遣 ' + dispatched + ' 只怪兽前往探索！', 'success');
+        renderExploration();
+    } else {
+        showNotification('派遣失败，请检查区域或怪兽状态。', 'warning');
+    }
+};
+
+// ── 一键驻守：将所有空闲怪兽全部送往同一个指定区域 ──
+window.garrisonAllToZone = function(zoneId) {
+    var zone = explorationZones.find(function(z) { return z.id === zoneId; });
+    if (!zone || !checkZoneCondition(zone)) { showNotification('区域尚未解锁！', 'warning'); return; }
+
+    var zs = getZoneState(zoneId);
+    var idleMonsters = gameState.monsters.filter(function(m) { return m.status === 'idle'; });
+    if (idleMonsters.length === 0) { showNotification('没有空闲怪兽可派遣！', 'info'); return; }
+
+    var dispatched = 0;
+    idleMonsters.forEach(function(m) {
+        if (zs.assignedMonsterIds.length >= 4) return;
+        assignMonsterToZone(zoneId, m.id);
+        dispatched++;
+    });
+
+    if (dispatched > 0) {
+        showNotification('已将 ' + dispatched + ' 只怪兽驻守至 ' + zone.icon + zone.name + '！', 'success');
+    } else {
+        showNotification('该区域已满员（最多4只）！', 'info');
+    }
+};
+
+// ── 一键召回：从所有区域召回全部怪兽 ──
+window.recallAllMonsters = function() {
+    var recalled = 0;
+    explorationZones.forEach(function(zone) {
+        var zs = getZoneState(zone.id);
+        var toRecall = zs.assignedMonsterIds.slice(); // 复制避免边改边迭代
+        toRecall.forEach(function(mid) {
+            recallMonsterFromZone(zone.id, mid);
+            recalled++;
+        });
+    });
+    if (recalled > 0) {
+        showNotification('已召回全部 ' + recalled + ' 只探索中的怪兽！', 'success');
+    } else {
+        showNotification('当前没有派遣中的怪兽。', 'info');
+    }
+};
+
 // ── 主渲染函数 ──
 window.renderExploration = function() {
     var el = document.getElementById('explorationArea');
@@ -275,6 +353,11 @@ window.renderExploration = function() {
     var rarityName  = { common:'普通', uncommon:'优良', rare:'稀有', epic:'史诗', legendary:'传说' };
     var layout = getLayoutPref('exploration');
 
+    // 统计状态数字
+    var totalAssigned  = 0;
+    var totalIdle      = gameState.monsters.filter(function(m){ return m.status === 'idle'; }).length;
+    explorationZones.forEach(function(z){ totalAssigned += getZoneState(z.id).assignedMonsterIds.length; });
+
     // ── 工具栏 ──
     var html = renderLayoutToolbar(
         'exploration',
@@ -282,11 +365,24 @@ window.renderExploration = function() {
         [],
         'renderExploration'
     );
-    // 副标题+状态
-    html += '<div style="padding:0 20px 8px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">' +
+    // 副标题+状态 + 一键操作按钮
+    html += '<div style="padding:0 20px 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
         '<span style="color:#8b949e;font-size:0.8571rem;">探索各区域可获得资源，并有机会捕获野生怪兽</span>' +
-        '<span style="color:#8b949e;font-size:0.8571rem;margin-left:auto;">⚡ <strong style="color:#58a6ff;">' + gameState.energy + '/' + gameState.maxEnergy + '</strong>' +
-        ' &nbsp;📊 <strong style="color:#46d164;">' + gameState.totalExplorations + '</strong></span>' +
+        '<span style="color:#8b949e;font-size:0.8571rem;">⚡ <strong style="color:#58a6ff;">' + gameState.energy + '/' + gameState.maxEnergy + '</strong>' +
+        ' &nbsp;📊 <strong style="color:#46d164;">' + gameState.totalExplorations + '</strong>' +
+        ' &nbsp;🐾 探索中 <strong style="color:#e0a02f;">' + totalAssigned + '</strong>' +
+        ' / 空闲 <strong style="color:#46d164;">' + totalIdle + '</strong></span>' +
+        // 一键操作按钮组
+        '<div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">' +
+            (totalIdle > 0
+                ? '<button class="btn btn-warning" style="font-size:12px;padding:4px 12px;" ' +
+                  'onclick="dispatchAllIdle()" title="将所有空闲怪兽依次分配到有空位的已解锁区域">⚡ 一键派遣(' + totalIdle + ')</button>'
+                : '') +
+            (totalAssigned > 0
+                ? '<button class="btn btn-secondary" style="font-size:12px;padding:4px 12px;border-color:#da3633;color:#f85149;" ' +
+                  'onclick="recallAllMonsters()" title="召回所有探索中的怪兽">↩ 全部召回(' + totalAssigned + ')</button>'
+                : '') +
+        '</div>' +
         '</div>';
 
     if (layout === 'compact') {
@@ -427,7 +523,12 @@ window.renderExploration = function() {
             var idleMonsters = gameState.monsters.filter(function(m) { return m.status === 'idle'; });
             if (idleMonsters.length > 0) {
                 dispatchBtn = '<button class="btn btn-warning expl-dispatch-btn" onclick="showDispatchPicker(\'' + zone.id + '\')">' +
-                    '+ 派遣怪兽</button>';
+                    '+ 派遣怪兽</button>' +
+                    (idleMonsters.length > 1
+                        ? '<button class="btn expl-dispatch-btn" style="border-color:#e0a02f;color:#e0a02f;" ' +
+                          'onclick="garrisonAllToZone(\'' + zone.id + '\')" title="将所有空闲怪兽全部派往此区域（最多4只）">' +
+                          '⚡ 驻守(' + idleMonsters.length + ')</button>'
+                        : '');
             } else {
                 dispatchBtn = '<button class="btn expl-dispatch-btn" disabled style="opacity:.4;">无可用怪兽</button>';
             }
