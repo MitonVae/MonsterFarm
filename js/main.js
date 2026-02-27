@@ -279,6 +279,18 @@ function gainExp(monster, amount) {
 }
 
 function autoSave() {
+    // 序列化 zoneStates，过滤掉无法序列化的 autoTimerId（定时器句柄）
+    var zoneStatesData = {};
+    Object.keys(gameState.zoneStates || {}).forEach(function(zid) {
+        var zs = gameState.zoneStates[zid];
+        zoneStatesData[zid] = {
+            progress:           zs.progress || 0,
+            assignedMonsterIds: (zs.assignedMonsterIds || []).slice(),
+            unlocked:           !!zs.unlocked
+            // autoTimerId 是运行时句柄，不保存
+        };
+    });
+
     var saveData = {
         savedAt: new Date().toISOString(),
         coins: gameState.coins,
@@ -300,7 +312,11 @@ function autoSave() {
         totalHarvests: gameState.totalHarvests,
         totalExplorations: gameState.totalExplorations,
         monstersBreed: gameState.monstersBreed,
-        nextMonsterId: gameState.nextMonsterId
+        nextMonsterId: gameState.nextMonsterId,
+        // ── 探索系统状态 ──
+        zoneStates:     zoneStatesData,
+        purchasedZones: Object.assign({}, gameState.purchasedZones || {}),
+        expeditions:    JSON.parse(JSON.stringify(gameState.expeditions || []))
     };
     
     localStorage.setItem('monsterFarm_v1', JSON.stringify(saveData));
@@ -327,6 +343,22 @@ function loadGame() {
             gameState.totalExplorations = saveData.totalExplorations || 0;
             gameState.monstersBreed = saveData.monstersBreed || 0;
             gameState.nextMonsterId = saveData.nextMonsterId || 1;
+
+            // ── 恢复探索系统状态 ──
+            gameState.purchasedZones = saveData.purchasedZones || {};
+            gameState.expeditions    = saveData.expeditions    || [];
+            // zoneStates：恢复进度和派遣列表，autoTimerId 留空（重启后由 renderExploration 重启定时器）
+            var savedZS = saveData.zoneStates || {};
+            gameState.zoneStates = {};
+            Object.keys(savedZS).forEach(function(zid) {
+                var zs = savedZS[zid];
+                gameState.zoneStates[zid] = {
+                    progress:           zs.progress || 0,
+                    assignedMonsterIds: zs.assignedMonsterIds || [],
+                    unlocked:           !!zs.unlocked,
+                    autoTimerId:        null   // 定时器在 renderExploration 时重启
+                };
+            });
             
             Object.keys(technologies).forEach(function(key) {
                 if (!(key in gameState.technologies)) {

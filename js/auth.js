@@ -31,8 +31,8 @@ function _onAuthChange(event, session) {
     refreshAuthUI();
     if (event === 'SIGNED_IN') {
         showNotification('✅ 登录成功：' + (session.user.email || session.user.phone || ''), 'success');
-        // 登录后拉取云端存档，比较时间戳决定用哪份
-        cloudLoadSave();
+        // 登录后拉取云端存档，比较时间戳决定用哪份（传 true 表示自动触发）
+        cloudLoadSave(true);
     } else if (event === 'SIGNED_OUT') {
         showNotification('已退出登录', 'info');
     }
@@ -122,8 +122,10 @@ window.cloudSaveSave = async function(silent) {
 
 // ── 云端下载存档
 // autoTriggered=true 时为登录自动调用，会在云端旧时才静默上传本地
-// autoTriggered=false(默认) 时为用户手动点"拉取云档"，直接弹窗让用户决定
+// autoTriggered 不传/false 时为用户手动点"拉取云档"，直接弹窗让用户决定
 window.cloudLoadSave = async function(autoTriggered) {
+    // 区分手动（不传参/false）vs 自动（显式传 true）
+    var isAuto = (autoTriggered === true);
     if (!_sb || !_currentUser) return;
     try {
         var res = await _sb.from('saves')
@@ -133,7 +135,7 @@ window.cloudLoadSave = async function(autoTriggered) {
 
         // 无云端存档
         if (res.error && res.error.code === 'PGRST116') {
-            if (autoTriggered) {
+            if (isAuto) {
                 // 登录时首次上传
                 await cloudSaveSave(true);
                 showNotification('☁️ 首次登录，本地存档已上传云端', 'success');
@@ -163,7 +165,7 @@ window.cloudLoadSave = async function(autoTriggered) {
 
         var diff = cloudTime - localTime;
 
-        if (!autoTriggered) {
+        if (!isAuto) {
             // 手动"拉取云档"：始终弹窗让用户确认，绝不自动覆盖任何一方
             _showCloudConflict(cloudGameData, cloudTime, localTime, true);
         } else if (diff > 5000) {
