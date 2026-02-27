@@ -110,6 +110,12 @@
                     _resBtn(T('resMaterials','gm'),  'materials', [100,500,2000]) +
                     _resBtn(T('resResearch','gm'),   'research',  [50,200,500]) +
                     _resBtn(T('resEnergy','gm'),     'energy',    [50,100,'full']) +
+                '</div>' +
+                '<div style="margin-top:10px;">' +
+                    '<button class="btn btn-warning" style="width:100%;font-size:13px;padding:9px;" ' +
+                        'onclick="window._gmFillAllResources();">' +
+                        T('btnFillAll','gm') +
+                    '</button>' +
                 '</div>'
             ) +
 
@@ -405,6 +411,17 @@
         }
         if (typeof updateResources === 'function') updateResources();
     }
+
+    // ── 一键大量补充全种类资源 ──
+    window._gmFillAllResources = function() {
+        gameState.coins     += 50000;
+        gameState.food      += 5000;
+        gameState.materials += 5000;
+        gameState.research  += 2000;
+        gameState.energy     = gameState.maxEnergy;
+        if (typeof updateResources === 'function') updateResources();
+        showNotification('⚡ 金币+50000 食物+5000 材料+5000 研究+2000 能量满', 'success');
+    };
 
     // ── 添加怪兽 ──
     window._gmAddMonster = function() {
