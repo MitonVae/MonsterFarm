@@ -38,7 +38,7 @@ var CHANGELOG = [
     },
     {
         version: '0.9.0',
-        date:    '2026-02-25',
+        date:    '2026-02-26',
         title:   '云存档 & 账号系统上线',
         changes: [
             { tag: 'new',     text: '新增云账号系统，支持邮箱密码注册/登录、魔法链接免密登录' },
@@ -49,7 +49,7 @@ var CHANGELOG = [
     },
     {
         version: '0.8.5',
-        date:    '2026-02-20',
+        date:    '2026-02-26',
         title:   '探索系统扩展',
         changes: [
             { tag: 'new',     text: '新增多个高级探索区域，解锁后可遇到稀有怪兽' },
@@ -60,7 +60,7 @@ var CHANGELOG = [
     },
     {
         version: '0.8.0',
-        date:    '2026-02-15',
+        date:    '2026-02-26',
         title:   '多语言 & 字体支持',
         changes: [
             { tag: 'new',     text: '游戏新增多语言支持，可在设置中切换中文/英文/日文' },
@@ -70,7 +70,7 @@ var CHANGELOG = [
     },
     {
         version: '0.7.0',
-        date:    '2026-02-08',
+        date:    '2026-02-26',
         title:   '科技树 & 繁殖系统',
         changes: [
             { tag: 'new',     text: '新增科技树系统，解锁后可提升产量、加速作物生长、解锁高级作物' },
@@ -81,7 +81,7 @@ var CHANGELOG = [
     },
     {
         version: '0.6.0',
-        date:    '2026-01-30',
+        date:    '2026-02-26',
         title:   '农场自动化',
         changes: [
             { tag: 'new',     text: '怪兽可被派遣驻守农田，实现自动播种与自动收获' },
