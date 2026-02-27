@@ -102,7 +102,7 @@ function settleZone(zone) {
     if (food     > 0) rewardText += ' 食物+'  + food;
     if (mats     > 0) rewardText += ' 材料+'  + mats;
     if (research > 0) rewardText += ' 研究+'  + research;
-    showNotification(zone.icon + ' ' + zone.name + ' 探索完成！' + rewardText, 'success');
+    // 探索结算走简报，不弹右上角
 
     // 简报：探索结算（取派遣怪兽之一的名字作代表，或标为手动）
     var repMonsterName = null;
@@ -252,15 +252,87 @@ window.renderExploration = function() {
 
     var rarityColor = { common:'#8b949e', uncommon:'#2196f3', rare:'#ff9800', epic:'#9c27b0', legendary:'#ffd700' };
     var rarityName  = { common:'普通', uncommon:'优良', rare:'稀有', epic:'史诗', legendary:'传说' };
+    var layout = getLayoutPref('exploration');
 
-    var html = '<div class="expl-header"><h2>🗺 野外探索</h2>' +
-        '<p style="color:#8b949e;font-size:13px;margin:4px 0 0;">探索各区域可获得资源，并有机会捕获野生怪兽。手动点击或派遣怪兽自动探索。</p>' +
-        '<div class="expl-stats">' +
-        '<span>⚡ 能量：<strong style="color:#58a6ff;">' + gameState.energy + '/' + gameState.maxEnergy + '</strong></span>' +
-        '<span>📊 总探索：<strong style="color:#46d164;">' + gameState.totalExplorations + '</strong></span>' +
-        '</div></div>';
+    // ── 工具栏 ──
+    var html = renderLayoutToolbar(
+        'exploration',
+        '🗺 野外探索',
+        [],
+        'renderExploration'
+    );
+    // 副标题+状态
+    html += '<div style="padding:0 20px 8px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">' +
+        '<span style="color:#8b949e;font-size:0.8571rem;">探索各区域可获得资源，并有机会捕获野生怪兽</span>' +
+        '<span style="color:#8b949e;font-size:0.8571rem;margin-left:auto;">⚡ <strong style="color:#58a6ff;">' + gameState.energy + '/' + gameState.maxEnergy + '</strong>' +
+        ' &nbsp;📊 <strong style="color:#46d164;">' + gameState.totalExplorations + '</strong></span>' +
+        '</div>';
 
-    html += '<div class="expl-zone-grid">';
+    if (layout === 'compact') {
+        // ────────── 紧凑模式 ──────────
+        html += '<div class="compact-list">';
+        explorationZones.forEach(function(zone, idx) {
+            var isUnlocked = checkZoneCondition(zone);
+            var zs = getZoneState(zone.id);
+            var progress = Math.min(100, zs.progress);
+            var assigned = zs.assignedMonsterIds.map(function(mid) {
+                return gameState.monsters.find(function(m) { return m.id === mid; });
+            }).filter(Boolean);
+            var isAutoRunning = assigned.length > 0;
+            var speed = isAutoRunning ? calcAutoSpeed(zone, zs.assignedMonsterIds).toFixed(1) : 0;
+
+            if (!isUnlocked) {
+                html += '<div class="compact-card locked">' +
+                    '<span class="compact-icon-emoji">' + zone.icon + '</span>' +
+                    '<span class="compact-name" style="color:#8b949e;">' + zone.name + '</span>' +
+                    '<span class="compact-sub">深度 ' + (idx+1) + '/10</span>' +
+                    '<div class="compact-spacer"></div>' +
+                    '<span class="compact-status locked">🔒 未解锁</span>' +
+                    '</div>';
+                return;
+            }
+
+            // 已解锁区域
+            var statusLabel = isAutoRunning
+                ? '<span class="compact-status auto">⚙ ' + speed + '%/s · ' + assigned.length + '只</span>'
+                : '<span class="compact-status idle">手动</span>';
+
+            var canClick = gameState.energy >= zone.energyCostManual;
+            var actionHtml = '<div class="compact-actions" onclick="event.stopPropagation();">';
+            if (!isAutoRunning) {
+                actionHtml += '<button class="compact-btn' + (canClick ? '' : ' disabled') + '" ' +
+                    (canClick ? 'onclick="manualExplore(\'' + zone.id + '\')"' : 'disabled') + '>⚡-' + zone.energyCostManual + '</button>';
+            } else {
+                // 召回第一只
+                actionHtml += '<button class="compact-btn danger" onclick="recallMonsterFromZone(\'' + zone.id + '\',' + assigned[0].id + ')">召回</button>';
+            }
+            // 派遣按钮（未满4时显示）
+            if (assigned.length < 4 && gameState.monsters.some(function(m){return m.status==='idle';})) {
+                actionHtml += '<button class="compact-btn warn" onclick="showDispatchPicker(\'' + zone.id + '\')">+ 派遣</button>';
+            }
+            actionHtml += '</div>';
+
+            var rewardsHtml = '<div class="compact-rewards">' +
+                (zone.rewards.coins[1]    > 0 ? '<span class="compact-reward-tag">🪙' + zone.rewards.coins[0]    + '~' + zone.rewards.coins[1] + '</span>' : '') +
+                (zone.rewards.materials[1]> 0 ? '<span class="compact-reward-tag">�' + zone.rewards.materials[0]+ '~' + zone.rewards.materials[1] + '</span>' : '') +
+                '</div>';
+
+            html += '<div class="compact-card ' + (isAutoRunning ? 'auto-running' : '') + '" onclick="showZoneDetailModal(\'' + zone.id + '\')">' +
+                '<span class="compact-icon-emoji">' + zone.icon + '</span>' +
+                '<div style="display:flex;flex-direction:column;min-width:0;flex:1;">' +
+                '<span class="compact-name">' + zone.name + '</span>' +
+                '<span class="compact-sub">深度 ' + (idx+1) + ' · ' + (zone.monsters.length > 0 ? monsterTypes[zone.monsters[0]].name : '') + (zone.monsters.length > 1 ? '等' : '') + '</span>' +
+                '</div>' +
+                rewardsHtml +
+                '<div class="compact-progress" title="' + Math.floor(progress) + '%"><div class="compact-progress-fill ' + (isAutoRunning?'auto':'') + '" id="zone-bar-' + zone.id + '" style="width:' + progress.toFixed(1) + '%;"></div></div>' +
+                statusLabel +
+                actionHtml +
+                '</div>';
+        });
+        html += '</div>';
+    } else {
+        // ────────── 大卡模式（原有逻辑）──────────
+        html += '<div class="expl-zone-grid">';
 
     explorationZones.forEach(function(zone, idx) {
         var isUnlocked = checkZoneCondition(zone);
@@ -388,7 +460,9 @@ window.renderExploration = function() {
             '</div>';
     });
 
-    html += '</div>';
+        html += '</div>'; // end expl-zone-grid
+    } // end else (large layout)
+
     el.innerHTML = html;
 
     // 恢复自动计时器（切换标签页后重挂）
@@ -400,40 +474,98 @@ window.renderExploration = function() {
     });
 };
 
-// ── 弹出派遣选择器 ──
+// ── 区域详情弹窗（小卡模式点击后展开）──
+window.showZoneDetailModal = function(zoneId) {
+    var zone = explorationZones.find(function(z) { return z.id === zoneId; });
+    if (!zone || !checkZoneCondition(zone)) return;
+    var rarityColor = { common:'#8b949e', uncommon:'#2196f3', rare:'#ff9800', epic:'#9c27b0', legendary:'#ffd700' };
+    var rarityName  = { common:'普通', uncommon:'优良', rare:'稀有', epic:'史诗', legendary:'传说' };
+    var zs = getZoneState(zone.id);
+    var progress = Math.min(100, zs.progress);
+    var assigned = zs.assignedMonsterIds.map(function(mid) {
+        return gameState.monsters.find(function(m) { return m.id === mid; });
+    }).filter(Boolean);
+    var isAutoRunning = assigned.length > 0;
+    var speed = isAutoRunning ? calcAutoSpeed(zone, zs.assignedMonsterIds).toFixed(1) : 0;
+
+    var monsterTags = zone.monsters.map(function(tid) {
+        var td = monsterTypes[tid];
+        if (!td) return '';
+        var rc = rarityColor[td.rarity] || '#8b949e';
+        var rn = rarityName[td.rarity]  || '';
+        return '<span style="border:1px solid ' + rc + ';color:' + rc + ';border-radius:4px;padding:2px 7px;font-size:12px;display:inline-block;margin:2px;">' +
+            td.name + ' [' + rn + ']</span>';
+    }).join('');
+
+    var assignedHtml = assigned.length > 0
+        ? assigned.map(function(m) {
+            return '<div style="display:flex;align-items:center;gap:8px;background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:6px 10px;font-size:13px;">' +
+                createSVG(m.type, 20) +
+                '<span style="flex:1;font-weight:600;">' + m.name + '</span>' +
+                '<span style="color:#8b949e;">Lv.' + m.level + '</span>' +
+                '<button style="background:#3a1a1a;color:#f85149;border:1px solid #da3633;border-radius:5px;padding:2px 8px;font-size:12px;cursor:pointer;" ' +
+                'onclick="recallMonsterFromZone(\'' + zone.id + '\',' + m.id + ');closeModal();">召回</button>' +
+                '</div>';
+        }).join('')
+        : '<div style="color:#8b949e;font-size:13px;padding:8px 0;">暂无派遣怪兽</div>';
+
+    var canClick = gameState.energy >= zone.energyCostManual;
+    var btnHtml = '';
+    if (!isAutoRunning) {
+        btnHtml += '<button class="btn btn-primary" ' + (canClick ? 'onclick="manualExplore(\'' + zone.id + '\');closeModal();"' : 'disabled') + '>' +
+            '⚡ 探索 (-' + zone.energyCostManual + '能量)</button>';
+    }
+    if (assigned.length < 4 && gameState.monsters.some(function(m){return m.status==='idle';})) {
+        btnHtml += '<button class="btn btn-warning" onclick="closeModal();showDispatchPicker(\'' + zone.id + '\');">+ 派遣怪兽</button>';
+    }
+    btnHtml += '<button class="btn btn-secondary" onclick="closeModal()">关闭</button>';
+
+    var html = '<div class="modal-header">' + zone.icon + ' ' + zone.name + '</div>' +
+        '<div style="font-size:13px;line-height:1.7;color:#c9d1d9;margin-bottom:12px;">' + zone.desc + '</div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">' +
+            (zone.rewards.coins[1]    > 0 ? '<span style="background:#21262d;border:1px solid #30363d;border-radius:6px;padding:2px 8px;font-size:13px;">🪙 ' + zone.rewards.coins[0]    + '~' + zone.rewards.coins[1] + '</span>' : '') +
+            (zone.rewards.food[1]     > 0 ? '<span style="background:#21262d;border:1px solid #30363d;border-radius:6px;padding:2px 8px;font-size:13px;">🌾 ' + zone.rewards.food[0]     + '~' + zone.rewards.food[1] + '</span>' : '') +
+            (zone.rewards.materials[1]> 0 ? '<span style="background:#21262d;border:1px solid #30363d;border-radius:6px;padding:2px 8px;font-size:13px;">🔩 ' + zone.rewards.materials[0]+ '~' + zone.rewards.materials[1] + '</span>' : '') +
+            (zone.rewards.research[1] > 0 ? '<span style="background:#21262d;border:1px solid #30363d;border-radius:6px;padding:2px 8px;font-size:13px;">🔬 ' + zone.rewards.research[0] + '~' + zone.rewards.research[1] + '</span>' : '') +
+        '</div>' +
+        '<div style="margin-bottom:8px;font-size:12px;color:#8b949e;">可遇怪兽：' + monsterTags + '</div>' +
+        // 进度条
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
+            '<div style="flex:1;height:8px;background:#21262d;border-radius:4px;overflow:hidden;">' +
+            '<div style="height:100%;background:' + (isAutoRunning ? 'linear-gradient(90deg,#46d164,#58a6ff)' : '#58a6ff') + ';width:' + progress.toFixed(1) + '%;border-radius:4px;transition:width 0.3s;"></div>' +
+            '</div>' +
+            '<span style="font-size:13px;color:#8b949e;min-width:36px;text-align:right;">' + Math.floor(progress) + '%</span>' +
+        '</div>' +
+        // 已派遣
+        '<div style="margin-bottom:12px;">' +
+            '<div style="font-size:12px;color:#8b949e;margin-bottom:6px;">已派遣怪兽 (' + assigned.length + '/4)' + (isAutoRunning ? '&nbsp;⚙ ' + speed + '%/s' : '') + '</div>' +
+            '<div style="display:flex;flex-direction:column;gap:5px;">' + assignedHtml + '</div>' +
+        '</div>' +
+        '<div class="modal-buttons">' + btnHtml + '</div>';
+
+    showModal(html);
+};
+
+// ── 弹出派遣选择器（接入统一筛选器）──
 window.showDispatchPicker = function(zoneId) {
     var zone = explorationZones.find(function(z) { return z.id === zoneId; });
     if (!zone) return;
-    var idleMonsters = gameState.monsters.filter(function(m) { return m.status === 'idle'; });
 
-    var html = '<div class="modal-header">' + zone.icon + ' 派遣怪兽前往 ' + zone.name + '</div>' +
-        '<p style="color:#8b949e;font-size:12px;margin:0 0 12px;">派遣怪兽后将自动探索，每只怪兽提升10%奖励并加快进度速度。</p>' +
-        '<div style="max-height:380px;overflow-y:auto;">';
-
-    if (idleMonsters.length === 0) {
-        html += '<div style="text-align:center;padding:30px;color:#8b949e;">所有怪兽都在忙碌中</div>';
-    } else {
-        html += idleMonsters.map(function(m) {
-            var td = monsterTypes[m.type];
+    showMonsterPickModal({
+        ctx:         'explore_' + zoneId,
+        title:       zone.icon + ' 派遣怪兽 → ' + TName(zoneId, 'zones'),
+        showLineage: false,
+        extraInfo: function(m) {
+            // 展示对该区域的探索贡献
             var power = (m.stats.strength || 0) + (m.stats.agility || 0) + (m.stats.intelligence || 0);
             var speedContrib = (power / 10).toFixed(1);
-            return '<div class="expl-picker-item" onclick="assignMonsterToZone(\'' + zoneId + '\',' + m.id + ');closeModal();">' +
-                '<div style="background:#0d1117;border-radius:8px;padding:4px;">' + createSVG(m.type, 32) + '</div>' +
-                '<div style="flex:1;margin-left:10px;">' +
-                '<div style="font-weight:700;">' + m.name + '</div>' +
-                '<div style="font-size:13px;color:#8b949e;">Lv.' + m.level + ' · ' + (td ? td.name : m.type) +
-                ' · 力量' + m.stats.strength + ' 敏捷' + m.stats.agility + ' 智力' + m.stats.intelligence + '</div>' +
-                '</div>' +
-                '<div style="text-align:right;font-size:13px;">' +
-                '<div style="color:#58a6ff;">+' + speedContrib + '%/s</div>' +
-                '<div style="color:#46d164;">奖励+10%</div>' +
-                '</div>' +
-                '</div>';
-        }).join('');
-    }
-
-    html += '</div><div class="modal-buttons"><button class="btn btn-primary" onclick="closeModal()">取消</button></div>';
-    showModal(html);
+            return '<div style="font-size:11px;color:#58a6ff;margin-top:2px;">' +
+                '速度 +' + speedContrib + '%/s　<span style="color:#46d164;">奖励 +10%</span></div>';
+        },
+        onSelect: function(monsterId) {
+            assignMonsterToZone(zoneId, monsterId);
+        }
+    });
 };
 
 // ── 从怪兽详情弹窗"派去探索"：先弹区域选择器，再派遣 ──

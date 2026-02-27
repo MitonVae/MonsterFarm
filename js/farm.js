@@ -42,11 +42,14 @@ window.handlePlotClick = function(plotId) {
         return;
     }
     if (!plot.crop) {
-        showPlantMenu(plotId);
+        // 空地块：弹出"种植 or 指派怪兽"二选一菜单
+        showEmptyPlotMenu(plotId);
     } else if (plot.progress >= 100) {
         harvest(plotId);
+    } else {
+        // 生长中且无怪兽：可指派怪兽加速
+        showGrowingPlotMenu(plotId);
     }
-    // 生长中且无怪兽：不可操作
 };
 
 // ==================== 地块管理面板（有怪兽时）====================
@@ -96,6 +99,118 @@ function getCropNameByMonster(monsterType) {
     return crop ? crop.name : '无';
 }
 
+// ==================== 空地块菜单（种植 or 指派怪兽）====================
+window.showEmptyPlotMenu = function(plotId) {
+    var hasIdleMonsters = gameState.monsters.some(function(m) { return m.status === 'idle'; });
+    var html =
+        '<div class="modal-header">🌱 地块 #' + (plotId + 1) + ' · 空闲</div>' +
+        '<div style="display:flex;flex-direction:column;gap:10px;padding:4px 0 10px;">' +
+        // ── 选项1：指派怪兽（自动化）──
+        '<div onclick="closeModal();showPickMonsterForPlot(' + plotId + ');" style="padding:14px 16px;background:#1a2a1a;' +
+            'border:2px solid #46d164;border-radius:10px;cursor:pointer;transition:background 0.15s;"' +
+            ' onmouseover="this.style.background=\'#223322\'" onmouseout="this.style.background=\'#1a2a1a\'">' +
+            '<div style="display:flex;align-items:center;gap:10px;">' +
+                '<span style="font-size:28px;">🐾</span>' +
+                '<div>' +
+                    '<div style="font-weight:700;color:#46d164;font-size:14px;">指派怪兽驻守</div>' +
+                    '<div style="font-size:12px;color:#8b949e;margin-top:3px;">自动化生产，支持设置专属作物，有专长加成</div>' +
+                    (hasIdleMonsters ? '' : '<div style="font-size:11px;color:#f85149;margin-top:4px;">⚠ 当前没有空闲怪兽</div>') +
+                '</div>' +
+            '</div>' +
+        '</div>' +
+        // ── 选项2：手动种植 ──
+        '<div onclick="closeModal();showPlantMenu(' + plotId + ');" style="padding:14px 16px;background:#21262d;' +
+            'border:2px solid #30363d;border-radius:10px;cursor:pointer;transition:background 0.15s;"' +
+            ' onmouseover="this.style.background=\'#30363d\'" onmouseout="this.style.background=\'#21262d\'">' +
+            '<div style="display:flex;align-items:center;gap:10px;">' +
+                '<span style="font-size:28px;">🌾</span>' +
+                '<div>' +
+                    '<div style="font-weight:700;color:#e6edf3;font-size:14px;">手动种植</div>' +
+                    '<div style="font-size:12px;color:#8b949e;margin-top:3px;">成熟后需手动收获，无自动化加成</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>' +
+        '</div>' +
+        '<div class="modal-buttons"><button class="btn btn-secondary" onclick="closeModal()">取消</button></div>';
+    showModal(html);
+};
+
+// ==================== 生长中地块菜单（可指派怪兽加速）====================
+window.showGrowingPlotMenu = function(plotId) {
+    var plot = gameState.plots[plotId];
+    var ct   = cropTypes.find(function(c){ return c.id === plot.crop; });
+    var hasIdleMonsters = gameState.monsters.some(function(m) { return m.status === 'idle'; });
+    var html =
+        '<div class="modal-header">🌿 地块 #' + (plotId + 1) + ' · 生长中</div>' +
+        '<div style="background:#21262d;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:#8b949e;">' +
+            '<span style="color:#e6edf3;font-weight:700;">' + (ct ? ct.name : plot.crop) + '</span>' +
+            ' · 进度 <span style="color:#58a6ff;">' + Math.floor(plot.progress) + '%</span>' +
+        '</div>' +
+        '<div onclick="closeModal();showPickMonsterForPlot(' + plotId + ');" style="padding:14px 16px;background:#1a2a1a;' +
+            'border:2px solid #46d164;border-radius:10px;cursor:pointer;margin-bottom:10px;transition:background 0.15s;"' +
+            ' onmouseover="this.style.background=\'#223322\'" onmouseout="this.style.background=\'#1a2a1a\'">' +
+            '<div style="display:flex;align-items:center;gap:10px;">' +
+                '<span style="font-size:28px;">🐾</span>' +
+                '<div>' +
+                    '<div style="font-weight:700;color:#46d164;font-size:14px;">派遣怪兽接管（加速生长）</div>' +
+                    '<div style="font-size:12px;color:#8b949e;margin-top:3px;">派遣后提升耕作速度，成熟时自动收获</div>' +
+                    (hasIdleMonsters ? '' : '<div style="font-size:11px;color:#f85149;margin-top:4px;">⚠ 当前没有空闲怪兽</div>') +
+                '</div>' +
+            '</div>' +
+        '</div>' +
+        '<div class="modal-buttons"><button class="btn btn-secondary" onclick="closeModal()">取消</button></div>';
+    showModal(html);
+};
+
+// ==================== 从地块入口选怪（含加成高亮）====================
+// 让玩家直接从地块选怪兽，选完后指派到该地块
+window.showPickMonsterForPlot = function(plotId) {
+    var plot = gameState.plots[plotId];
+    // 确定参考作物（用于加成排序）
+    var cropId = plot.autoCrop || plot.crop || null;
+
+    // 检查是否有空闲怪兽
+    var idleMonsters = gameState.monsters.filter(function(m){ return m.status === 'idle'; });
+    if (idleMonsters.length === 0) {
+        showNotification('没有空闲怪兽！先去探索捕捉怪兽吧。', 'warning');
+        return;
+    }
+
+    // 构建 cropId 对应的作物提示
+    var cropHint = '';
+    if (cropId) {
+        var ct = cropTypes.find(function(c){ return c.id === cropId; });
+        if (ct) {
+            cropHint = '<div style="background:#161b22;border:1px solid #30363d;border-radius:6px;' +
+                'padding:8px 12px;margin-bottom:8px;font-size:12px;color:#8b949e;">' +
+                '当前作物：<span style="color:#e6edf3;font-weight:700;">' + ct.name + '</span>' +
+                (ct.preferredMonster
+                    ? '　专长怪兽：<span style="color:#46d164;font-weight:700;">' +
+                      (monsterTypes[ct.preferredMonster] ? monsterTypes[ct.preferredMonster].name : ct.preferredMonster) +
+                      '</span>　<span style="color:#46d164;">速度×1.25 优质率+15%</span>'
+                    : '') +
+                '</div>';
+        }
+    }
+
+    // 使用 showMonsterPickModal（含筛选器）
+    // 先用 showModal 注入提示 + 再调用选怪弹窗
+    showMonsterPickModal({
+        ctx:        'farm_plot_' + plotId,
+        title:      '🐾 为地块 #' + (plotId + 1) + ' 选择驻守怪兽',
+        monsters:   idleMonsters,
+        pinCropType: cropId,
+        showLineage: true,
+        onSelect:   function(monsterId) {
+            var ok = assignMonsterToPlot(monsterId, plotId);
+            if (ok && !plot.autoCrop) {
+                // 指派后弹出作物设置面板
+                setTimeout(function(){ showPlotManagePanel(plotId); }, 200);
+            }
+        }
+    });
+};
+
 window.showPlantMenu = function(plotId) {
     var plot = gameState.plots[plotId];
     if (plot.locked || plot.crop) return;
@@ -109,6 +224,11 @@ window.showPlantMenu = function(plotId) {
         '💡 手动种植需手动收获。如需自动化，请先派遣怪兽驻守此地块。</div>' +
         '<div style="display: grid; gap: 10px;">' +
         availableCrops.map(function(crop) {
+            // 展示有加成的怪兽提示
+            var prefMonster = crop.preferredMonster ? monsterTypes[crop.preferredMonster] : null;
+            var bonusTip = prefMonster
+                ? '<div style="font-size:11px;color:#46d164;margin-top:4px;">★ ' + prefMonster.name + ' 派驻可获得专长加成</div>'
+                : '';
             return '<div style="padding: 15px; background: #21262d; border-radius: 8px; cursor: pointer; border: 2px solid #30363d;"' +
                 ' onclick="plantCrop(' + plotId + ', \'' + crop.id + '\')"' +
                 ' onmouseover="this.style.borderColor=\'#58a6ff\'"' +
@@ -117,6 +237,7 @@ window.showPlantMenu = function(plotId) {
                 '<div style="font-size: 12px; color: #8b949e;">' +
                 '生长时间: ' + crop.growTime/1000 + '秒 | 产量: ' + crop.yield + ' 食物 | 售价: ' + crop.value + ' 金币' +
                 '</div><div style="font-size:13px;color:#58a6ff;margin-top:4px;">' + crop.desc + '</div>' +
+                bonusTip +
                 '</div>';
         }).join('') +
         '</div><div class="modal-buttons"><button class="btn btn-primary" onclick="closeModal()">取消</button></div>';
@@ -273,7 +394,7 @@ function startGrowTimer(plotId) {
             if (!harvestScheduled) {
                 harvestScheduled = true;
                 updatePlotAppearance(plotId, true);
-                showNotification(ct.name + ' 成熟了！', 'success');
+                // 成熟提示已由地块 UI 高亮显示，无需右上角弹窗
             }
             return; // timer 继续跑，以便状态恢复后能重新检测
         }
@@ -411,7 +532,7 @@ window.harvest = function(plotId) {
     gameState.totalHarvests++;
     checkMilestones();
     var extras = (matYield > 0 ? ' +' + matYield + '材料' : '') + (resYield > 0 ? ' +' + resYield + '研究' : '');
-    showNotification('收获 ' + cropType.name + '！+' + yieldAmount + '食物 +' + valueAmount + '金币' + extras, 'success');
+    // 手动收获：只走简报，不弹右上角通知
     if (typeof briefHarvest === 'function') briefHarvest(cropType.name, valueAmount, yieldAmount, null);
     plot.crop = null;
     plot.plantedAt = null;
@@ -439,7 +560,8 @@ window.removeMonsterFromPlot = function(plotId) {
         plot.plantedAt = Date.now() - (plot.progress / 100) * ct.growTime;
         startGrowTimer(plotId);
     }
-    showNotification(monster.name + ' 已从地块撤回', 'info');
+    // 撤回走简报，不弹右上角
+    if (typeof briefSystem === 'function') briefSystem(monster.name + ' 已从地块撤回');
     renderFarm();
     renderSidebarMonsters();
 };
@@ -462,7 +584,8 @@ window.assignMonsterToPlot = function(monsterId, plotId) {
         if (growIntervals[plotId]) clearInterval(growIntervals[plotId]);
         startGrowTimer(plotId);
     }
-    showNotification(monster.name + ' 驻守地块 #' + (plotId+1), 'success');
+    // 派驻走简报，不弹右上角
+    if (typeof briefSystem === 'function') briefSystem(monster.name + ' 驻守地块 #' + (plotId+1));
     // 引导钩子：Step4 选择地块 → Step5
     if (typeof onTutorialPlotPicked === 'function') onTutorialPlotPicked();
     renderFarm();
@@ -523,7 +646,7 @@ window.autoHarvestAll = function() {
 // ==================== 快捷操作：手动存档 ====================
 window.quickSave = function() {
     autoSave();
-    showNotification('✅ 存档成功！', 'success');
+    // 保存走简报，不弹右上角
     if (typeof briefSave === 'function') briefSave(false);
 };
 

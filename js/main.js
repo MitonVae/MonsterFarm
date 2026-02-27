@@ -227,7 +227,12 @@ function createMonster(type, parent1, parent2) {
         assignment: null,
         status: 'idle',
         traits: generateTraits(),
-        generation: parent1 ? Math.max(parent1.generation, parent2.generation) + 1 : 1
+        generation: parent1 ? Math.max(parent1.generation, parent2.generation) + 1 : 1,
+        // ── 亲代血统记录（供系谱树使用）──
+        parent1Id:   parent1 ? parent1.id   : null,
+        parent1Name: parent1 ? parent1.name : null,
+        parent2Id:   parent2 ? parent2.id   : null,
+        parent2Name: parent2 ? parent2.name : null
     };
     
     gameState.monsters.push(monster);
@@ -274,7 +279,7 @@ function gainExp(monster, amount) {
             monster.stats[key] += increase;
         });
         
-        showNotification(monster.name + ' 升级到 ' + monster.level + ' 级！', 'success');
+    // 升级走简报，不弹右上角
     if (typeof briefLevelUp === 'function') briefLevelUp(monster.name, monster.level);
     }
 }
@@ -509,7 +514,8 @@ document.addEventListener('keydown', function(e) {
     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
         autoSave();
-        showNotification('💾 游戏已保存！', 'success');
+        // 保存走简报，不弹右上角
+        if (typeof briefSave === 'function') briefSave(false);
     }
     
     if (e.key === 'Escape') {
