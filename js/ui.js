@@ -877,6 +877,11 @@ window.showSettingsModal = function() {
         // 底部按钮行
         '<div class="modal-buttons">' +
         '<button class="btn btn-info" style="background:#1f6feb;border-color:#1f6feb;" onclick="closeModal();if(typeof showTextTutorial===\'function\')showTextTutorial();">' + _t('tutorialBtn','settings') + '</button>' +
+        (function() {
+            var unread = (typeof getChangelogUnread === 'function') ? getChangelogUnread() : 0;
+            var dot = unread ? '<span style="display:inline-block;width:7px;height:7px;background:#f85149;border-radius:50%;margin-left:5px;vertical-align:middle;"></span>' : '';
+            return '<button class="btn btn-secondary" style="border-color:#46d164;color:#46d164;" onclick="closeModal();if(typeof showChangelog===\'function\')showChangelog();">📋 更新公告' + dot + '</button>';
+        })() +
         '<button class="btn btn-danger" onclick="if(typeof resetGame===\'function\')resetGame();">' + _t('resetBtn','settings') + '</button>' +
         '<button class="btn btn-primary" onclick="closeModal()">' + _t('closeBtn','settings') + '</button>' +
         '</div>' +
@@ -884,7 +889,7 @@ window.showSettingsModal = function() {
         // 隐藏版本号（长按2秒进入GM面板）
         '<div id="gmVersionHint" ' +
             'style="text-align:center;margin-top:8px;font-size:10px;color:#30363d;cursor:default;user-select:none;letter-spacing:0.3px;">' +
-            'v0.9.1-dev' +
+            'v0.9.3' +
         '</div>';
 
     showModal(html);
