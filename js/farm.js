@@ -147,8 +147,13 @@ window.setAutoCrop = function(plotId, cropId) {
         startGrowTimer(plotId);
         closeModal();
         showNotification('已切换并重新种植：' + cropName, 'success');
+    } else if (plot.progress >= 100) {
+        // 作物已成熟：立即触发收获（重启 timer 可重置 harvestScheduled 标志）
+        startGrowTimer(plotId);
+        closeModal();
+        showNotification('将自动收获并种植：' + cropName, 'info');
     } else {
-        // 相同作物 或 已成熟等待收获：仅更新 autoCrop，下轮生效
+        // 相同作物且未成熟：仅更新 autoCrop，当前 timer 继续，下轮生效
         closeModal();
         showNotification('下一轮将自动种植：' + cropName, 'info');
     }
@@ -208,6 +213,9 @@ function calcQualityChance(monster, crop) {
 }
 
 // ==================== 生长计时器（核心）====================
+// 设计原则：timer 在整个作物生命周期内持续运行，不在成熟时停止。
+// 这样无论用户打开/关闭面板、renderFarm 重建 DOM，下次 tick 都能
+// 正确检测状态，避免"成熟后卡死闪烁"问题。
 function startGrowTimer(plotId) {
     // 先清除已有 timer，防止重复
     if (growIntervals[plotId]) {
@@ -217,13 +225,15 @@ function startGrowTimer(plotId) {
     var plot = gameState.plots[plotId];
     if (!plot || !plot.crop) return;
 
-    // 记录本次 timer 启动时对应的作物，用于检测"中途换作物"的失效 timer
+    // 记录启动时的作物 ID，用于检测"中途换作物"后的失效 timer
     var timerCrop = plot.crop;
+    // 防止成熟后多次触发收获的标志
+    var harvestScheduled = false;
 
     var intervalId = setInterval(function() {
         var p = gameState.plots[plotId];
 
-        // 地块已清空，或作物已被换掉（换作物时会重启 timer，旧 timer 应失效）
+        // 地块已清空或作物被换掉 → 此 timer 已过期，自毁
         if (!p || !p.crop || p.crop !== timerCrop) {
             clearInterval(intervalId);
             if (growIntervals[plotId] === intervalId) delete growIntervals[plotId];
@@ -237,24 +247,46 @@ function startGrowTimer(plotId) {
             return;
         }
 
-        var speedMult = calcSpeedMultiplier(p, p.assignedMonster);
-        var elapsed = Date.now() - p.plantedAt;
-        p.progress = Math.min(100, (elapsed / ct.growTime) * 100 * speedMult);
-        updatePlotProgress(plotId);
+        // ── 未成熟：更新进度 ──
+        if (p.progress < 100) {
+            harvestScheduled = false; // 重置标志（以防万一）
+            var speedMult = calcSpeedMultiplier(p, p.assignedMonster);
+            var elapsed = Date.now() - p.plantedAt;
+            p.progress = Math.min(100, (elapsed / ct.growTime) * 100 * speedMult);
+            updatePlotProgress(plotId);
+            return;
+        }
 
-        if (p.progress >= 100) {
-            clearInterval(intervalId);
-            if (growIntervals[plotId] === intervalId) delete growIntervals[plotId];
-            updatePlotAppearance(plotId, true);
-            // 仅当没有怪兽时才播报"成熟"通知（有怪兽会在 autoHarvestPlot 里通知）
-            if (!p.assignedMonster) {
+        // ── 已成熟 ──
+        p.progress = 100; // 确保精确值
+
+        if (!p.assignedMonster) {
+            // 无怪兽：保持成熟等待手动收获；只在首次成熟时更新外观和通知
+            if (!harvestScheduled) {
+                harvestScheduled = true;
+                updatePlotAppearance(plotId, true);
                 showNotification(ct.name + ' 成熟了！', 'success');
             }
-            if (p.assignedMonster && p.autoCrop) {
-                setTimeout(function() { autoHarvestPlot(plotId); }, 800);
-            } else if (!p.assignedMonster) {
-                // 无怪兽：保持成熟状态，等待手动收获
+            return; // timer 继续跑，以便状态恢复后能重新检测
+        }
+
+        if (!p.autoCrop) {
+            // 有怪兽但未设置 autoCrop：同样保持成熟
+            if (!harvestScheduled) {
+                harvestScheduled = true;
+                updatePlotAppearance(plotId, true);
             }
+            return;
+        }
+
+        // 有怪兽且设置了 autoCrop：触发一次自动收获，之后停止此 timer
+        if (!harvestScheduled) {
+            harvestScheduled = true;
+            updatePlotAppearance(plotId, true);
+            // 停止当前 timer（收获完毕后 startAutoCycle 会启动新 timer）
+            clearInterval(intervalId);
+            if (growIntervals[plotId] === intervalId) delete growIntervals[plotId];
+            autoHarvestPlot(plotId);
         }
     }, 200);
     growIntervals[plotId] = intervalId;
@@ -583,13 +615,10 @@ window.restoreGrowTimers = function() {
         }
 
         if (plot.progress >= 100) {
-            // 已成熟：如有怪兽则触发自动收获，否则保持成熟状态等待手动收获
-            if (plot.assignedMonster && plot.autoCrop) {
-                // 用短延迟错开多地块同时收获，避免通知堆叠
-                var delay = plot.id * 200;
-                setTimeout(function() { autoHarvestPlot(plot.id); }, delay);
-            }
-            // 无怪兽：DOM 会在 renderFarm 时渲染为"点击收获"状态，无需额外处理
+            // 已成熟：无论有无怪兽，都启动 timer。
+            // timer 内部会处理：有怪兽→自动收获，无怪兽→保持成熟显示。
+            // 这样可确保 renderFarm 重建 DOM 后外观也能被 timer 持续修正。
+            startGrowTimer(plot.id);
         } else {
             // 仍在生长中：补偿离线时间后重启计时器
             // plantedAt 已保存，elapsed 自动包含离线时长，progress 会在 timer 首次 tick 时更新
