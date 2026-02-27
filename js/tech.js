@@ -262,12 +262,8 @@ function renderMonsterBreakthroughSection() {
     }
     var selMonster = _reforgeState.monsterId ? gameState.monsters.find(function(m){ return m.id === _reforgeState.monsterId; }) : null;
 
-    // 怪兽选择下拉
-    var monsterOptions = gameState.monsters.map(function(m){
-        var idle = m.status === 'idle';
-        return '<option value="' + m.id + '"' + (m.id === _reforgeState.monsterId ? ' selected' : '') + (!idle ? ' disabled' : '') + '>' +
-            m.name + ' Lv.' + m.level + (idle ? '' : ' [' + T('working','monsterStatus') + ']') + '</option>';
-    }).join('');
+    // ── 当前已选怪兽预览卡（替代 <select> 下拉）──
+    var monsterPickHtml = _renderReforgeMonsterCard(selMonster);
 
     // 重铸模式按钮（使用 i18n 名称）
     var modeHtml = Object.keys(REFORGE_CONFIG).map(function(key){
@@ -352,12 +348,8 @@ function renderMonsterBreakthroughSection() {
         '<div class="tech-title" style="margin:0;">🧬 ' + T('reforgeTitle','monsters') + '</div>' +
         '<span style="font-size:11px;color:#8b949e;">' + _reforgeSubtitle() + '</span>' +
         '</div>' +
-        // 怪兽选择
-        '<div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">' +
-        '<div style="font-size:12px;color:#8b949e;white-space:nowrap;">' + T('title','monsters') + '：</div>' +
-        '<select id="reforge-monster-select" onchange="onReforgeMonsterChange(this.value)" style="flex:1;background:#21262d;color:#e6edf3;border:1px solid #30363d;border-radius:6px;padding:5px 8px;font-size:13px;">' +
-        monsterOptions + '</select>' +
-        '</div>' +
+        // 怪兽选择卡（筛选器入口）
+        monsterPickHtml +
         // 模式选择
         '<div style="display:flex;gap:6px;margin-bottom:10px;">' + modeHtml + '</div>' +
         // 模式说明
@@ -374,6 +366,97 @@ function renderMonsterBreakthroughSection() {
         '</div>' +
         '</div>';
 }
+
+// ── 渲染重铸怪兽预览卡（替代 <select>）──
+function _renderReforgeMonsterCard(selMonster) {
+    if (!selMonster) {
+        return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;' +
+            'background:#0d1117;border:1px dashed #30363d;border-radius:10px;padding:12px 16px;margin-bottom:10px;">' +
+            '<span style="color:#8b949e;font-size:13px;">尚未选择怪兽</span>' +
+            '<button onclick="openReforgeMonsterPicker()" style="' +
+                'padding:6px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;' +
+                'border:1px solid #58a6ff;background:#58a6ff22;color:#58a6ff;">🔍 选择怪兽</button>' +
+        '</div>';
+    }
+    var td = monsterTypes[selMonster.type] || {};
+    var selTotal = STAT_KEYS.reduce(function(s,k){ return s+(selMonster.stats[k]||0); }, 0);
+    var selBest  = selMonster.reforgeBestStats
+        ? STAT_KEYS.reduce(function(s,k){ return s+(selMonster.reforgeBestStats[k]||0); }, 0) : null;
+    var rarityColors = { common:'#8b949e', uncommon:'#2196f3', rare:'#ff9800', epic:'#9c27b0', legendary:'#ffd700' };
+    var rc = rarityColors[td.rarity] || '#8b949e';
+    var pc = selMonster.reforgePityCount || 0;
+    var pityBadge = '';
+    if (pc >= REFORGE_PITY_THRESHOLD) {
+        pityBadge = '<span style="font-size:10px;background:#ffd70022;color:#ffd700;border:1px solid #ffd70044;' +
+            'border-radius:8px;padding:1px 6px;margin-left:4px;vertical-align:middle;">✨ 保底</span>';
+    } else if (pc > 0) {
+        pityBadge = '<span style="font-size:10px;background:#f0883e22;color:#f0883e;border:1px solid #f0883e44;' +
+            'border-radius:8px;padding:1px 6px;margin-left:4px;vertical-align:middle;">保底 ' + pc + '/' + REFORGE_PITY_THRESHOLD + '</span>';
+    }
+    // 四项属性小格
+    var statBars = '<div style="display:flex;gap:5px;margin-top:5px;">' +
+        STAT_KEYS.map(function(k) {
+            var v = selMonster.stats[k] || 0;
+            var best = selMonster.reforgeBestStats ? (selMonster.reforgeBestStats[k]||0) : v;
+            var isBest = v >= best;
+            return '<div style="flex:1;text-align:center;background:#21262d;border-radius:5px;padding:3px 2px;">' +
+                '<div style="font-size:9px;color:#8b949e;">' + (STAT_LABELS[k]||k).slice(0,1) + '</div>' +
+                '<div style="font-size:12px;font-weight:700;color:' + (isBest ? '#ffd700' : '#e6edf3') + ';">' + v + '</div>' +
+            '</div>';
+        }).join('') +
+    '</div>';
+
+    return '<div style="display:flex;align-items:center;gap:10px;background:#0d1117;' +
+        'border:1px solid #30363d;border-radius:10px;padding:8px 12px;margin-bottom:10px;">' +
+        '<div style="background:#21262d;border-radius:8px;padding:4px;flex-shrink:0;">' + createSVG(selMonster.type, 36) + '</div>' +
+        '<div style="flex:1;min-width:0;">' +
+            '<div style="font-weight:700;color:#e6edf3;font-size:13px;line-height:1.3;">' +
+                selMonster.name + pityBadge +
+            '</div>' +
+            '<div style="font-size:11px;color:#8b949e;margin-top:1px;">' +
+                'Lv.' + selMonster.level +
+                ' · <span style="color:' + rc + ';">' + (td.name || selMonster.type) + '</span>' +
+                ' · 总计 <strong style="color:#e6edf3;">' + selTotal + '</strong>' +
+                (selBest ? ' / 最佳 <strong style="color:#ffd700;">' + selBest + '</strong>' : '') +
+            '</div>' +
+            statBars +
+        '</div>' +
+        '<button onclick="openReforgeMonsterPicker()" title="筛选更换怪兽" style="' +
+            'padding:7px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0;' +
+            'border:1px solid #58a6ff44;background:#58a6ff11;color:#58a6ff;transition:all 0.2s;"' +
+            ' onmouseover="this.style.background=\'#58a6ff33\'"' +
+            ' onmouseout="this.style.background=\'#58a6ff11\'">🔍 更换</button>' +
+    '</div>';
+}
+
+// ── 打开重铸怪兽筛选器弹窗 ──
+window.openReforgeMonsterPicker = function() {
+    showMonsterPickModal({
+        ctx:         'reforge',
+        title:       '🧬 选择重铸怪兽',
+        statusFilter: 'idle',    // 只显示空闲怪兽
+        showLineage:  true,
+        extraInfo: function(m) {
+            var total = STAT_KEYS.reduce(function(s,k){ return s+(m.stats[k]||0); }, 0);
+            var best  = m.reforgeBestStats
+                ? STAT_KEYS.reduce(function(s,k){ return s+(m.reforgeBestStats[k]||0); }, 0) : null;
+            var pc = m.reforgePityCount || 0;
+            var pityStr = pc >= REFORGE_PITY_THRESHOLD
+                ? '<span style="color:#ffd700;">✨ 保底已触发</span>'
+                : (pc > 0 ? '<span style="color:#f0883e;">保底 ' + pc + '/' + REFORGE_PITY_THRESHOLD + '</span>' : '');
+            return '<div style="font-size:11px;color:#8b949e;margin-top:2px;">' +
+                '总属性 <strong style="color:#e6edf3;">' + total + '</strong>' +
+                (best ? ' · 最佳 <strong style="color:#ffd700;">' + best + '</strong>' : '') +
+                (pityStr ? ' · ' + pityStr : '') +
+            '</div>';
+        },
+        onSelect: function(monsterId) {
+            _reforgeState.monsterId = monsterId;
+            _reforgeState.lockedStats = [];
+            renderTech();
+        }
+    });
+};
 
 // ── 切换模式 ──
 window.switchReforgeMode = function(mode) {
