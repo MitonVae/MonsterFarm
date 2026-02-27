@@ -81,21 +81,27 @@
                 'style="flex:1;padding:6px 4px;font-size:12px;">×' + s + '</button>';
         }).join('');
 
-        var typeOpts = Object.keys(monsterTypes).map(function(k) {
+        var rColor = { common:'#8b949e', uncommon:'#46d164', rare:'#58a6ff', epic:'#bc8cff', legendary:'#f0c53d' };
+
+        // 怪兽品种下拉选项
+        var typeItems = Object.keys(monsterTypes).map(function(k) {
             var t = monsterTypes[k];
-            var rColor = { common:'#8b949e', uncommon:'#46d164', rare:'#58a6ff', epic:'#bc8cff', legendary:'#f0c53d' };
-            return '<option value="' + k + '" style="color:' + (rColor[t.rarity]||'#e6edf3') + ';">' +
-                t.name + '（' + t.rarity + '）</option>';
-        }).join('');
+            return { value: k, label: t.name + '（' + t.rarity + '）', color: rColor[t.rarity] || '#e6edf3' };
+        });
+        var firstTypeKey = typeItems.length ? typeItems[0].value : '';
 
-        var zoneOpts = explorationZones.map(function(z) {
-            return '<option value="' + z.id + '">' + z.icon + ' ' + z.name + '</option>';
-        }).join('');
+        // 探索区域下拉选项
+        var zoneItems = explorationZones.map(function(z) {
+            return { value: z.id, label: z.icon + ' ' + z.name };
+        });
+        var firstZoneId = zoneItems.length ? zoneItems[0].value : '';
 
-        var techOpts = Object.keys(technologies).map(function(k) {
+        // 科技下拉选项
+        var techItems = Object.keys(technologies).map(function(k) {
             var unlocked = gameState.technologies[k];
-            return '<option value="' + k + '">' + (unlocked ? '✅ ' : '🔒 ') + technologies[k].name + '</option>';
-        }).join('');
+            return { value: k, label: (unlocked ? '✅ ' : '🔒 ') + technologies[k].name };
+        });
+        var firstTechKey = techItems.length ? techItems[0].value : '';
 
         var html =
             // ── 标题 ──
@@ -135,17 +141,17 @@
             _section(T('secMonster','gm'),
                 '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">' +
                     '<div>' +
-                        '<label style="font-size:12px;color:#8b949e;">' + T('monsterType','gm') + '</label>' +
-                        '<select id="gmMonsterType" style="width:100%;margin-top:4px;padding:7px 8px;' +
-                            'background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3;font-size:13px;">' +
-                            typeOpts +
-                        '</select>' +
+                        '<label style="font-size:12px;color:#8b949e;display:block;margin-bottom:4px;">' + T('monsterType','gm') + '</label>' +
+                        _gmBuildCS('gmMonsterType', typeItems, firstTypeKey) +
                     '</div>' +
                     '<div>' +
                         '<label style="font-size:12px;color:#8b949e;">' + T('monsterLevel','gm') + '</label>' +
-                        '<input id="gmMonsterLevel" type="number" min="1" max="50" value="1" ' +
-                            'style="width:100%;box-sizing:border-box;margin-top:4px;padding:7px 8px;' +
-                            'background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3;font-size:13px;">' +
+                        '<div class="mf-num-wrap" style="margin-top:4px;">' +
+                            '<button class="mf-num-btn" onclick="var el=document.getElementById(\'gmMonsterLevel\');el.value=Math.max(1,+el.value-1)">−</button>' +
+                            '<input id="gmMonsterLevel" type="number" min="1" max="50" value="1" ' +
+                                'class="mf-range-input" style="width:60px;border:none;border-left:1px solid #30363d;border-right:1px solid #30363d;">' +
+                            '<button class="mf-num-btn" onclick="var el=document.getElementById(\'gmMonsterLevel\');el.value=Math.min(50,+el.value+1)">+</button>' +
+                        '</div>' +
                     '</div>' +
                 '</div>' +
                 '<div style="margin-bottom:8px;">' +
@@ -163,10 +169,7 @@
             // ── 区块：科技解锁 ──
             _section(T('secTech','gm'),
                 '<div style="margin-bottom:8px;">' +
-                    '<select id="gmTechKey" style="width:100%;padding:7px 8px;' +
-                        'background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3;font-size:13px;">' +
-                        techOpts +
-                    '</select>' +
+                    _gmBuildCS('gmTechKey', techItems, firstTechKey) +
                 '</div>' +
                 '<div style="display:flex;gap:8px;">' +
                     '<button class="btn btn-primary" style="flex:1;font-size:13px;" onclick="window._gmUnlockTech()">' + T('btnUnlockTech','gm') + '</button>' +
@@ -177,10 +180,7 @@
             // ── 区块：探索区域解锁 ──
             _section(T('secZone','gm'),
                 '<div style="margin-bottom:8px;">' +
-                    '<select id="gmZoneKey" style="width:100%;padding:7px 8px;' +
-                        'background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3;font-size:13px;">' +
-                        zoneOpts +
-                    '</select>' +
+                    _gmBuildCS('gmZoneKey', zoneItems, firstZoneId) +
                 '</div>' +
                 '<div style="display:flex;gap:8px;">' +
                     '<button class="btn btn-primary" style="flex:1;font-size:13px;" onclick="window._gmUnlockZone()">' + T('btnUnlockZone','gm') + '</button>' +
@@ -242,6 +242,43 @@
             '</div>';
 
         showModal(html);
+    }
+
+    // ========== 辅助：GM 自定义下拉 ==========
+    // 复用 monster-filter.js 中注册的 _csOpen/_csSelect 全局函数
+    // items: [{value, label, color?}]，defaultVal: 默认选中的 value
+    function _gmBuildCS(id, items, defaultVal) {
+        var cur = defaultVal;
+        var curLabel = '';
+        items.forEach(function(o) {
+            if (String(o.value) === String(cur)) curLabel = o.label;
+        });
+        if (!curLabel && items.length) { cur = items[0].value; curLabel = items[0].label; }
+
+        var listHtml = items.map(function(o) {
+            var isSel = String(o.value) === String(cur);
+            var colorStyle = o.color ? 'color:' + o.color + ';' : '';
+            // 选中后直接更新 data-value 和 label，不需要走 _mfUpdate
+            return '<div class="cs-item' + (isSel ? ' cs-selected' : '') + '" ' +
+                'data-value="' + o.value + '" ' +
+                'style="' + colorStyle + '" ' +
+                'onclick="event.stopPropagation();window._csSelect(\'' + id + '\',' +
+                    JSON.stringify(o.value) + ',' +
+                    JSON.stringify(o.label) + ',' +
+                    'null' +
+                ');">' +
+                (isSel ? '<span class="cs-check">✓</span>' : '<span class="cs-check"></span>') +
+                o.label +
+                '</div>';
+        }).join('');
+
+        return '<div class="cs-dropdown gm-cs" id="' + id + '" data-value="' + cur + '" ' +
+            'style="width:100%;box-sizing:border-box;" ' +
+            'onclick="event.stopPropagation();window._csOpen(\'' + id + '\')">' +
+            '<span class="cs-label">' + curLabel + '</span>' +
+            '<span class="cs-arrow">▾</span>' +
+            '<div class="cs-list">' + listHtml + '</div>' +
+        '</div>';
     }
 
     // ========== 辅助：区块包裹 ==========
@@ -423,7 +460,8 @@
 
     // ── 添加怪兽 ──
     window._gmAddMonster = function() {
-        var typeKey  = (document.getElementById('gmMonsterType')  || {}).value  || 'slime';
+        var _gmTypeEl = document.getElementById('gmMonsterType');
+        var typeKey  = (_gmTypeEl ? (_gmTypeEl.dataset.value || _gmTypeEl.value) : '') || 'slime';
         var levelVal = parseInt((document.getElementById('gmMonsterLevel') || {}).value || '1', 10);
         var nameVal  = ((document.getElementById('gmMonsterName') || {}).value || '').trim();
         levelVal = Math.max(1, Math.min(50, isNaN(levelVal) ? 1 : levelVal));
@@ -504,7 +542,8 @@
 
     // ── 科技解锁 ──
     window._gmUnlockTech = function() {
-        var key = (document.getElementById('gmTechKey') || {}).value;
+        var _gmTechEl = document.getElementById('gmTechKey');
+        var key = _gmTechEl ? (_gmTechEl.dataset.value || _gmTechEl.value) : '';
         if (!key) return;
         gameState.technologies[key] = true;
         if (typeof renderTech === 'function') renderTech();
@@ -521,7 +560,8 @@
 
     // ── 探索区域解锁 ──
     window._gmUnlockZone = function() {
-        var zoneId = (document.getElementById('gmZoneKey') || {}).value;
+        var _gmZoneEl = document.getElementById('gmZoneKey');
+        var zoneId = _gmZoneEl ? (_gmZoneEl.dataset.value || _gmZoneEl.value) : '';
         if (!zoneId) return;
         if (!gameState.zoneStates[zoneId]) gameState.zoneStates[zoneId] = {};
         gameState.zoneStates[zoneId].unlocked = true;

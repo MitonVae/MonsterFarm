@@ -134,82 +134,6 @@
         return arr;
     };
 
-    // ── 构建筛选工具栏 HTML ──
-    // opts: { ctx, pinCropType, showBonusFirst, extraHtml }
-    // pinCropType: 如果设置，顶部显示对该作物有加成的怪兽
-    window.buildMonsterFilterBar = function(opts) {
-        opts = opts || {};
-        var ctx   = opts.ctx || 'default';
-        var s     = getFS(ctx);
-
-        // 收集所有可用特性
-        var traitPool = {};
-        (gameState.monsters || []).forEach(function(m) {
-            (m.traits || []).forEach(function(t) { traitPool[t.id] = t.name; });
-        });
-        var traitOpts = '<option value="all">全部特性</option>' +
-            Object.keys(traitPool).map(function(id) {
-                return '<option value="' + id + '"' + (s.trait === id ? ' selected' : '') + '>' + traitPool[id] + '</option>';
-            }).join('');
-
-        // 品种选项
-        var typeOpts = '<option value="all">全部品种</option>' +
-            Object.keys(monsterTypes).map(function(k) {
-                var t = monsterTypes[k];
-                return '<option value="' + k + '"' + (s.type === k ? ' selected' : '') + '>' + t.name + '</option>';
-            }).join('');
-
-        // 稀有度选项
-        var rarityOpts = '<option value="all">全部稀有度</option>' +
-            ['common','uncommon','rare','epic','legendary'].map(function(r) {
-                return '<option value="' + r + '"' + (s.rarity === r ? ' selected' : '') + '>' + RARITY_LABEL[r] + '</option>';
-            }).join('');
-
-        // 排序选项
-        var sortOpts = SORT_OPTIONS.map(function(o) {
-            return '<option value="' + o.key + '"' + (s.sort === o.key ? ' selected' : '') + '>' + o.label + '</option>';
-        }).join('');
-
-        var idPfx = 'mf_' + ctx;
-        // 是否有星标怪兽存在（没有则不显示按钮）
-        var hasStarred = (gameState.monsters || []).some(function(m){ return m.starred; });
-
-        return [
-            '<div class="mf-filterbar" data-ctx="' + ctx + '">',
-            // ── 第一行：搜索 + 星标 + 排序 ──
-            '<div class="mf-row">',
-            '<input class="mf-search" id="' + idPfx + '_search" type="text" placeholder="搜索名字/品种…"',
-            ' value="' + (s.search || '') + '"',
-            ' oninput="window._mfUpdate(\'' + ctx + '\',\'search\',this.value)">',
-            (hasStarred
-                ? '<button class="mf-star-btn' + (s.starOnly ? ' active' : '') + '" ' +
-                  'onclick="window._mfUpdate(\'' + ctx + '\',\'starOnly\',' + (!s.starOnly) + ')" title="仅显示星标怪兽">⭐</button>'
-                : ''),
-            '<select class="mf-select" id="' + idPfx + '_sort" onchange="window._mfUpdate(\'' + ctx + '\',\'sort\',this.value)">',
-            sortOpts, '</select>',
-            '</div>',
-            // ── 第二行：稀有度 + 品种 + 特性 ──
-            '<div class="mf-row">',
-            '<select class="mf-select" id="' + idPfx + '_rarity" onchange="window._mfUpdate(\'' + ctx + '\',\'rarity\',this.value)">', rarityOpts, '</select>',
-            '<select class="mf-select" id="' + idPfx + '_type"   onchange="window._mfUpdate(\'' + ctx + '\',\'type\',this.value)">', typeOpts, '</select>',
-            '<select class="mf-select" id="' + idPfx + '_trait"  onchange="window._mfUpdate(\'' + ctx + '\',\'trait\',this.value)">', traitOpts, '</select>',
-            '</div>',
-            // ── 第三行：等级 + 代数范围 ──
-            '<div class="mf-row mf-row-range">',
-            '<label>等级</label>',
-            '<input type="number" min="1" max="99" class="mf-range-input" value="' + (s.minLevel||1) + '" placeholder="最低" onchange="window._mfUpdate(\'' + ctx + '\',\'minLevel\',+this.value)">',
-            '<span>~</span>',
-            '<input type="number" min="1" max="99" class="mf-range-input" value="' + (s.maxLevel||99) + '" placeholder="最高" onchange="window._mfUpdate(\'' + ctx + '\',\'maxLevel\',+this.value)">',
-            '<label style="margin-left:12px;">代数</label>',
-            '<input type="number" min="1" max="99" class="mf-range-input" value="' + (s.minGen||1) + '" placeholder="最低" onchange="window._mfUpdate(\'' + ctx + '\',\'minGen\',+this.value)">',
-            '<span>~</span>',
-            '<input type="number" min="1" max="99" class="mf-range-input" value="' + (s.maxGen||99) + '" placeholder="最高" onchange="window._mfUpdate(\'' + ctx + '\',\'maxGen\',+this.value)">',
-            '<button class="mf-reset-btn" onclick="window._mfReset(\'' + ctx + '\')">重置</button>',
-            '</div>',
-            '</div>'
-        ].join('');
-    };
-
     // ── 筛选器更新回调（由 HTML onchange/oninput 调用）──
     window._mfUpdate = function(ctx, key, val) {
         var s = getFS(ctx);
@@ -503,22 +427,237 @@
             '</div>';
     }
 
+    // ==================== 自定义下拉组件（替代原生 <select>）====================
+    /**
+     * buildCustomSelect(id, options, currentVal, onChange)
+     * options: [{value, label}]
+     * onChange: 'window._mfUpdate(\'ctx\',\'key\',VALUE)' 中 VALUE 会被替换
+     * 返回 HTML 字符串
+     */
+    window._csOpen = function(id) {
+        // 关闭所有其他下拉
+        document.querySelectorAll('.cs-dropdown.cs-open').forEach(function(el) {
+            if (el.id !== id) el.classList.remove('cs-open');
+        });
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.classList.toggle('cs-open');
+        // 确保列表不超出弹窗范围
+        var list = el.querySelector('.cs-list');
+        if (list && el.classList.contains('cs-open')) {
+            var rect = el.getBoundingClientRect();
+            var wh = window.innerHeight;
+            if (rect.bottom + list.offsetHeight > wh - 20) {
+                list.style.bottom = '100%';
+                list.style.top = 'auto';
+                list.style.marginTop = '0';
+                list.style.marginBottom = '2px';
+            } else {
+                list.style.top = '100%';
+                list.style.bottom = 'auto';
+                list.style.marginTop = '2px';
+                list.style.marginBottom = '0';
+            }
+        }
+    };
+    window._csSelect = function(id, value, label, onChangeFn) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.querySelector('.cs-label').textContent = label;
+        el.dataset.value = value;
+        el.classList.remove('cs-open');
+        // 高亮当前选中项
+        el.querySelectorAll('.cs-item').forEach(function(item) {
+            item.classList.toggle('cs-selected', item.dataset.value === String(value));
+        });
+        // 调用回调
+        if (onChangeFn) onChangeFn(value);
+    };
+    // 点击外部关闭
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.cs-dropdown')) {
+            document.querySelectorAll('.cs-dropdown.cs-open').forEach(function(el) {
+                el.classList.remove('cs-open');
+            });
+        }
+    }, true);
+
+    /**
+     * 构建自定义下拉 HTML
+     * opts: { id, options:[{value,label,color?}], value, ctx, key }
+     */
+    function buildCS(opts) {
+        var id    = opts.id;
+        var items = opts.options;
+        var cur   = opts.value;
+        var ctx   = opts.ctx;
+        var key   = opts.key;
+        var curLabel = '';
+        items.forEach(function(o) {
+            if (String(o.value) === String(cur)) curLabel = o.label;
+        });
+        if (!curLabel && items.length) curLabel = items[0].label;
+
+        var onChangeFn = 'window._mfUpdate.bind(null,\'' + ctx + '\',\'' + key + '\')';
+
+        var listHtml = items.map(function(o) {
+            var isSel = String(o.value) === String(cur);
+            var colorStyle = o.color ? 'color:' + o.color + ';' : '';
+            return '<div class="cs-item' + (isSel ? ' cs-selected' : '') + '" ' +
+                'data-value="' + o.value + '" ' +
+                'style="' + colorStyle + '" ' +
+                'onclick="event.stopPropagation();window._csSelect(\'' + id + '\',' +
+                    JSON.stringify(o.value) + ',' +
+                    JSON.stringify(o.label) + ',' +
+                    onChangeFn +
+                ');">' +
+                (isSel ? '<span class="cs-check">✓</span>' : '<span class="cs-check"></span>') +
+                o.label +
+                '</div>';
+        }).join('');
+
+        return '<div class="cs-dropdown" id="' + id + '" data-value="' + cur + '" onclick="event.stopPropagation();window._csOpen(\'' + id + '\')">' +
+            '<span class="cs-label">' + curLabel + '</span>' +
+            '<span class="cs-arrow">▾</span>' +
+            '<div class="cs-list">' + listHtml + '</div>' +
+        '</div>';
+    }
+
+    // ── 构建筛选工具栏 HTML（重写，使用自定义下拉）──
+    window.buildMonsterFilterBar = function(opts) {
+        opts = opts || {};
+        var ctx   = opts.ctx || 'default';
+        var s     = getFS(ctx);
+        var idPfx = 'mf_' + ctx;
+
+        // 收集所有可用特性
+        var traitPool = {};
+        (gameState.monsters || []).forEach(function(m) {
+            (m.traits || []).forEach(function(t) { traitPool[t.id] = t.name; });
+        });
+
+        // 排序选项
+        var sortItems = SORT_OPTIONS.map(function(o) { return {value: o.key, label: o.label}; });
+
+        // 稀有度选项
+        var rarityItems = [{value:'all', label:'全部稀有度'}].concat(
+            ['common','uncommon','rare','epic','legendary'].map(function(r) {
+                return {value: r, label: RARITY_LABEL[r], color: RARITY_COLOR[r]};
+            })
+        );
+
+        // 品种选项
+        var typeItems = [{value:'all', label:'全部品种'}].concat(
+            Object.keys(monsterTypes).map(function(k) {
+                return {value: k, label: monsterTypes[k].name};
+            })
+        );
+
+        // 特性选项
+        var traitItems = [{value:'all', label:'全部特性'}].concat(
+            Object.keys(traitPool).map(function(id) {
+                return {value: id, label: traitPool[id]};
+            })
+        );
+
+        var hasStarred = (gameState.monsters || []).some(function(m){ return m.starred; });
+
+        return [
+            '<div class="mf-filterbar" data-ctx="' + ctx + '">',
+            // ── 第一行：搜索 + 星标 + 排序 ──
+            '<div class="mf-row">',
+            '<input class="mf-search" id="' + idPfx + '_search" type="text" placeholder="搜索名字/品种…"',
+            ' value="' + (s.search || '') + '"',
+            ' oninput="window._mfUpdate(\'' + ctx + '\',\'search\',this.value)">',
+            (hasStarred
+                ? '<button class="mf-star-btn' + (s.starOnly ? ' active' : '') + '" ' +
+                  'onclick="window._mfUpdate(\'' + ctx + '\',\'starOnly\',' + (!s.starOnly) + ')" title="仅显示星标怪兽">⭐</button>'
+                : ''),
+            buildCS({id: idPfx+'_sort', options: sortItems, value: s.sort, ctx: ctx, key: 'sort'}),
+            '</div>',
+            // ── 第二行：稀有度 + 品种 + 特性 ──
+            '<div class="mf-row">',
+            buildCS({id: idPfx+'_rarity', options: rarityItems, value: s.rarity, ctx: ctx, key: 'rarity'}),
+            buildCS({id: idPfx+'_type',   options: typeItems,   value: s.type,   ctx: ctx, key: 'type'}),
+            buildCS({id: idPfx+'_trait',  options: traitItems,  value: s.trait,  ctx: ctx, key: 'trait'}),
+            '</div>',
+            // ── 第三行：等级 + 代数范围 ──
+            '<div class="mf-row mf-row-range">',
+            '<label>等级</label>',
+            '<div class="mf-num-wrap">',
+            '<button class="mf-num-btn" onclick="var v=Math.max(0,+(document.getElementById(\'' + idPfx + '_minLevel\').value||0)-1);document.getElementById(\'' + idPfx + '_minLevel\').value=v;window._mfUpdate(\'' + ctx + '\',\'minLevel\',v)">−</button>',
+            '<input type="number" min="0" max="99" class="mf-range-input" id="' + idPfx + '_minLevel" value="' + (s.minLevel||0) + '" onchange="window._mfUpdate(\'' + ctx + '\',\'minLevel\',+this.value)">',
+            '<button class="mf-num-btn" onclick="var v=Math.min(99,+(document.getElementById(\'' + idPfx + '_minLevel\').value||0)+1);document.getElementById(\'' + idPfx + '_minLevel\').value=v;window._mfUpdate(\'' + ctx + '\',\'minLevel\',v)">+</button>',
+            '</div>',
+            '<span class="mf-tilde">~</span>',
+            '<div class="mf-num-wrap">',
+            '<button class="mf-num-btn" onclick="var v=Math.max(0,+(document.getElementById(\'' + idPfx + '_maxLevel\').value||99)-1);document.getElementById(\'' + idPfx + '_maxLevel\').value=v;window._mfUpdate(\'' + ctx + '\',\'maxLevel\',v)">−</button>',
+            '<input type="number" min="0" max="99" class="mf-range-input" id="' + idPfx + '_maxLevel" value="' + (s.maxLevel||99) + '" onchange="window._mfUpdate(\'' + ctx + '\',\'maxLevel\',+this.value)">',
+            '<button class="mf-num-btn" onclick="var v=Math.min(99,+(document.getElementById(\'' + idPfx + '_maxLevel\').value||99)+1);document.getElementById(\'' + idPfx + '_maxLevel\').value=v;window._mfUpdate(\'' + ctx + '\',\'maxLevel\',v)">+</button>',
+            '</div>',
+            '<label style="margin-left:10px;">代数</label>',
+            '<div class="mf-num-wrap">',
+            '<button class="mf-num-btn" onclick="var v=Math.max(0,+(document.getElementById(\'' + idPfx + '_minGen\').value||0)-1);document.getElementById(\'' + idPfx + '_minGen\').value=v;window._mfUpdate(\'' + ctx + '\',\'minGen\',v)">−</button>',
+            '<input type="number" min="0" max="99" class="mf-range-input" id="' + idPfx + '_minGen" value="' + (s.minGen||0) + '" onchange="window._mfUpdate(\'' + ctx + '\',\'minGen\',+this.value)">',
+            '<button class="mf-num-btn" onclick="var v=Math.min(99,+(document.getElementById(\'' + idPfx + '_minGen\').value||0)+1);document.getElementById(\'' + idPfx + '_minGen\').value=v;window._mfUpdate(\'' + ctx + '\',\'minGen\',v)">+</button>',
+            '</div>',
+            '<span class="mf-tilde">~</span>',
+            '<div class="mf-num-wrap">',
+            '<button class="mf-num-btn" onclick="var v=Math.max(0,+(document.getElementById(\'' + idPfx + '_maxGen\').value||99)-1);document.getElementById(\'' + idPfx + '_maxGen\').value=v;window._mfUpdate(\'' + ctx + '\',\'maxGen\',v)">−</button>',
+            '<input type="number" min="0" max="99" class="mf-range-input" id="' + idPfx + '_maxGen" value="' + (s.maxGen||99) + '" onchange="window._mfUpdate(\'' + ctx + '\',\'maxGen\',+this.value)">',
+            '<button class="mf-num-btn" onclick="var v=Math.min(99,+(document.getElementById(\'' + idPfx + '_maxGen\').value||99)+1);document.getElementById(\'' + idPfx + '_maxGen\').value=v;window._mfUpdate(\'' + ctx + '\',\'maxGen\',v)">+</button>',
+            '</div>',
+            '<button class="mf-reset-btn" onclick="window._mfReset(\'' + ctx + '\')">重置</button>',
+            '</div>',
+            '</div>'
+        ].join('');
+    };
+
     // ==================== CSS 注入 ====================
     var style = document.createElement('style');
     style.textContent = [
         // 筛选栏
         '.mf-filterbar{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:8px 10px;margin-bottom:4px;display:flex;flex-direction:column;gap:6px;}',
         '.mf-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}',
-        '.mf-row-range{font-size:12px;color:#8b949e;}',
-        '.mf-search{flex:1;min-width:120px;padding:6px 10px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3;font-size:12px;}',
-        '.mf-select{padding:5px 8px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3;font-size:12px;cursor:pointer;}',
-        '.mf-range-input{width:48px;padding:4px 6px;background:#0d1117;border:1px solid #30363d;border-radius:5px;color:#e6edf3;font-size:12px;text-align:center;}',
+        '.mf-row-range{font-size:12px;color:#8b949e;gap:4px;}',
+        '.mf-search{flex:1;min-width:120px;padding:6px 10px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#e6edf3;font-size:12px;outline:none;}',
+        '.mf-search:focus{border-color:#58a6ff;}',
+        '.mf-range-input{width:36px;padding:4px 2px;background:#0d1117;border:1px solid #30363d;border-radius:4px;color:#e6edf3;font-size:12px;text-align:center;-moz-appearance:textfield;outline:none;}',
+        '.mf-range-input::-webkit-inner-spin-button,.mf-range-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}',
+        '.mf-tilde{color:#8b949e;padding:0 2px;}',
+        // 数字增减按钮
+        '.mf-num-wrap{display:flex;align-items:center;background:#0d1117;border:1px solid #30363d;border-radius:5px;overflow:hidden;}',
+        '.mf-num-btn{padding:2px 7px;background:none;border:none;color:#8b949e;font-size:14px;cursor:pointer;line-height:1;transition:background 0.1s;}',
+        '.mf-num-btn:hover{background:#30363d;color:#e6edf3;}',
+        '.mf-num-wrap .mf-range-input{border:none;border-radius:0;border-left:1px solid #30363d;border-right:1px solid #30363d;}',
         '.mf-reset-btn{margin-left:auto;padding:4px 10px;background:none;border:1px solid #f85149;border-radius:5px;color:#f85149;font-size:11px;cursor:pointer;}',
         '.mf-reset-btn:hover{background:#f85149;color:#fff;}',
-        // 星标筛选按钮
+        // 星标按钮
         '.mf-star-btn{padding:4px 10px;background:none;border:1px solid #30363d;border-radius:6px;color:#8b949e;font-size:14px;cursor:pointer;transition:all 0.15s;flex-shrink:0;}',
         '.mf-star-btn:hover{border-color:#f0c53d;color:#f0c53d;}',
         '.mf-star-btn.active{background:#2d2a12;border-color:#f0c53d;color:#f0c53d;}',
+        // ── 自定义下拉 ──
+        '.cs-dropdown{position:relative;display:inline-flex;align-items:center;justify-content:space-between;gap:4px;',
+        '  padding:5px 8px 5px 10px;background:#0d1117;border:1px solid #30363d;border-radius:6px;',
+        '  color:#e6edf3;font-size:12px;cursor:pointer;user-select:none;min-width:80px;white-space:nowrap;',
+        '  transition:border-color 0.15s;}',
+        '.cs-dropdown:hover{border-color:#58a6ff;}',
+        '.cs-dropdown.cs-open{border-color:#58a6ff;}',
+        '.cs-arrow{color:#8b949e;font-size:10px;transition:transform 0.15s;pointer-events:none;}',
+        '.cs-dropdown.cs-open .cs-arrow{transform:rotate(180deg);}',
+        '.cs-label{flex:1;overflow:hidden;text-overflow:ellipsis;}',
+        '.cs-list{display:none;position:absolute;top:100%;left:0;min-width:100%;max-height:220px;overflow-y:auto;',
+        '  background:#1c2128;border:1px solid #444c56;border-radius:6px;z-index:99999;',
+        '  box-shadow:0 8px 24px rgba(0,0,0,0.6);margin-top:2px;}',
+        '.cs-dropdown.cs-open .cs-list{display:block;}',
+        '.cs-item{display:flex;align-items:center;gap:6px;padding:7px 12px;font-size:12px;color:#e6edf3;cursor:pointer;transition:background 0.1s;}',
+        '.cs-item:hover{background:#30363d;}',
+        '.cs-item.cs-selected{background:#1e3448;color:#58a6ff;}',
+        '.cs-check{width:12px;font-size:11px;color:#58a6ff;flex-shrink:0;}',
+        // 滚动条
+        '.cs-list::-webkit-scrollbar{width:4px;}',
+        '.cs-list::-webkit-scrollbar-track{background:transparent;}',
+        '.cs-list::-webkit-scrollbar-thumb{background:#444c56;border-radius:2px;}',
     ].join('\n');
     document.head.appendChild(style);
 
