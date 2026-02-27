@@ -2,99 +2,210 @@
 
 // 科技分类配置（label 由 i18n 动态填充）
 var TECH_CATEGORIES = [
+    { id: 'all',         color: '#c9d1d9', label: '全部' },
     { id: 'farming',     color: '#46d164' },
     { id: 'exploration', color: '#58a6ff' },
     { id: 'monster',     color: '#9c27b0' },
     { id: 'breeding',    color: '#e91e63' },
-    { id: 'expansion',   color: '#f0883e' }
+    { id: 'expansion',   color: '#f0883e' },
+    { id: 'reforge',     color: '#ffd700', label: '🧬 重铸' }
 ];
 
 var _activeTechCategory = 'farming';
+
+// ── 渲染单张科技卡（大卡模式）──
+function _renderTechCard(techId) {
+    var tech = technologies[techId];
+    var unlocked = gameState.technologies[techId];
+    var prereqMet = !tech.prereq || tech.prereq.length === 0 || tech.prereq.every(function(p) {
+        return gameState.technologies[p];
+    });
+    var canAfford = Object.keys(tech.cost).every(function(resource) {
+        return gameState[resource] >= tech.cost[resource];
+    });
+    var canUnlock = prereqMet && canAfford;
+    var tierColor = ['','#8b949e','#46d164','#58a6ff','#f0883e','#9c27b0','#ffd700'][tech.tier||1] || '#8b949e';
+
+    var prereqBlock = '';
+    if (!prereqMet && tech.prereq && tech.prereq.length > 0) {
+        prereqBlock = '<div style="font-size:11px;color:#f85149;margin-top:6px;">⚠ ' + T('prereqNeeded','tech') + '：' +
+            tech.prereq.map(function(p){ return TName(p,'tech') || (technologies[p] ? technologies[p].name : p); }).join('、') + '</div>';
+    }
+
+    // 全部分类时显示所属分类色条提示
+    var catBadge = '';
+    if (_activeTechCategory === 'all') {
+        var catObj = TECH_CATEGORIES.find(function(c){ return c.id === tech.category; });
+        if (catObj) {
+            var catLabel = catObj.label || T(catObj.id, 'tech.category') || T(catObj.id, 'tech') || catObj.id;
+            catBadge = '<span style="font-size:10px;background:' + catObj.color + '22;color:' + catObj.color + ';' +
+                'padding:1px 6px;border-radius:8px;margin-right:4px;">' + catLabel + '</span>';
+        }
+    }
+
+    return '<div class="tech-item ' + (unlocked ? 'unlocked' : 'locked') + '" style="' +
+        'break-inside:avoid;' +
+        'border-left:3px solid ' + tierColor + ';opacity:' + (!prereqMet && !unlocked ? '0.55' : '1') + ';">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;gap:4px;flex-wrap:wrap;">' +
+        '<div class="tech-title" style="margin:0;flex:1;min-width:0;">' +
+            '<span style="display:inline-block;vertical-align:middle;margin-right:4px;">' +
+            (unlocked ? createSVG('check',13) : createSVG('locked_tech',13)) + '</span>' + tech.name +
+        '</div>' +
+        '<div style="display:flex;gap:3px;flex-shrink:0;">' +
+        catBadge +
+        '<span style="font-size:10px;background:' + tierColor + '22;color:' + tierColor + ';padding:1px 6px;border-radius:8px;">Tier ' + (tech.tier||1) + '</span>' +
+        '</div>' +
+        '</div>' +
+        '<div class="tech-desc">' + tech.desc + '</div>' +
+        prereqBlock +
+        (!unlocked ? (
+            '<div class="tech-cost" style="margin-top:8px;">' + T('cost','common') + '：' +
+            Object.keys(tech.cost).map(function(r) {
+                var have = gameState[r] || 0;
+                var need = tech.cost[r];
+                var ok = have >= need;
+                return '<span style="color:' + (ok?'#46d164':'#f85149') + ';">' + getResourceIcon(r,12) + need + '</span>';
+            }).join(' ') + '</div>' +
+            '<button class="btn btn-primary" style="margin-top:8px;" onclick="unlockTech(\'' + techId + '\')" ' +
+            (!canUnlock ? 'disabled' : '') + '>' +
+            (unlocked ? T('unlocked','tech') : (canUnlock ? T('unlock','tech') : (!prereqMet ? T('prereqNeeded','tech') : T('notEnough','tech')))) +
+            '</button>'
+        ) : (
+            '<div style="color:#46d164;font-weight:bold;margin-top:8px;font-size:13px;">✓ ' + T('unlocked','tech') + '</div>'
+        )) +
+        '</div>';
+}
+
+// ── 渲染单条紧凑科技行 ──
+function _renderTechCompactRow(techId) {
+    var tech = technologies[techId];
+    var unlocked = gameState.technologies[techId];
+    var prereqMet = !tech.prereq || tech.prereq.length === 0 || tech.prereq.every(function(p) {
+        return gameState.technologies[p];
+    });
+    var canAfford = Object.keys(tech.cost).every(function(r) { return (gameState[r]||0) >= tech.cost[r]; });
+    var canUnlock = prereqMet && canAfford && !unlocked;
+    var tierColor = ['','#8b949e','#46d164','#58a6ff','#f0883e','#9c27b0','#ffd700'][tech.tier||1] || '#8b949e';
+    var costText = Object.keys(tech.cost).map(function(r) {
+        var ok = (gameState[r]||0) >= tech.cost[r];
+        return '<span style="color:' + (ok?'#46d164':'#f85149') + ';">' + getResourceIcon(r,11) + tech.cost[r] + '</span>';
+    }).join(' ');
+
+    // 全部分类时显示分类小标签
+    var catBadge = '';
+    if (_activeTechCategory === 'all') {
+        var catObj = TECH_CATEGORIES.find(function(c){ return c.id === tech.category; });
+        if (catObj) {
+            catBadge = '<span style="font-size:9px;background:' + catObj.color + '22;color:' + catObj.color + ';' +
+                'padding:1px 5px;border-radius:8px;flex-shrink:0;">' +
+                (catObj.label || T(catObj.id,'tech.category') || catObj.id) + '</span>';
+        }
+    }
+
+    return '<div class="compact-card' + (unlocked ? ' auto-running' : '') + '" style="' +
+        'border-left:3px solid ' + tierColor + ';' +
+        'opacity:' + (!prereqMet && !unlocked ? '0.5' : '1') + ';' +
+        'cursor:' + (canUnlock ? 'pointer' : 'default') + ';"' +
+        (canUnlock ? ' onclick="unlockTech(\'' + techId + '\')"' : '') + '>' +
+        '<div style="width:18px;text-align:center;flex-shrink:0;font-size:14px;">' +
+            (unlocked ? '✓' : (prereqMet ? '○' : '🔒')) +
+        '</div>' +
+        '<div style="display:flex;flex-direction:column;min-width:0;flex:1;gap:1px;">' +
+            '<span class="compact-name" style="color:' + (unlocked?'#46d164':(!prereqMet?'#8b949e':'#e6edf3')) + ';">' + tech.name + '</span>' +
+            '<span class="compact-sub">' + tech.desc.replace(/<[^>]+>/g,'').slice(0,60) + (tech.desc.length>60?'…':'') + '</span>' +
+        '</div>' +
+        catBadge +
+        '<span style="font-size:10px;background:' + tierColor + '22;color:' + tierColor + ';padding:1px 6px;border-radius:8px;flex-shrink:0;white-space:nowrap;">T' + (tech.tier||1) + '</span>' +
+        (!unlocked ? '<div style="flex-shrink:0;font-size:11px;">' + costText + '</div>' : '') +
+        (!unlocked ? '<button class="compact-btn' + (canUnlock ? ' success' : '') + '" ' +
+            (canUnlock ? 'onclick="event.stopPropagation();unlockTech(\'' + techId + '\')"' : 'disabled style="opacity:0.4;"') + '>' +
+            (canUnlock ? T('unlock','tech') : (!prereqMet ? '🔒' : T('notEnough','tech'))) +
+            '</button>' : '') +
+        '</div>';
+}
 
 window.renderTech = function() {
     var techTree = document.getElementById('techTree');
     if (!techTree) return;
 
-    // ── 分类 Tab 头 ──
-    var tabsHtml = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">' +
+    var techLayout = getLayoutPref('tech');
+
+    // ── 分类 Tab 头（sticky 固定在顶部）──
+    var totalAll   = Object.keys(technologies).length;
+    var unlockedAll = Object.keys(technologies).filter(function(k){ return gameState.technologies[k]; }).length;
+
+    var tabsHtml = '<div style="' +
+        'position:sticky;top:0;z-index:10;' +
+        'background:#161b22;' +
+        'padding:10px 20px 8px;margin:-16px -20px 12px;' +
+        'border-bottom:1px solid #30363d;' +
+        'display:flex;gap:6px;flex-wrap:wrap;align-items:center;">' +
         TECH_CATEGORIES.map(function(cat) {
             var isActive = _activeTechCategory === cat.id;
-            var catTechs = Object.keys(technologies).filter(function(k){ return technologies[k].category === cat.id; });
-            var unlockedCount = catTechs.filter(function(k){ return gameState.technologies[k]; }).length;
-            var catLabel = T(cat.id, 'tech.category') || T(cat.id, 'tech');
+            var catLabel = cat.label || T(cat.id, 'tech.category') || T(cat.id, 'tech') || cat.id;
+            var badge = '';
+            if (cat.id === 'all') {
+                badge = ' <span style="font-size:11px;opacity:0.8;">(' + unlockedAll + '/' + totalAll + ')</span>';
+            } else if (cat.id !== 'reforge') {
+                var catTechs = Object.keys(technologies).filter(function(k){ return technologies[k].category === cat.id; });
+                var unlockedCount = catTechs.filter(function(k){ return gameState.technologies[k]; }).length;
+                badge = ' <span style="font-size:11px;opacity:0.8;">(' + unlockedCount + '/' + catTechs.length + ')</span>';
+            }
             return '<button onclick="switchTechCategory(\'' + cat.id + '\')" style="' +
-                'padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;' +
+                'padding:5px 12px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;' +
                 'border:2px solid ' + (isActive ? cat.color : '#30363d') + ';' +
                 'background:' + (isActive ? cat.color + '22' : 'transparent') + ';' +
                 'color:' + (isActive ? cat.color : '#8b949e') + ';">' +
-                catLabel + ' <span style="font-size:11px;opacity:0.8;">(' + unlockedCount + '/' + catTechs.length + ')</span>' +
+                catLabel + badge +
                 '</button>';
         }).join('') +
+        // 布局切换按钮放在 tab 行右侧（覆盖 layout-toolbar 内边距）
+        '<div style="margin-left:auto;display:flex;align-items:center;">' +
+          '<div class="layout-toggle" style="display:flex;gap:4px;">' +
+            '<button class="layout-toggle-btn' + (techLayout === 'large'   ? ' active' : '') + '" ' +
+              'onclick="setLayoutPref(\'tech\',\'large\');renderTech();" title="大卡片">⊞ 大卡</button>' +
+            '<button class="layout-toggle-btn' + (techLayout === 'compact' ? ' active' : '') + '" ' +
+              'onclick="setLayoutPref(\'tech\',\'compact\');renderTech();" title="紧凑列表">☰ 小卡</button>' +
+          '</div>' +
+        '</div>' +
         '</div>';
 
     // ── 当前分类的科技列表 ──
-    var filteredTechs = Object.keys(technologies).filter(function(k) {
-        return technologies[k].category === _activeTechCategory;
-    });
+    var filteredTechs;
+    if (_activeTechCategory === 'all') {
+        filteredTechs = Object.keys(technologies);
+    } else if (_activeTechCategory === 'reforge') {
+        filteredTechs = []; // 重铸 tab 单独处理
+    } else {
+        filteredTechs = Object.keys(technologies).filter(function(k) {
+            return technologies[k].category === _activeTechCategory;
+        });
+    }
 
-    // 按 tier 排序
+    // 按 tier 升序排序
     filteredTechs.sort(function(a, b) {
         return (technologies[a].tier || 1) - (technologies[b].tier || 1);
     });
 
-    var techHtml = filteredTechs.map(function(techId) {
-        var tech = technologies[techId];
-        var unlocked = gameState.technologies[techId];
+    var techHtml = '';
 
-        // 前置科技检查
-        var prereqMet = !tech.prereq || tech.prereq.length === 0 || tech.prereq.every(function(p) {
-            return gameState.technologies[p];
-        });
-        var canAfford = Object.keys(tech.cost).every(function(resource) {
-            return gameState[resource] >= tech.cost[resource];
-        });
-        var canUnlock = prereqMet && canAfford;
-        var tierColor = ['','#8b949e','#46d164','#58a6ff','#f0883e','#9c27b0','#ffd700'][tech.tier||1] || '#8b949e';
-
-        var prereqBlock = '';
-        if (!prereqMet && tech.prereq && tech.prereq.length > 0) {
-            prereqBlock = '<div style="font-size:11px;color:#f85149;margin-top:6px;">⚠ ' + T('prereqNeeded','tech') + '：' +
-                tech.prereq.map(function(p){ return TName(p,'tech') || (technologies[p] ? technologies[p].name : p); }).join('、') + '</div>';
-        }
-
-        return '<div class="tech-item ' + (unlocked ? 'unlocked' : 'locked') + '" style="' +
-            'border-left:3px solid ' + tierColor + ';opacity:' + (!prereqMet && !unlocked ? '0.55' : '1') + ';">' +
-            '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">' +
-            '<div class="tech-title" style="margin:0;">' +
-                '<span style="display:inline-block;vertical-align:middle;margin-right:4px;">' +
-                (unlocked ? createSVG('check',13) : createSVG('locked_tech',13)) + '</span>' + tech.name +
-            '</div>' +
-            '<span style="font-size:10px;background:' + tierColor + '22;color:' + tierColor + ';padding:1px 6px;border-radius:8px;">Tier ' + (tech.tier||1) + '</span>' +
-            '</div>' +
-            '<div class="tech-desc">' + tech.desc + '</div>' +
-            prereqBlock +
-            (!unlocked ? (
-                '<div class="tech-cost" style="margin-top:8px;">' + T('cost','common') + '：' +
-                Object.keys(tech.cost).map(function(r) {
-                    var have = gameState[r] || 0;
-                    var need = tech.cost[r];
-                    var ok = have >= need;
-                    return '<span style="color:' + (ok?'#46d164':'#f85149') + ';">' + getResourceIcon(r,12) + need + '</span>';
-                }).join(' ') + '</div>' +
-                '<button class="btn btn-primary" style="margin-top:8px;" onclick="unlockTech(\'' + techId + '\')" ' +
-                (!canUnlock ? 'disabled' : '') + '>' +
-                (unlocked ? T('unlocked','tech') : (canUnlock ? T('unlock','tech') : (!prereqMet ? T('prereqNeeded','tech') : T('notEnough','tech')))) +
-                '</button>'
-            ) : (
-                '<div style="color:#46d164;font-weight:bold;margin-top:8px;font-size:13px;">✓ ' + T('unlocked','tech') + '</div>'
-            )) +
+    if (_activeTechCategory === 'reforge') {
+        // ── 重铸 Tab：只渲染重铸面板 ──
+        techHtml = renderMonsterBreakthroughSection();
+    } else if (techLayout === 'compact') {
+        // ── 紧凑模式：每条科技一行 ──
+        techHtml = '<div class="compact-list" style="padding:4px 0 12px;">' +
+            filteredTechs.map(_renderTechCompactRow).join('') +
             '</div>';
-    }).join('');
+    } else {
+        // ── 大卡模式：CSS 多列瀑布流，避免等高留白 ──
+        techHtml = '<div style="columns:2 280px;column-gap:12px;padding-bottom:12px;">' +
+            filteredTechs.map(_renderTechCard).join('') +
+            '</div>';
+    }
 
-    // ── 怪兽属性突破区域 ──
-    var breakthroughHtml = renderMonsterBreakthroughSection();
-
-    techTree.innerHTML = tabsHtml + techHtml + breakthroughHtml;
+    // 重铸 tab 已单独处理，其他 tab 不追加重铸面板
+    techTree.innerHTML = tabsHtml + techHtml;
 };
 
 window.switchTechCategory = function(catId) {

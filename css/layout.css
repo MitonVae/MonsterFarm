@@ -1368,9 +1368,11 @@ svg[width="48"], svg[width="50"], svg[width="60"] {
 
 /* 科技树等其他组件样式保持不变... */
 .tech-tree {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 15px;
+    /* 改为块级，内部布局由 JS 的 columns 多列控制 */
+    display: block;
+    padding: 16px 20px;
+    /* 允许 sticky 子元素工作 */
+    overflow: visible;
 }
 
 .tech-item {
@@ -1380,6 +1382,9 @@ svg[width="48"], svg[width="50"], svg[width="60"] {
     border: 2px solid #21262d;
     position: relative;
     color: #e6edf3;
+    /* 配合 CSS columns 瀑布流，防止卡片被截断 */
+    break-inside: avoid;
+    margin-bottom: 12px;
 }
 
 .tech-item.unlocked {
@@ -2170,4 +2175,264 @@ svg[width="48"], svg[width="50"], svg[width="60"] {
         padding: 5px;
     }
 }
+
+/* ==================== 布局切换工具栏 ==================== */
+/* 每个支持切换的界面顶部工具栏（含大/小卡片按钮）*/
+.layout-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 20px 4px;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.layout-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+.layout-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+/* 大/小卡片切换按钮组 */
+.layout-toggle {
+    display: flex;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.layout-toggle-btn {
+    padding: 5px 10px;
+    font-size: 0.8571rem;
+    cursor: pointer;
+    color: #8b949e;
+    background: transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+    line-height: 1;
+}
+.layout-toggle-btn:hover { color: #e6edf3; background: #21262d; }
+.layout-toggle-btn.active {
+    background: #21262d;
+    color: #58a6ff;
+    font-weight: 600;
+}
+.layout-toggle-btn + .layout-toggle-btn {
+    border-left: 1px solid #30363d;
+}
+/* 工具栏内快捷操作按钮 */
+.toolbar-quick-btn {
+    padding: 5px 12px;
+    font-size: 0.8571rem;
+    border-radius: 7px;
+    border: 1px solid #30363d;
+    background: #21262d;
+    color: #8b949e;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+.toolbar-quick-btn:hover { border-color: #58a6ff; color: #58a6ff; }
+.toolbar-quick-btn.danger:hover { border-color: #f85149; color: #f85149; }
+.toolbar-quick-btn.success:hover { border-color: #46d164; color: #46d164; }
+
+/* ==================== 紧凑（小卡片）列表通用样式 ==================== */
+.compact-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 20px 16px;
+}
+/* 单条紧凑卡片行 */
+.compact-card {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    min-height: 44px;
+}
+.compact-card:hover { border-color: #444c56; background: #1c2128; }
+.compact-card.status-farming  { border-left: 3px solid #46d164; }
+.compact-card.status-exploring{ border-left: 3px solid #f0c53d; }
+.compact-card.status-breeding  { border-left: 3px solid #e91e63; }
+.compact-card.status-idle      { border-left: 3px solid #30363d; }
+.compact-card.auto-running     { border-left: 3px solid #46d164; }
+.compact-card.locked           { opacity: 0.5; border-left: 3px solid #30363d; }
+
+/* 图标容器（小尺寸）*/
+.compact-icon {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.compact-icon-emoji {
+    font-size: 1.3rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+/* 名称区域 */
+.compact-name {
+    font-weight: 600;
+    font-size: 0.9286rem;
+    color: #e6edf3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    flex-shrink: 1;
+}
+/* 次要信息行（类型、等级等）*/
+.compact-sub {
+    font-size: 0.8rem;
+    color: #8b949e;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 1;
+    min-width: 0;
+}
+/* 中间弹性间隔 */
+.compact-spacer { flex: 1; min-width: 0; }
+/* 状态标签 */
+.compact-status {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 5px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.compact-status.farming   { background: #1a3a1a; color: #46d164; }
+.compact-status.exploring { background: #2a2400; color: #f0c53d; }
+.compact-status.breeding  { background: #2a0a14; color: #e91e63; }
+.compact-status.idle      { background: #1c2128; color: #8b949e; }
+.compact-status.auto      { background: #1a3a1a; color: #46d164; }
+.compact-status.locked    { background: #1c2128; color: #8b949e; }
+/* 进度条（紧凑行内版本）*/
+.compact-progress {
+    width: 64px;
+    height: 5px;
+    background: #21262d;
+    border-radius: 3px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+.compact-progress-fill {
+    height: 100%;
+    background: #58a6ff;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+.compact-progress-fill.auto { background: linear-gradient(90deg, #46d164, #58a6ff); }
+/* 快捷操作按钮（紧凑行内）*/
+.compact-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+}
+.compact-btn {
+    padding: 3px 9px;
+    font-size: 0.8rem;
+    border-radius: 5px;
+    border: 1px solid #30363d;
+    background: #21262d;
+    color: #8b949e;
+    cursor: pointer;
+    transition: all 0.12s;
+    white-space: nowrap;
+}
+.compact-btn:hover          { border-color: #58a6ff; color: #58a6ff; }
+.compact-btn.danger:hover   { border-color: #f85149; color: #f85149; }
+.compact-btn.success:hover  { border-color: #46d164; color: #46d164; }
+.compact-btn.warn:hover     { border-color: #f0c53d; color: #f0c53d; }
+
+/* ── 怪兽紧凑卡片专属：属性数字 ── */
+.compact-stats {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+.compact-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 26px;
+}
+.compact-stat-label { font-size: 0.75rem; color: #8b949e; line-height: 1; }
+.compact-stat-value { font-size: 0.8571rem; font-weight: 700; color: #e6edf3; line-height: 1.3; }
+
+/* ── 探索紧凑卡片：奖励小徽章 ── */
+.compact-rewards {
+    display: flex;
+    gap: 4px;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+}
+.compact-reward-tag {
+    font-size: 0.75rem;
+    color: #8b949e;
+    white-space: nowrap;
+}
+
+/* 移动端：紧凑卡片进一步缩减 */
+@media (max-width: 767px) {
+    .compact-stats { display: none; }
+    .compact-rewards { display: none; }
+    .compact-sub { max-width: 100px; }
+    .layout-toolbar { padding: 6px 12px 2px; }
+}
+
+/* ── 侧边栏内的紧凑列表：覆盖大页内边距 ── */
+.msb-compact.compact-list {
+    padding: 6px 8px 10px;
+}
+.msb-compact .compact-card {
+    padding: 5px 8px;
+    min-height: 38px;
+}
+.msb-compact .compact-name { font-size: 0.857rem; }
+.msb-compact .compact-sub  { font-size: 0.75rem; }
+
+/* ── 侧边栏工具栏样式（嵌在 header 和列表之间）── */
+#msb-layout-toolbar .layout-toolbar,
+#mob-msb-layout-toolbar .layout-toolbar {
+    padding: 4px 8px 4px;
+    background: transparent;
+    border-bottom: none;
+}
+#msb-layout-toolbar .layout-toolbar-title,
+#mob-msb-layout-toolbar .layout-toolbar-title {
+    display: none; /* 侧边栏空间有限，隐藏标题 */
+}
+
+/* ── 怪兽卡片紧凑状态着色 ── */
+.compact-card.monster.farming   { border-left: 3px solid #46d164; }
+.compact-card.monster.exploring { border-left: 3px solid #f0c53d; }
+.compact-card.monster.preparing { border-left: 3px solid #f0c53d; }
+.compact-card.monster.breeding  { border-left: 3px solid #e91e63; }
+.compact-card.monster.selected  { border-color: #58a6ff; background: #1a2740; }
+.compact-card.monster.selected .compact-name { color: #58a6ff; }
+
+/* ── 处置中心紧凑卡片 ── */
+.compact-card.disposal.selected { border-color: #58a6ff !important; background: #1a2740; }
+.compact-card.disposal.selected .compact-name { color: #58a6ff; }
+.compact-card.disposal.locked   { opacity: 0.45; cursor: not-allowed !important; }
 
