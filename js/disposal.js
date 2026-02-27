@@ -73,20 +73,24 @@ window.releaseMonster = function() {
         return;
     }
     
-    if (confirm('确定要放生 ' + monster.name + ' 吗？\n\n这将获得 ' + (monster.level * 5) + ' 材料')) {
-        var reward = monster.level * 5;
-        gameState.materials += reward;
-        
-        var index = gameState.monsters.findIndex(function(m) { return m.id === monster.id; });
-        gameState.monsters.splice(index, 1);
-        
-        gameState.selectedMonster = null;
-        
-        showNotification('放生了 ' + monster.name + '，获得 ' + reward + ' 材料', 'success');
-        updateResources();
-        renderMonsters();
-        renderDisposal();
-    }
+    var reward = monster.level * 5;
+    showConfirmModal({
+        title: '🌿 放生怪兽',
+        content: '确定要放生 <strong style="color:#58a6ff;">' + monster.name + '</strong> 吗？<br><br>' +
+            '这将获得 <span style="color:#c9d1d9;">🪨 材料 ' + reward + '</span>',
+        confirmText: '确认放生',
+        confirmClass: 'btn-success',
+        onConfirm: function() {
+            gameState.materials += reward;
+            var index = gameState.monsters.findIndex(function(m) { return m.id === monster.id; });
+            gameState.monsters.splice(index, 1);
+            gameState.selectedMonster = null;
+            showNotification('放生了 ' + monster.name + '，获得 ' + reward + ' 材料', 'success');
+            updateResources();
+            renderMonsters();
+            renderDisposal();
+        }
+    });
 };
 
 window.sacrificeMonster = function() {
@@ -105,19 +109,24 @@ window.sacrificeMonster = function() {
     var totalStats = Object.values(monster.stats).reduce(function(a, b) { return a + b; }, 0);
     var reward = monster.level * 10 + totalStats * 2;
     
-    if (confirm('确定要献祭 ' + monster.name + ' 吗？\n\n这将获得 ' + reward + ' 研究点\n\n⚠️ 此操作不可逆！')) {
-        gameState.research += reward;
-        
-        var index = gameState.monsters.findIndex(function(m) { return m.id === monster.id; });
-        gameState.monsters.splice(index, 1);
-        
-        gameState.selectedMonster = null;
-        
-        showNotification('献祭了 ' + monster.name + '，获得 ' + reward + ' 研究点', 'success');
-        updateResources();
-        renderMonsters();
-        renderDisposal();
-    }
+    showConfirmModal({
+        title: '🔮 献祭怪兽',
+        content: '确定要献祭 <strong style="color:#58a6ff;">' + monster.name + '</strong> 吗？<br><br>' +
+            '这将获得 <span style="color:#58a6ff;">🔬 研究点 ' + reward + '</span><br><br>' +
+            '<span style="color:#f85149;">⚠️ 此操作不可逆！</span>',
+        confirmText: '确认献祭',
+        confirmClass: 'btn-danger',
+        onConfirm: function() {
+            gameState.research += reward;
+            var index = gameState.monsters.findIndex(function(m) { return m.id === monster.id; });
+            gameState.monsters.splice(index, 1);
+            gameState.selectedMonster = null;
+            showNotification('献祭了 ' + monster.name + '，获得 ' + reward + ' 研究点', 'success');
+            updateResources();
+            renderMonsters();
+            renderDisposal();
+        }
+    });
 };
 
 window.decomposeMonster = function() {
@@ -136,20 +145,26 @@ window.decomposeMonster = function() {
     var materialsReward = monster.level * 8 + monster.stats.strength * 3;
     var foodReward = monster.level * 5 + monster.stats.farming * 2;
     
-    if (confirm('确定要分解 ' + monster.name + ' 吗？\n\n将获得：\n材料 ' + materialsReward + '\n食物 ' + foodReward)) {
-        gameState.materials += materialsReward;
-        gameState.food += foodReward;
-        
-        var index = gameState.monsters.findIndex(function(m) { return m.id === monster.id; });
-        gameState.monsters.splice(index, 1);
-        
-        gameState.selectedMonster = null;
-        
-        showNotification('分解了 ' + monster.name, 'success');
-        updateResources();
-        renderMonsters();
-        renderDisposal();
-    }
+    showConfirmModal({
+        title: '⚙️ 分解怪兽',
+        content: '确定要分解 <strong style="color:#58a6ff;">' + monster.name + '</strong> 吗？<br><br>' +
+            '将获得：<br>' +
+            '<span style="color:#c9d1d9;">🪨 材料 ' + materialsReward + '</span><br>' +
+            '<span style="color:#46d164;">🍎 食物 ' + foodReward + '</span>',
+        confirmText: '确认分解',
+        confirmClass: 'btn-warning',
+        onConfirm: function() {
+            gameState.materials += materialsReward;
+            gameState.food += foodReward;
+            var index = gameState.monsters.findIndex(function(m) { return m.id === monster.id; });
+            gameState.monsters.splice(index, 1);
+            gameState.selectedMonster = null;
+            showNotification('分解了 ' + monster.name, 'success');
+            updateResources();
+            renderMonsters();
+            renderDisposal();
+        }
+    });
 };
 
 window.researchMonster = function() {
@@ -168,19 +183,24 @@ window.researchMonster = function() {
     var totalStats = Object.values(monster.stats).reduce(function(a, b) { return a + b; }, 0);
     var reward = monster.level * 15 + totalStats * 3;
     
-    if (confirm('确定要让 ' + monster.name + ' 参与研究实验吗？\n\n这将获得 ' + reward + ' 研究点\n\n⚠️ 怪兽将永远消失！')) {
-        gameState.research += reward;
-        
-        var index = gameState.monsters.findIndex(function(m) { return m.id === monster.id; });
-        gameState.monsters.splice(index, 1);
-        
-        gameState.selectedMonster = null;
-        
-        showNotification('让 ' + monster.name + ' 参与了研究实验，获得 ' + reward + ' 研究点', 'success');
-        updateResources();
-        renderMonsters();
-        renderDisposal();
-    }
+    showConfirmModal({
+        title: '🧪 研究实验',
+        content: '确定要让 <strong style="color:#58a6ff;">' + monster.name + '</strong> 参与研究实验吗？<br><br>' +
+            '这将获得 <span style="color:#58a6ff;">🔬 研究点 ' + reward + '</span><br><br>' +
+            '<span style="color:#f85149;">⚠️ 怪兽将永远消失！</span>',
+        confirmText: '确认实验',
+        confirmClass: 'btn-danger',
+        onConfirm: function() {
+            gameState.research += reward;
+            var index = gameState.monsters.findIndex(function(m) { return m.id === monster.id; });
+            gameState.monsters.splice(index, 1);
+            gameState.selectedMonster = null;
+            showNotification('让 ' + monster.name + ' 参与了研究实验，获得 ' + reward + ' 研究点', 'success');
+            updateResources();
+            renderMonsters();
+            renderDisposal();
+        }
+    });
 };
 
 window.sellMonster = function() {
@@ -199,17 +219,21 @@ window.sellMonster = function() {
     var totalStats = Object.values(monster.stats).reduce(function(a, b) { return a + b; }, 0);
     var reward = monster.level * 20 + totalStats * 5 + monster.generation * 10;
     
-    if (confirm('确定要出售 ' + monster.name + ' 吗？\n\n将获得 ' + reward + ' 金币')) {
-        gameState.coins += reward;
-        
-        var index = gameState.monsters.findIndex(function(m) { return m.id === monster.id; });
-        gameState.monsters.splice(index, 1);
-        
-        gameState.selectedMonster = null;
-        
-        showNotification('出售了 ' + monster.name + '，获得 ' + reward + ' 金币', 'success');
-        updateResources();
-        renderMonsters();
-        renderDisposal();
-    }
+    showConfirmModal({
+        title: '💰 出售怪兽',
+        content: '确定要出售 <strong style="color:#58a6ff;">' + monster.name + '</strong> 吗？<br><br>' +
+            '将获得 <span style="color:#f0c53d;">💰 金币 ' + reward + '</span>',
+        confirmText: '确认出售',
+        confirmClass: 'btn-primary',
+        onConfirm: function() {
+            gameState.coins += reward;
+            var index = gameState.monsters.findIndex(function(m) { return m.id === monster.id; });
+            gameState.monsters.splice(index, 1);
+            gameState.selectedMonster = null;
+            showNotification('出售了 ' + monster.name + '，获得 ' + reward + ' 金币', 'success');
+            updateResources();
+            renderMonsters();
+            renderDisposal();
+        }
+    });
 };

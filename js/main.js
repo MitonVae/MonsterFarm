@@ -376,7 +376,16 @@ function loadGame() {
 }
 
 function resetGame() {
-    if (confirm('确定要重置游戏吗？所有进度将丢失！')) {
+    showConfirmModal({
+        title: '⚠️ 确认重置游戏',
+        content: '这将 <strong style="color:#f85149;">清除所有存档数据</strong>，包括：<br>' +
+            '• 所有资源、怪兽、科技<br>' +
+            '• 探索进度和农场地块<br>' +
+            '• 所有统计数据<br><br>' +
+            '<strong style="color:#f0c53d;">此操作不可撤销！</strong>',
+        confirmText: '💣 确认重置',
+        confirmClass: 'btn-danger',
+        onConfirm: function() {
         // 先重置内存状态，防止 beforeunload 的 autoSave 把旧数据重新写回
         gameState.coins = 100;
         gameState.food = 50;
@@ -399,7 +408,8 @@ function resetGame() {
         localStorage.removeItem('mf_tutorial_done');
 
         location.reload();
-    }
+        }  // end onConfirm
+    }); // end showConfirmModal
 }
 
 // ==================== 全局事件与定时器 ====================

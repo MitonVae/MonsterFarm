@@ -11,14 +11,22 @@ window.unlockPlot = function(plotId) {
     var cost = plot.unlockCost;
     
     if (gameState.coins >= cost.coins && gameState.materials >= cost.materials) {
-        if (confirm('解锁这块农田需要：\n金币 ' + cost.coins + '\n材料 ' + cost.materials + '\n\n确定解锁吗？')) {
-            gameState.coins -= cost.coins;
-            gameState.materials -= cost.materials;
-            plot.locked = false;
-            
-            showNotification('解锁成功！', 'success');
-            renderAll();
-        }
+        showConfirmModal({
+            title: '🔓 解锁农田',
+            content: '解锁这块农田需要：<br><br>' +
+                '<span style="color:#f0c53d;">💰 金币 ' + cost.coins + '</span><br>' +
+                '<span style="color:#c9d1d9;">🪨 材料 ' + cost.materials + '</span><br><br>' +
+                '确定解锁吗？',
+            confirmText: '确认解锁',
+            confirmClass: 'btn-primary',
+            onConfirm: function() {
+                gameState.coins -= cost.coins;
+                gameState.materials -= cost.materials;
+                plot.locked = false;
+                showNotification('解锁成功！', 'success');
+                renderAll();
+            }
+        });
     } else {
         showNotification('资源不足！', 'error');
     }

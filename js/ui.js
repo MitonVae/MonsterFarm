@@ -435,6 +435,41 @@ window.showModal = function(content) {
     modal.classList.add('active');
 };
 
+/**
+ * showConfirmModal — 通用游戏内确认弹窗，替代原生 confirm()
+ * opts: { title, content, confirmText, confirmClass, cancelText, onConfirm, onCancel }
+ */
+window.showConfirmModal = function(opts) {
+    opts = opts || {};
+    var title       = opts.title       || '确认操作';
+    var content     = opts.content     || '是否继续？';
+    var confirmText = opts.confirmText || '确认';
+    var confirmCls  = opts.confirmClass|| 'btn-danger';
+    var cancelText  = opts.cancelText  || T('cancel','common') || '取消';
+    var onConfirm   = opts.onConfirm   || function() {};
+    var onCancel    = opts.onCancel    || null;
+
+    // 用唯一 id 挂钩回调，避免 onclick 字符串作用域问题
+    var cbKey = '_scmCb_' + Date.now();
+    window[cbKey] = function(confirmed) {
+        closeModal();
+        delete window[cbKey];
+        if (confirmed) onConfirm();
+        else if (onCancel) onCancel();
+    };
+
+    var html =
+        '<div class="modal-header">' + title + '</div>' +
+        '<div style="padding:8px 2px 16px;font-size:13px;line-height:1.7;color:#c9d1d9;">' +
+            content +
+        '</div>' +
+        '<div class="modal-buttons">' +
+            '<button class="btn ' + confirmCls + '" onclick="window[\'' + cbKey + '\'](true)">' + confirmText + '</button>' +
+            '<button class="btn btn-secondary" onclick="window[\'' + cbKey + '\'](false)">' + cancelText + '</button>' +
+        '</div>';
+    showModal(html);
+};
+
 window.closeModal = function() {
     // 引导期间"选地块"步骤，禁止关闭弹窗（强制玩家点地块）
     if (typeof tutorialState !== 'undefined' &&
