@@ -289,14 +289,14 @@ function getResourceIcon(resource, size) {
 
 function getStatusText(status) {
     var statusMap = {
-        idle: '空闲',
-        working: '工作中',
-        exploring: '探索中',
-        farming: '耕作中',
-        breeding: '繁殖中',
-        selling: '售卖中'
+        idle:      function(){ return T('idle',      'monsterStatus'); },
+        working:   function(){ return T('working',   'monsterStatus'); },
+        exploring: function(){ return T('exploring', 'monsterStatus'); },
+        farming:   function(){ return T('farming',   'monsterStatus'); },
+        breeding:  function(){ return T('breeding',  'monsterStatus'); },
+        selling:   function(){ return T('selling',   'monsterStatus'); }
     };
-    return statusMap[status] || status;
+    return (statusMap[status] ? statusMap[status]() : status);
 }
 
 // ==================== 全局产量倍率（整合所有科技效果）====================
@@ -360,12 +360,5 @@ function getRarityColor(rarity) {
 }
 
 function getRarityLabel(rarity) {
-    var labels = {
-        common:    '普通',
-        uncommon:  '稀有',
-        rare:      '珍贵',
-        epic:      '史诗',
-        legendary: '传说'
-    };
-    return labels[rarity] || rarity;
+    return T(rarity, 'rarity') || rarity;
 }

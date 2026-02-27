@@ -792,31 +792,41 @@ window.showMobileResourcePanel = function() {
 // ==================== 设置弹窗（含字体大小）====================
 window.showSettingsModal = function() {
     var cur = localStorage.getItem('mf_font_size') || 'medium';
+    // 使用 i18n 翻译（兼容未加载 i18n.js 的情况）
+    var _t = function(k, cat) { return (typeof i18n !== 'undefined') ? i18n.t(k, cat) : k; };
+    var curLang = (typeof i18n !== 'undefined') ? i18n.currentLang : 'zh';
+
     var sizes = [
-        { key: 'small',  label: '小', desc: '12px · 密度高' },
-        { key: 'medium', label: '中', desc: '14px · 推荐' },
-        { key: 'large',  label: '大', desc: '16px · 舒适' },
-        { key: 'xlarge', label: '特大', desc: '18px · 无障碍' }
+        { key: 'small',  label: _t('fontSmall','settings'),  desc: _t('fontSmallDesc','settings') },
+        { key: 'medium', label: _t('fontMedium','settings'), desc: _t('fontMediumDesc','settings') },
+        { key: 'large',  label: _t('fontLarge','settings'),  desc: _t('fontLargeDesc','settings') },
+        { key: 'xlarge', label: _t('fontXLarge','settings'), desc: _t('fontXLargeDesc','settings') }
     ];
 
-    // ── 字体大小 ──
-    var html = '<div class="modal-header">⚙️ 游戏设置</div>' +
+    // ── 语言选项 ──
+    var langs = [
+        { key: 'zh', label: '中文' },
+        { key: 'en', label: 'English' },
+        { key: 'ja', label: '日本語' }
+    ];
+
+    var html = '<div class="modal-header">' + _t('title','settings') + '</div>' +
         '<div style="padding:4px 0;">' +
 
         // 统计数据
         '<div style="margin-bottom:14px;">' +
-        '<h3 style="margin-bottom:8px;font-size:13px;color:#8b949e;letter-spacing:.05em;">📊 游戏统计</h3>' +
+        '<h3 style="margin-bottom:8px;font-size:13px;color:#8b949e;letter-spacing:.05em;">' + _t('stats','settings') + '</h3>' +
         '<div style="background:#21262d;padding:12px 15px;border-radius:8px;font-size:13px;' +
             'display:grid;grid-template-columns:1fr 1fr;gap:6px;">' +
-        '<div>总收获：<strong style="color:#46d164;">' + (window.gameState ? window.gameState.totalHarvests : 0) + '</strong></div>' +
-        '<div>总探索：<strong style="color:#58a6ff;">' + (window.gameState ? window.gameState.totalExplorations : 0) + '</strong></div>' +
-        '<div>繁殖数：<strong style="color:#f0c53d;">' + (window.gameState ? (window.gameState.monstersBreed || 0) : 0) + '</strong></div>' +
-        '<div>怪兽数：<strong style="color:#e6edf3;">' + (window.gameState ? window.gameState.monsters.length : 0) + '</strong></div>' +
+        '<div>' + _t('totalHarvests','settings') + '：<strong style="color:#46d164;">' + (window.gameState ? window.gameState.totalHarvests : 0) + '</strong></div>' +
+        '<div>' + _t('totalExplorations','settings') + '：<strong style="color:#58a6ff;">' + (window.gameState ? window.gameState.totalExplorations : 0) + '</strong></div>' +
+        '<div>' + _t('monstersBreed','settings') + '：<strong style="color:#f0c53d;">' + (window.gameState ? (window.gameState.monstersBreed || 0) : 0) + '</strong></div>' +
+        '<div>' + _t('monsterCount','settings') + '：<strong style="color:#e6edf3;">' + (window.gameState ? window.gameState.monsters.length : 0) + '</strong></div>' +
         '</div></div>' +
 
         // 字体大小
         '<div style="margin-bottom:14px;">' +
-        '<h3 style="margin-bottom:8px;font-size:13px;color:#8b949e;letter-spacing:.05em;">🔤 字体大小</h3>' +
+        '<h3 style="margin-bottom:8px;font-size:13px;color:#8b949e;letter-spacing:.05em;">' + _t('fontSize','settings') + '</h3>' +
         '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">';
     sizes.forEach(function(s) {
         var active = cur === s.key;
@@ -830,31 +840,45 @@ window.showSettingsModal = function() {
     });
     html += '</div></div>' +
 
+        // 语言选择
+        '<div style="margin-bottom:14px;">' +
+        '<h3 style="margin-bottom:8px;font-size:13px;color:#8b949e;letter-spacing:.05em;">' + _t('language','settings') + '</h3>' +
+        '<div style="display:flex;gap:8px;">';
+    langs.forEach(function(l) {
+        var active = curLang === l.key;
+        html += '<div onclick="window._settingsSetLang(\'' + l.key + '\')" ' +
+            'class="lang-opt" data-lang="' + l.key + '" ' +
+            'style="flex:1;padding:9px 6px;background:' + (active ? '#1a3a1a' : '#21262d') + ';border:2px solid ' + (active ? '#46d164' : '#30363d') + ';' +
+            'border-radius:8px;text-align:center;cursor:pointer;transition:all 0.15s;font-size:13px;font-weight:' + (active ? '700' : '400') + ';">' +
+            l.label + '</div>';
+    });
+    html += '</div></div>' +
+
         // 存档操作
         '<div style="margin-bottom:14px;">' +
-        '<h3 style="margin-bottom:8px;font-size:13px;color:#8b949e;letter-spacing:.05em;">💾 存档</h3>' +
+        '<h3 style="margin-bottom:8px;font-size:13px;color:#8b949e;letter-spacing:.05em;">' + _t('save','settings') + '</h3>' +
         '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
-        '<button class="btn btn-primary" style="flex:1;min-width:100px;" onclick="quickSave();closeModal();">💾 手动存档</button>' +
-        '<button class="btn btn-secondary" style="flex:1;min-width:100px;" onclick="confirmRecallAll();">🔄 一键召回</button>' +
+        '<button class="btn btn-primary" style="flex:1;min-width:100px;" onclick="quickSave();closeModal();">' + _t('saveBtn','settings') + '</button>' +
+        '<button class="btn btn-secondary" style="flex:1;min-width:100px;" onclick="confirmRecallAll();">' + _t('recallBtn','settings') + '</button>' +
         '</div></div>' +
 
         // 快捷键
         '<div style="margin-bottom:14px;">' +
-        '<h3 style="margin-bottom:8px;font-size:13px;color:#8b949e;letter-spacing:.05em;">⌨️ 快捷键</h3>' +
+        '<h3 style="margin-bottom:8px;font-size:13px;color:#8b949e;letter-spacing:.05em;">' + _t('shortcuts','settings') + '</h3>' +
         '<div style="background:#21262d;padding:12px 15px;border-radius:8px;font-size:12px;' +
             'color:#8b949e;display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;">' +
-        '<div><kbd style="background:#30363d;padding:1px 5px;border-radius:3px;">1~5</kbd> 切换标签页</div>' +
-        '<div><kbd style="background:#30363d;padding:1px 5px;border-radius:3px;">Ctrl+S</kbd> 手动保存</div>' +
-        '<div><kbd style="background:#30363d;padding:1px 5px;border-radius:3px;">Esc</kbd> 关闭弹窗</div>' +
+        '<div><kbd style="background:#30363d;padding:1px 5px;border-radius:3px;">1~5</kbd> ' + _t('shortcut15','settings') + '</div>' +
+        '<div><kbd style="background:#30363d;padding:1px 5px;border-radius:3px;">Ctrl+S</kbd> ' + _t('shortcutCtrlS','settings') + '</div>' +
+        '<div><kbd style="background:#30363d;padding:1px 5px;border-radius:3px;">Esc</kbd> ' + _t('shortcutEsc','settings') + '</div>' +
         '</div></div>' +
 
         '</div>' + // end padding wrapper
 
         // 底部按钮行
         '<div class="modal-buttons">' +
-        '<button class="btn btn-info" style="background:#1f6feb;border-color:#1f6feb;" onclick="closeModal();if(typeof showTextTutorial===\'function\')showTextTutorial();">📖 游戏教程</button>' +
-        '<button class="btn btn-danger" onclick="if(typeof resetGame===\'function\')resetGame();">🗑 重置游戏</button>' +
-        '<button class="btn btn-primary" onclick="closeModal()">关闭</button>' +
+        '<button class="btn btn-info" style="background:#1f6feb;border-color:#1f6feb;" onclick="closeModal();if(typeof showTextTutorial===\'function\')showTextTutorial();">' + _t('tutorialBtn','settings') + '</button>' +
+        '<button class="btn btn-danger" onclick="if(typeof resetGame===\'function\')resetGame();">' + _t('resetBtn','settings') + '</button>' +
+        '<button class="btn btn-primary" onclick="closeModal()">' + _t('closeBtn','settings') + '</button>' +
         '</div>' +
 
         // 隐藏版本号（长按2秒进入GM面板）
@@ -912,6 +936,22 @@ window.showSettingsModal = function() {
             hint.addEventListener('touchcancel', cancelPress);
         }
     }, 100);
+};
+
+// 切换语言并重新渲染设置面板
+window._settingsSetLang = function(lang) {
+    if (typeof i18n === 'undefined') return;
+    i18n.setLang(lang);
+    // 更新语言按钮样式（无需重开整个 modal，只更新 lang-opt 样式）
+    document.querySelectorAll('.lang-opt').forEach(function(el) {
+        var isActive = el.getAttribute('data-lang') === lang;
+        el.style.background    = isActive ? '#1a3a1a' : '#21262d';
+        el.style.borderColor   = isActive ? '#46d164' : '#30363d';
+        el.style.fontWeight    = isActive ? '700' : '400';
+    });
+    // 重新渲染设置面板以刷新其他翻译文字
+    closeModal();
+    setTimeout(showSettingsModal, 80);
 };
 
 // 应用字体大小
