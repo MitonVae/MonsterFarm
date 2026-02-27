@@ -823,12 +823,11 @@ window.showSettingsModal = function() {
         '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">';
     sizes.forEach(function(s) {
         var active = cur === s.key;
-        html += '<div onclick="applyFontSize(\'' + s.key + '\');document.querySelectorAll(\'.font-size-opt\').forEach(function(e){e.classList.remove(\'active\')});this.classList.add(\'active\');" ' +
+        html += '<div onclick="applyFontSize(\'' + s.key + '\')" ' +
             'class="font-size-opt' + (active ? ' active' : '') + '" ' +
-            'style="padding:10px 6px;background:' + (active ? '#1f4a7a' : '#21262d') + ';border:2px solid ' + (active ? '#58a6ff' : '#30363d') + ';' +
-            'border-radius:8px;text-align:center;cursor:pointer;transition:all 0.15s;">' +
-            '<div style="font-size:18px;font-weight:700;margin-bottom:3px;">' + s.label + '</div>' +
-            '<div style="font-size:10px;color:#8b949e;line-height:1.3;">' + s.desc + '</div>' +
+            'data-size="' + s.key + '">' +
+            '<div class="fs-label">' + s.label + '</div>' +
+            '<div class="fs-desc">' + s.desc + '</div>' +
             '</div>';
     });
     html += '</div></div>' +
@@ -947,13 +946,23 @@ window._settingsSetLang = function(lang) {
     setTimeout(showSettingsModal, 80);
 };
 
-// 应用字体大小
+// 应用字体大小（全局 CSS 变量方案，移动端同步生效）
 window.applyFontSize = function(size) {
     var sizeMap = { small: '12px', medium: '14px', large: '16px', xlarge: '18px' };
     var px = sizeMap[size] || '14px';
-    document.documentElement.style.setProperty('font-size', px);
+    // 1. 修改 CSS 自定义变量，所有使用 rem/em 的元素自动跟随
+    document.documentElement.style.setProperty('--base-fs', px);
+    // 2. 同步设置 html / body 字号（兜底，覆盖部分不用变量的场景）
+    document.documentElement.style.fontSize = px;
     document.body.style.fontSize = px;
+    // 3. 持久化
     try { localStorage.setItem('mf_font_size', size); } catch(e) {}
+    // 4. 立即刷新设置面板内的字体选项按钮激活状态（无需重开面板）
+    document.querySelectorAll('.font-size-opt').forEach(function(el) {
+        var isActive = el.getAttribute('data-size') === size;
+        if (isActive) { el.classList.add('active'); }
+        else           { el.classList.remove('active'); }
+    });
 };
 
 // ==================== 右侧怪兽侧边栏渲染 ====================
