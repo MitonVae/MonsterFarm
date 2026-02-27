@@ -278,6 +278,8 @@
                 updateSidebarResources();
                 initMobileNavIcons();
                 applyFontSize(localStorage.getItem('mf_font_size') || 'medium');
+                // 恢复存档中正在生长/已成熟的地块计时器（必须在 renderAll 之后调用）
+                if (typeof restoreGrowTimers === 'function') restoreGrowTimers();
             }, 100);
         });
     </script>

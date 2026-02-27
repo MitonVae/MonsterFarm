@@ -131,13 +131,24 @@ window.plantCrop = function(plotId, cropId) {
 // ==================== 自动种植作物设置 ====================
 window.setAutoCrop = function(plotId, cropId) {
     var plot = gameState.plots[plotId];
+    var oldCrop = plot.autoCrop;
     plot.autoCrop = cropId;
     var cropName = cropTypes.find(function(c){return c.id===cropId;}).name;
     if (!plot.crop) {
+        // 地块空闲，直接启动自动循环
         startAutoCycle(plotId);
         closeModal();
         showNotification('已设置自动种植：' + cropName, 'success');
+    } else if (plot.crop !== cropId && plot.progress < 100) {
+        // 切换了不同作物且当前作物未成熟：重置计时，种新作物
+        plot.crop = cropId;
+        plot.plantedAt = Date.now();
+        plot.progress = 0;
+        startGrowTimer(plotId);
+        closeModal();
+        showNotification('已切换并重新种植：' + cropName, 'success');
     } else {
+        // 相同作物 或 已成熟等待收获：仅更新 autoCrop，下轮生效
         closeModal();
         showNotification('下一轮将自动种植：' + cropName, 'info');
     }
@@ -535,6 +546,28 @@ window.recallAllMonsters = function() {
         showNotification('已召回 ' + recalled + ' 只怪兽', 'success');
         renderAll();
     }
+};
+
+// ==================== 存档恢复：重启所有生长计时器 ====================
+// 在 loadGame() 之后调用，恢复所有正在生长/等待收获的地块计时器
+window.restoreGrowTimers = function() {
+    gameState.plots.forEach(function(plot) {
+        if (plot.locked || !plot.crop) return;
+
+        if (plot.progress >= 100) {
+            // 已成熟：如有怪兽则触发自动收获，否则保持成熟状态等待手动收获
+            if (plot.assignedMonster && plot.autoCrop) {
+                // 用短延迟错开多地块同时收获，避免通知堆叠
+                var delay = plot.id * 200;
+                setTimeout(function() { autoHarvestPlot(plot.id); }, delay);
+            }
+            // 无怪兽：DOM 会在 renderFarm 时渲染为"点击收获"状态，无需额外处理
+        } else {
+            // 仍在生长中：补偿离线时间后重启计时器
+            // plantedAt 已保存，elapsed 自动包含离线时长，progress 会在 timer 首次 tick 时更新
+            startGrowTimer(plot.id);
+        }
+    });
 };
 
 // ==================== 一键种植（手动地块）====================
