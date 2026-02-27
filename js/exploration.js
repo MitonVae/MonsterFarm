@@ -1,5 +1,26 @@
 // ==================== 探索模块（区域探索版）====================
 
+// ── 工具：根据条件对象生成可读文字描述 ──
+function _condLabel(c) {
+    if (c.label) return c.label;
+    switch (c.type) {
+        case 'coins':             return '金币 ≥ ' + c.value;
+        case 'materials':         return '材料 ≥ ' + c.value;
+        case 'research':          return '研究点 ≥ ' + c.value;
+        case 'food':              return '食物 ≥ ' + c.value;
+        case 'totalExplorations': return '完成探索 ≥ ' + c.value + ' 次';
+        case 'monsterCount':      return '拥有怪兽 ≥ ' + c.value + ' 只';
+        case 'monstersBreed':     return '怪兽繁殖 ≥ ' + c.value + ' 次';
+        case 'tech': {
+            var td = (typeof technologies !== 'undefined') && technologies[c.value];
+            return '解锁科技「' + (td ? td.name : c.value) + '」';
+        }
+        case 'allTech':           return c.label || '解锁全部科技';
+        case 'purchase':          return '花费 ' + c.value + ' 金币购买通行证';
+        default:                  return c.type + (c.value !== undefined ? ' ≥ ' + c.value : '');
+    }
+}
+
 // ── 工具：检查区域解锁条件 ──
 function checkZoneCondition(zone) {
     var cond = zone.unlockCondition;
@@ -351,15 +372,15 @@ window.renderExploration = function() {
             if (cond.type === 'compound') {
                 condHtml = cond.conditions.map(function(c) {
                     var met = checkZoneCondition({ unlockCondition: c });
-                    return '<div class="expl-cond ' + (met ? 'met' : '') + '">' + (met ? '✅' : '🔒') + ' ' + c.label + '</div>';
+                    return '<div class="expl-cond ' + (met ? 'met' : '') + '">' + (met ? '✅' : '🔒') + ' ' + _condLabel(c) + '</div>';
                 }).join('');
             } else if (cond.type === 'purchase') {
-                condHtml = '<div class="expl-cond">💰 ' + cond.label + '</div>' +
+                condHtml = '<div class="expl-cond">💰 ' + _condLabel(cond) + '</div>' +
                     '<button class="btn btn-warning expl-purchase-btn" onclick="purchaseZonePass(\'' + zone.id + '\')">' +
                     '花费 ' + cond.value + ' 金币解锁</button>';
             } else {
                 var met = checkZoneCondition(zone);
-                condHtml = '<div class="expl-cond ' + (met ? 'met' : '') + '">' + (met ? '✅' : '🔒') + ' ' + cond.label + '</div>';
+                condHtml = '<div class="expl-cond ' + (met ? 'met' : '') + '">' + (met ? '✅' : '🔒') + ' ' + _condLabel(cond) + '</div>';
             }
 
             html += '<div class="expl-zone locked">' +
