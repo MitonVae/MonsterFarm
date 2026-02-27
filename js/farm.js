@@ -209,38 +209,55 @@ function calcQualityChance(monster, crop) {
 
 // ==================== 生长计时器（核心）====================
 function startGrowTimer(plotId) {
+    // 先清除已有 timer，防止重复
     if (growIntervals[plotId]) {
         clearInterval(growIntervals[plotId]);
         delete growIntervals[plotId];
     }
     var plot = gameState.plots[plotId];
     if (!plot || !plot.crop) return;
-    var cropType = cropTypes.find(function(c) { return c.id === plot.crop; });
 
-    var interval = setInterval(function() {
+    // 记录本次 timer 启动时对应的作物，用于检测"中途换作物"的失效 timer
+    var timerCrop = plot.crop;
+
+    var intervalId = setInterval(function() {
         var p = gameState.plots[plotId];
-        if (!p || !p.crop) {
-            clearInterval(interval);
-            delete growIntervals[plotId];
+
+        // 地块已清空，或作物已被换掉（换作物时会重启 timer，旧 timer 应失效）
+        if (!p || !p.crop || p.crop !== timerCrop) {
+            clearInterval(intervalId);
+            if (growIntervals[plotId] === intervalId) delete growIntervals[plotId];
             return;
         }
+
         var ct = cropTypes.find(function(c) { return c.id === p.crop; });
+        if (!ct) {
+            clearInterval(intervalId);
+            if (growIntervals[plotId] === intervalId) delete growIntervals[plotId];
+            return;
+        }
+
         var speedMult = calcSpeedMultiplier(p, p.assignedMonster);
         var elapsed = Date.now() - p.plantedAt;
         p.progress = Math.min(100, (elapsed / ct.growTime) * 100 * speedMult);
         updatePlotProgress(plotId);
 
         if (p.progress >= 100) {
-            clearInterval(interval);
-            delete growIntervals[plotId];
+            clearInterval(intervalId);
+            if (growIntervals[plotId] === intervalId) delete growIntervals[plotId];
             updatePlotAppearance(plotId, true);
-            showNotification(ct.name + ' 成熟了！', 'success');
+            // 仅当没有怪兽时才播报"成熟"通知（有怪兽会在 autoHarvestPlot 里通知）
+            if (!p.assignedMonster) {
+                showNotification(ct.name + ' 成熟了！', 'success');
+            }
             if (p.assignedMonster && p.autoCrop) {
                 setTimeout(function() { autoHarvestPlot(plotId); }, 800);
+            } else if (!p.assignedMonster) {
+                // 无怪兽：保持成熟状态，等待手动收获
             }
         }
-    }, 100);
-    growIntervals[plotId] = interval;
+    }, 200);
+    growIntervals[plotId] = intervalId;
 }
 
 // ==================== 自动收获（怪兽驱动）====================
@@ -552,7 +569,18 @@ window.recallAllMonsters = function() {
 // 在 loadGame() 之后调用，恢复所有正在生长/等待收获的地块计时器
 window.restoreGrowTimers = function() {
     gameState.plots.forEach(function(plot) {
-        if (plot.locked || !plot.crop) return;
+        if (plot.locked) return;
+
+        // ── 特殊情况：crop 为空但有怪兽+autoCrop ──
+        // 说明存档恰好发生在 autoHarvestPlot 清空 crop 后、startAutoCycle 执行前的 500ms 窗口
+        // 直接重启自动循环即可
+        if (!plot.crop) {
+            if (plot.assignedMonster && plot.autoCrop) {
+                var delay = plot.id * 300;
+                setTimeout(function() { startAutoCycle(plot.id); }, delay);
+            }
+            return;
+        }
 
         if (plot.progress >= 100) {
             // 已成熟：如有怪兽则触发自动收获，否则保持成熟状态等待手动收获
