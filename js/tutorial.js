@@ -6,13 +6,33 @@
 //                false = 镂空区域仅高亮展示，操作由气泡按钮驱动
 // onShow: 气泡出现前的回调
 // onNext: 气泡消失后的回调，可传入 done 回调让引导系统等待
+
+// ── 移动端检测（与 resizer.js 断点一致）──
+function _tutIsMobile() { return window.innerWidth < 1024; }
+
+// ── 获取有效 selector（主选择器不可见时自动回退到 fallback）──
+function _tutGetSelector(primary, fallback) {
+    var el = primary ? document.querySelector(primary) : null;
+    if (el) {
+        var r = el.getBoundingClientRect();
+        if (r.width > 0 || r.height > 0) return primary;
+    }
+    return fallback || null;
+}
+
 var tutorialSteps = [
     // ── Step 0：欢迎 ──
     {
         id: 'welcome',
         get title()   { return T('step0_title',   'tutorial'); },
         get content() { return T('step0_content', 'tutorial'); },
-        focusSelector: '.tab[onclick*="exploration"]',
+        // PC：顶部 tab；移动端：底部导航栏探索按钮
+        get focusSelector() {
+            return _tutGetSelector(
+                '.tab[onclick*="exploration"]',
+                '.bottom-nav-item[data-tab="exploration"]'
+            );
+        },
         allowInteract: false,
         get btnText() { return T('step0_btn', 'tutorial'); },
         onShow: null,
@@ -52,39 +72,62 @@ var tutorialSteps = [
         id: 'select_monster',
         get title()   { return T('step2_title',   'tutorial'); },
         get content() { return T('step2_content', 'tutorial'); },
-        focusSelector: '#monsterSidebar .msb-monster-card',
+        // PC: 右侧侧边栏卡片；移动端: 怪兽 tab 里的卡片
+        get focusSelector() {
+            return _tutGetSelector(
+                '#monsterSidebar .msb-monster-card',
+                '#monsters-tab .msb-monster-card'
+            );
+        },
         allowInteract: true,
-        btnText: null,      // 等玩家点击怪兽卡片后触发钩子推进
+        btnText: null,
         onShow: function() {
             tutorialState.waitingForMonsterSelect = true;
+            // 移动端：自动切到怪兽 tab，让卡片出现
+            if (_tutIsMobile()) {
+                switchTab('monsters');
+            }
             setTimeout(function() {
                 if (tutorialState.active && tutorialState.currentStep === 2) {
                     renderOverlay(tutorialSteps[2]);
                     var b = document.getElementById('tutorialBubble');
                     if (b) positionBubble(b, tutorialSteps[2]);
                 }
-            }, 300);
+            }, 450);
         },
         onNext: null
     },
 
-    // ── Step 3：点击「派驻农田」按钮（强引导） ──
+    // ── Step 3：点击「派驻农田」按钮 ──
     {
         id: 'assign_farm',
         get title()   { return T('step3_title',   'tutorial'); },
         get content() { return T('step3_content', 'tutorial'); },
-        focusSelector: '#monsterSidebar .msb-btn-assign',
+        // PC: 侧边栏的派驻按钮；移动端: 详情弹窗里的派驻按钮
+        get focusSelector() {
+            return _tutGetSelector(
+                '#monsterSidebar .msb-btn-assign',
+                '.modal-content .msb-btn-assign'
+            );
+        },
         allowInteract: true,
-        btnText: null,      // 等玩家点击耕作按钮后触发钩子推进
+        btnText: null,
         onShow: function() {
             tutorialState.waitingForAssign = true;
+            // 移动端：自动打开第一只怪兽的详情弹窗（弹窗里有"派驻农田"按钮）
+            if (_tutIsMobile() && gameState.monsters && gameState.monsters.length > 0) {
+                var firstId = gameState.monsters[0].id;
+                if (typeof showMonsterDetailModal === 'function') {
+                    showMonsterDetailModal(firstId);
+                }
+            }
             setTimeout(function() {
                 if (tutorialState.active && tutorialState.currentStep === 3) {
                     renderOverlay(tutorialSteps[3]);
                     var b = document.getElementById('tutorialBubble');
                     if (b) positionBubble(b, tutorialSteps[3]);
                 }
-            }, 300);
+            }, 500);
         },
         onNext: null
     },

@@ -403,6 +403,10 @@ window.assignMonsterToPlot = function(monsterId, plotId) {
 
 // ==================== 选择地块派怪兽（地块选择器）====================
 window.showAssignPlotPicker = function(monsterId) {
+    // ── 引导钩子：点击"派驻农田"→ Step3 assign_farm → Step4 pick_plot ──
+    // 无论从侧边栏按钮还是详情弹窗触发，均在此统一处理
+    if (typeof onTutorialAssignFarm === 'function') onTutorialAssignFarm();
+
     var availablePlots = gameState.plots.filter(function(p) {
         return !p.locked && !p.assignedMonster;
     });

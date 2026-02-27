@@ -567,6 +567,9 @@ window.toggleSidebar = function() {
 window.showMonsterDetailModal = function(monsterId) {
     var monster = gameState.monsters.find(function(m) { return m.id === monsterId; });
     if (!monster) return;
+
+    // ── 引导钩子：Step2 点击怪兽卡片 → Step3 assign_farm ──
+    if (typeof onTutorialMonsterSelected === 'function') onTutorialMonsterSelected();
     
     var typeData = monsterTypes[monster.type];
     var isWorking = monster.status !== 'idle';
@@ -1018,16 +1021,13 @@ window.renderMonsterSidebar = function() {
         // 判断操作按钮
         var actionBtns = '';
         if (monster.status === 'idle') {
-            actionBtns = '<button class="msb-action-btn msb-btn-detail" onclick="event.stopPropagation();showMonsterDetailModal(' + monster.id + ')">详情</button>' +
-                '<button class="msb-action-btn msb-btn-assign" onclick="event.stopPropagation();closeModal&&closeModal();showAssignPlotPicker(' + monster.id + ')">派驻农田</button>';
+            actionBtns = '<button class="msb-action-btn msb-btn-assign" onclick="event.stopPropagation();closeModal&&closeModal();showAssignPlotPicker(' + monster.id + ')">派驻农田</button>';
         } else if (monster.status === 'farming') {
             var farmPlot2 = gameState.plots.find(function(p) { return p.assignedMonster && p.assignedMonster.id === monster.id; });
             var plotId = farmPlot2 ? farmPlot2.id : -1;
-            actionBtns = '<button class="msb-action-btn msb-btn-detail" onclick="event.stopPropagation();showMonsterDetailModal(' + monster.id + ')">详情</button>' +
-                (plotId >= 0 ? '<button class="msb-action-btn msb-btn-recall" onclick="event.stopPropagation();removeMonsterFromPlot(' + plotId + ');renderMonsterSidebar();">撤回</button>' : '');
+            actionBtns = plotId >= 0 ? '<button class="msb-action-btn msb-btn-recall" onclick="event.stopPropagation();removeMonsterFromPlot(' + plotId + ');renderMonsterSidebar();">撤回</button>' : '';
         } else {
-            actionBtns = '<button class="msb-action-btn msb-btn-detail" onclick="event.stopPropagation();showMonsterDetailModal(' + monster.id + ')">详情</button>' +
-                '<button class="msb-action-btn msb-btn-recall" onclick="event.stopPropagation();recallMonster(' + monster.id + ');">召回</button>';
+            actionBtns = '<button class="msb-action-btn msb-btn-recall" onclick="event.stopPropagation();recallMonster(' + monster.id + ');">召回</button>';
         }
 
         return '<div class="msb-monster-card ' + statusCls + '" onclick="showMonsterDetailModal(' + monster.id + ')">' +

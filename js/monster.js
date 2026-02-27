@@ -18,10 +18,8 @@ window.assignToFarm = function(monsterId) {
         return;
     }
 
-    // 引导期间：先触发钩子（切换到 Step4 pick_plot），再弹出地块选择器
-    var inTutorialAssign = typeof tutorialState !== 'undefined' && tutorialState.active && tutorialState.waitingForAssign;
-    if (inTutorialAssign) {
-        if (typeof onTutorialAssignFarm === 'function') onTutorialAssignFarm();
+    // 引导期间直接弹出地块选择器（钩子已统一在 showAssignPlotPicker 入口触发）
+    if (typeof tutorialState !== 'undefined' && tutorialState.active && tutorialState.waitingForAssign) {
         showAssignPlotPicker(monsterId);
         return;
     }
