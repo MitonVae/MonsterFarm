@@ -613,11 +613,13 @@ window.showMonsterDetailModal = function(monsterId) {
     var isWorking = monster.status !== 'idle';
     var statusText = getStatusText(monster.status);
     var isStarred  = !!monster.starred;
+    var _rarityColorMap = { common:'#8b949e', uncommon:'#2196f3', rare:'#ff9800', epic:'#9c27b0', legendary:'#ffd700' };
+    var _nameColor = _rarityColorMap[typeData ? typeData.rarity : 'common'] || '#e6edf3';
 
     var modalContent = `
         <div class="modal-header" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
             ${createSVG(monster.type, 32)}
-            <span id="mdl_name_${monster.id}" style="flex:1;font-weight:700;font-size:16px;cursor:pointer;border-bottom:1px dashed #444;padding-bottom:1px;"
+            <span id="mdl_name_${monster.id}" style="flex:1;font-weight:700;font-size:16px;cursor:pointer;border-bottom:1px dashed #444;padding-bottom:1px;color:${_nameColor};"
                 title="点击重命名" onclick="window._promptRename(${monster.id})">${monster.name}</span>
             <button onclick="window.toggleMonsterStar(${monster.id})" title="${isStarred ? '取消星标' : '添加星标'}"
                 style="background:none;border:none;font-size:20px;cursor:pointer;line-height:1;padding:0 4px;opacity:${isStarred ? '1' : '0.35'};transition:opacity 0.15s;"
@@ -672,6 +674,44 @@ window.showMonsterDetailModal = function(monsterId) {
                 }
             </div>
         </div>
+
+        ${(function(){
+            var bondVal = (typeof AffinitySystem !== 'undefined') ? AffinitySystem.getPlayerBond(monsterId) : 0;
+            var bondTag = (typeof AffinitySystem !== 'undefined') ? AffinitySystem.getPlayerBondTag(bondVal) : '—';
+            var bondPct = Math.round((bondVal + 100) / 2);
+            var bondColor = bondVal >= 50 ? '#f0c53d' : bondVal >= 20 ? '#58a6ff' : bondVal >= 0 ? '#8b949e' : '#f85149';
+            var pairList = [];
+            if (typeof AffinitySystem !== 'undefined') {
+                (gameState.monsters || []).forEach(function(m){
+                    if (m.id === monsterId) return;
+                    var v = AffinitySystem.getPair(monsterId, m.id);
+                    if (v !== 0) pairList.push({ name: m.name, val: v, tag: AffinitySystem.getPairTag(v) });
+                });
+            }
+            pairList.sort(function(a,b){ return b.val - a.val; });
+            var pairsHtml = pairList.length
+                ? pairList.map(function(r){
+                    var c = r.val >= 60 ? '#46d164' : r.val >= 0 ? '#8b949e' : '#f85149';
+                    return '<span style="background:#161b22;border:1px solid '+c+';border-radius:12px;padding:2px 8px;font-size:11px;color:'+c+';">'+r.name+'·'+r.tag+'</span>';
+                  }).join('')
+                : '<span style="color:#8b949e;font-size:11px;">尚未与其他怪兽建立关系</span>';
+            return '<div class="monster-detail-section" style="margin-bottom:8px;">'+
+                '<h4 style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'+
+                    '<span>🤝 羁绊与关系</span>'+
+                '</h4>'+
+                '<div style="background:#21262d;border-radius:8px;padding:8px 10px;margin-bottom:8px;display:flex;align-items:center;gap:10px;">'+
+                    '<span style="font-size:18px;">💛</span>'+
+                    '<div style="flex:1;">'+
+                        '<div style="font-size:11px;color:#8b949e;">对你的羁绊：<strong style="color:'+bondColor+';">'+bondTag+'</strong></div>'+
+                        '<div style="background:#161b22;border-radius:4px;height:4px;margin-top:4px;overflow:hidden;">'+
+                            '<div style="width:'+bondPct+'%;height:100%;background:'+bondColor+';transition:width .3s;border-radius:4px;"></div>'+
+                        '</div>'+
+                    '</div>'+
+                    '<span style="font-size:16px;font-weight:700;color:'+bondColor+';">'+bondVal+'</span>'+
+                '</div>'+
+                '<div style="display:flex;flex-wrap:wrap;gap:5px;">'+pairsHtml+'</div>'+
+            '</div>';
+        })()}
         
         <div class="modal-buttons">
             ${!isWorking ? `
@@ -694,6 +734,10 @@ window.showMonsterDetailModal = function(monsterId) {
             </button>
             <button class="btn btn-secondary" onclick="closeModal(); showLineageModal(${monster.id});">
                 🧬 系谱
+            </button>
+            <button class="btn btn-secondary" onclick="showMonsterLogModal(${monster.id});"
+                style="border-color:#e040fb;color:#e040fb;">
+                📜 履历
             </button>
             <button class="btn btn-primary" onclick="closeModal()">
                 关闭
@@ -1102,10 +1146,13 @@ window.renderMonsterSidebar = function() {
                     actionBtns = '<button class="compact-btn danger" onclick="event.stopPropagation();recallMonster(' + monster.id + ')">召回</button>';
                 }
 
+                var _rcm = { common:'#8b949e', uncommon:'#2196f3', rare:'#ff9800', epic:'#9c27b0', legendary:'#ffd700' };
+                var _mtd = monsterTypes[monster.type];
+                var _nc = _rcm[_mtd ? _mtd.rarity : 'common'] || '#e6edf3';
                 return '<div class="compact-card monster ' + (monster.status || 'idle') + '" onclick="showMonsterDetailModal(' + monster.id + ')">' +
                     '<div style="width:28px;height:28px;flex-shrink:0;">' + createSVG(monster.type, 28) + '</div>' +
                     '<div style="display:flex;flex-direction:column;min-width:0;flex:1;gap:1px;">' +
-                        '<span class="compact-name">' + (monster.starred ? '<span style="color:#f0c53d;font-size:11px;">⭐</span>' : '') + monster.name + '</span>' +
+                        '<span class="compact-name" style="color:' + _nc + ';">' + (monster.starred ? '<span style="color:#f0c53d;font-size:11px;">⭐</span>' : '') + monster.name + '</span>' +
                         '<span class="compact-sub">Lv.' + monster.level + ' · 力' + monster.stats.strength + ' 耕' + monster.stats.farming + '</span>' +
                     '</div>' +
                     '<div style="width:28px;height:3px;background:#21262d;border-radius:2px;overflow:hidden;align-self:center;">' +
@@ -1140,11 +1187,14 @@ window.renderMonsterSidebar = function() {
                 actionBtns = '<button class="msb-action-btn msb-btn-recall" onclick="event.stopPropagation();recallMonster(' + monster.id + ');">召回</button>';
             }
 
+            var _rcm2 = { common:'#8b949e', uncommon:'#2196f3', rare:'#ff9800', epic:'#9c27b0', legendary:'#ffd700' };
+            var _mtd2 = monsterTypes[monster.type];
+            var _nc2 = _rcm2[_mtd2 ? _mtd2.rarity : 'common'] || '#e6edf3';
             return '<div class="msb-monster-card ' + statusCls + '" onclick="showMonsterDetailModal(' + monster.id + ')">' +
                 '<div class="msb-monster-top">' +
                 '<div class="msb-monster-icon">' + createSVG(monster.type, 28) + '</div>' +
                 '<div class="msb-monster-meta">' +
-                '<div class="msb-monster-name">' + (monster.starred ? '<span style="color:#f0c53d;font-size:11px;margin-right:2px;">⭐</span>' : '') + monster.name + '</div>' +
+                '<div class="msb-monster-name" style="color:' + _nc2 + ';">' + (monster.starred ? '<span style="color:#f0c53d;font-size:11px;margin-right:2px;">⭐</span>' : '') + monster.name + '</div>' +
                 '<div class="msb-monster-level">Lv.' + monster.level + ' · ' + (monsterTypes[monster.type] ? monsterTypes[monster.type].name : monster.type) + '</div>' +
                 assignInfo +
                 '</div>' +
