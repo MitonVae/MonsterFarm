@@ -470,6 +470,70 @@ window.closeModal = function() {
     document.body.style.touchAction = '';
 };
 
+// ── 特性徽章浮层 ──
+// anchor: 被点击的 span 元素；tipJson: JSON 字符串 { name, rarity, desc, effect, color }
+window.showTraitTooltip = function(anchor, tipJson) {
+    // 移除上一个浮层
+    var old = document.getElementById('trait-tooltip');
+    if (old) { old.remove(); if (old._anchor === anchor) return; } // 再次点击同一徽章则关闭
+
+    var data;
+    try { data = JSON.parse(tipJson); } catch(e) { return; }
+
+    var rarityLabel = { common:'普通', uncommon:'稀有', rare:'珍贵', epic:'史诗', legendary:'传说' };
+    var rarityBg    = { common:'#30363d', uncommon:'#1a3a1a', rare:'#1a2840', epic:'#2a1a3a', legendary:'#3a2a00' };
+
+    var tip = document.createElement('div');
+    tip.id = 'trait-tooltip';
+    tip._anchor = anchor;
+    tip.style.cssText = [
+        'position:fixed',
+        'z-index:9998',
+        'min-width:180px',
+        'max-width:260px',
+        'background:' + (rarityBg[data.rarity] || '#21262d'),
+        'border:1.5px solid ' + data.color,
+        'border-radius:10px',
+        'padding:12px 14px',
+        'box-shadow:0 6px 24px rgba(0,0,0,.65)',
+        'font-size:13px',
+        'line-height:1.6',
+        'pointer-events:auto'
+    ].join(';');
+
+    tip.innerHTML =
+        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">' +
+            '<strong style="color:' + data.color + ';font-size:14px;">' + data.name + '</strong>' +
+            '<span style="font-size:10px;background:' + data.color + '33;color:' + data.color + ';padding:1px 6px;border-radius:8px;border:1px solid ' + data.color + ';">' + (rarityLabel[data.rarity] || data.rarity) + '</span>' +
+        '</div>' +
+        (data.desc ? '<div style="color:#c9d1d9;margin-bottom:' + (data.effect ? '8px' : '0') + ';">' + data.desc + '</div>' : '') +
+        (data.effect ? '<div style="font-size:12px;color:#8b949e;border-top:1px solid #30363d;padding-top:6px;">📊 ' + data.effect + '</div>' : '');
+
+    document.body.appendChild(tip);
+
+    // 定位（优先显示在锚点下方，超出屏幕则翻到上方）
+    var rect = anchor.getBoundingClientRect();
+    var tw = tip.offsetWidth  || 220;
+    var th = tip.offsetHeight || 100;
+    var left = Math.min(rect.left, window.innerWidth - tw - 10);
+    left = Math.max(8, left);
+    var top  = rect.bottom + 6;
+    if (top + th > window.innerHeight - 10) top = rect.top - th - 6;
+    tip.style.left = left + 'px';
+    tip.style.top  = top  + 'px';
+
+    // 点击其他区域关闭
+    function onOutsideClick(e) {
+        if (!tip.contains(e.target) && e.target !== anchor) {
+            tip.remove();
+            document.removeEventListener('click', onOutsideClick, true);
+        }
+    }
+    setTimeout(function() {
+        document.addEventListener('click', onOutsideClick, true);
+    }, 0);
+};
+
 // 事件面板
 window.showEventPanel = function(event) {
     var oldEvent = document.querySelector('.event-panel');
@@ -721,13 +785,41 @@ window.showMonsterDetailModal = function(monsterId) {
         </div>
         
         <div class="monster-detail-section">
-            <h4>特殊能力</h4>
+            <h4 style="display:flex;align-items:center;gap:6px;">特殊能力
+                <span style="font-size:11px;color:#8b949e;font-weight:400;">点击徽章查看效果</span>
+            </h4>
             <div class="monster-traits">
                 ${monster.traits.length > 0 ? 
-                    monster.traits.map(function(trait) { 
-                        return '<span class="monster-trait-tag">' + trait.name + '</span>';
+                    monster.traits.map(function(trait) {
+                        var _rc = { common:'#8b949e', uncommon:'#3fb950', rare:'#58a6ff', epic:'#a371f7', legendary:'#f0c53d' };
+                        var _tc = _rc[trait.rarity] || '#8b949e';
+                        // 解析 effect 为可读文字
+                        var effectParts = [];
+                        var e = trait.effect || {};
+                        var statNameMap = { strength:'力量', agility:'敏捷', intelligence:'智力', farming:'耕作', luck:'幸运' };
+                        Object.keys(e).forEach(function(k) {
+                            var v = e[k];
+                            if (statNameMap[k]) { effectParts.push(statNameMap[k] + (v > 0 ? '+' : '') + v); return; }
+                            if (k === 'materialBonus')   { effectParts.push('材料+' + Math.round(v*100) + '%'); return; }
+                            if (k === 'coinBonus')       { effectParts.push('金币+' + Math.round(v*100) + '%'); return; }
+                            if (k === 'researchBonus')   { effectParts.push('研究+' + Math.round(v*100) + '%'); return; }
+                            if (k === 'farmYield')       { effectParts.push('农场产量+' + Math.round(v*100) + '%'); return; }
+                            if (k === 'harvestCoinBonus'){ effectParts.push('收获金币+' + Math.round(v*100) + '%'); return; }
+                            if (k === 'noFatigue')       { v && effectParts.push('探索不积疲劳'); return; }
+                            if (k === 'defeatImmune')    { v && effectParts.push('免疫战败惩罚'); return; }
+                            if (k === 'parasitic')       { v && effectParts.push('寄生偷食'); return; }
+                        });
+                        var effectText = effectParts.length ? effectParts.join(' · ') : '';
+                        // 构建 onclick tooltip 弹窗（用 showTraitTooltip 全局函数）
+                        // 将数据存入 dataset，避免 HTML 属性内 JSON 引号转义问题
+                        var tipData = JSON.stringify({ name: trait.name, rarity: trait.rarity, desc: trait.desc || '', effect: effectText, color: _tc });
+                        var encodedData = encodeURIComponent(tipData);
+                        return '<span class="monster-trait-tag" style="cursor:pointer;border-color:' + _tc + ';color:' + _tc + ';background:' + _tc + '22;" ' +
+                            'data-trait="' + encodedData + '" ' +
+                            'onclick="event.stopPropagation();showTraitTooltip(this,decodeURIComponent(this.dataset.trait))" ' +
+                            'title="' + (trait.desc || trait.name) + '">' + trait.name + '</span>';
                     }).join('') : 
-                    '<span>无特殊能力</span>'
+                    '<span style="color:#8b949e;font-size:12px;">无特殊能力</span>'
                 }
             </div>
         </div>
