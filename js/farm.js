@@ -7,28 +7,44 @@ var growIntervals = {};
 window.unlockPlot = function(plotId) {
     var plot = gameState.plots[plotId];
     if (!plot.locked) return;
-    
+
     var cost = plot.unlockCost;
-    
-    if (gameState.coins >= cost.coins && gameState.materials >= cost.materials) {
+    var canAffordCoins = gameState.coins >= cost.coins;
+    var canAffordMats  = gameState.materials >= cost.materials;
+    var canUnlock = canAffordCoins && canAffordMats;
+
+    var coinsLine = '<span style="color:' + (canAffordCoins ? '#f0c53d' : '#f85149') + ';">' +
+        '💰 金币 ' + cost.coins +
+        (!canAffordCoins ? ' <span style="font-size:12px;">（差 ' + (cost.coins - gameState.coins) + '）</span>' : ' ✓') +
+        '</span>';
+    var matsLine = '<span style="color:' + (canAffordMats ? '#c9d1d9' : '#f85149') + ';">' +
+        '🪨 材料 ' + cost.materials +
+        (!canAffordMats ? ' <span style="font-size:12px;">（差 ' + (cost.materials - gameState.materials) + '）</span>' : ' ✓') +
+        '</span>';
+
+    if (canUnlock) {
         showConfirmModal({
             title: '🔓 解锁农田',
-            content: '解锁这块农田需要：<br><br>' +
-                '<span style="color:#f0c53d;">💰 金币 ' + cost.coins + '</span><br>' +
-                '<span style="color:#c9d1d9;">🪨 材料 ' + cost.materials + '</span><br><br>' +
-                '确定解锁吗？',
+            content: '解锁这块农田需要：<br><br>' + coinsLine + '<br>' + matsLine + '<br><br>确定解锁吗？',
             confirmText: '确认解锁',
             confirmClass: 'btn-primary',
             onConfirm: function() {
                 gameState.coins -= cost.coins;
                 gameState.materials -= cost.materials;
                 plot.locked = false;
-                showNotification('解锁成功！', 'success');
+                showNotification('🔓 农田解锁成功！', 'success');
                 renderAll();
             }
         });
     } else {
-        showNotification('资源不足！', 'error');
+        showConfirmModal({
+            title: '🔒 资源不足',
+            content: '解锁此地块需要：<br><br>' + coinsLine + '<br>' + matsLine +
+                '<br><br><span style="color:#8b949e;font-size:13px;">💡 通过探索区域获取材料，收获作物积累金币。</span>',
+            confirmText: '知道了',
+            confirmClass: 'btn-secondary',
+            onConfirm: function() {}
+        });
     }
 };
 

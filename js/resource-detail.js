@@ -92,34 +92,78 @@ var RESOURCE_INFO = {
 // 当前展开的资源 key
 var _openResDetail = null;
 
-// 切换展开/收起
-window.toggleResourceDetail = function(key) {
-    var detailEl  = document.getElementById('detail-' + key);
-    var chevronEl = document.getElementById('chevron-' + key);
-    if (!detailEl) return;
+// ── Popover 单例 ──
+var _resPopover = null;
 
-    var isOpen = detailEl.classList.contains('open');
+function _getOrCreatePopover() {
+    if (!_resPopover) {
+        _resPopover = document.createElement('div');
+        _resPopover.id = 'resDetailPopover';
+        _resPopover.className = 'res-popover';
+        document.body.appendChild(_resPopover);
 
-    // 先关闭所有
+        // 点击弹窗外部关闭
+        document.addEventListener('mousedown', function(e) {
+            if (_resPopover && !_resPopover.contains(e.target)) {
+                // 如果点的是资源行本身，交给 toggleResourceDetail 处理，此处忽略
+                var anchor = e.target.closest('.res-clickable');
+                if (!anchor) _closePopover();
+            }
+        }, true);
+    }
+    return _resPopover;
+}
+
+function _closePopover() {
+    if (_resPopover) {
+        _resPopover.classList.remove('open');
+    }
+    // 重置所有箭头
     Object.keys(RESOURCE_INFO).forEach(function(k) {
-        var d = document.getElementById('detail-' + k);
         var c = document.getElementById('chevron-' + k);
-        if (d) d.classList.remove('open');
         if (c) c.classList.remove('open');
     });
+    _openResDetail = null;
+}
 
-    if (!isOpen) {
-        // 填充内容（动态读取当前值）
-        _fillDetail(key, detailEl);
-        detailEl.classList.add('open');
-        if (chevronEl) chevronEl.classList.add('open');
-        _openResDetail = key;
-    } else {
-        _openResDetail = null;
+// 切换展开/收起
+window.toggleResourceDetail = function(key) {
+    var anchorEl  = document.querySelector('.sidebar-resource[data-res="' + key + '"]');
+    var chevronEl = document.getElementById('chevron-' + key);
+
+    var isSameKey = (_openResDetail === key);
+
+    // 先关闭
+    _closePopover();
+
+    if (isSameKey) return; // 点同一个 → 仅关闭
+
+    // 定位并填充
+    var popover = _getOrCreatePopover();
+    _fillDetail(key, popover);
+
+    if (anchorEl) {
+        var rect = anchorEl.getBoundingClientRect();
+        // 默认显示在资源行右侧，紧贴侧边栏
+        var left = rect.right + 8;
+        var top  = rect.top;
+        // 防止超出右侧视口
+        var popW = 268;
+        if (left + popW > window.innerWidth - 8) {
+            left = window.innerWidth - popW - 8;
+        }
+        // 防止超出底部视口
+        popover.style.left = left + 'px';
+        popover.style.top  = top + 'px';
+        popover.style.maxHeight = (window.innerHeight - top - 16) + 'px';
     }
+
+    popover.classList.add('open');
+    if (chevronEl) chevronEl.classList.add('open');
+    _openResDetail = key;
 };
 
-// 填充详情 HTML
+// 填充详情 HTML（现在写入 popover 节点）
 function _fillDetail(key, el) {
     var info = RESOURCE_INFO[key];
     if (!info) return;
@@ -181,11 +225,8 @@ function _fillDetail(key, el) {
 
 // 若当前有展开的详情，在资源更新时刷新其数值
 window.refreshOpenResourceDetail = function() {
-    if (_openResDetail) {
-        var el = document.getElementById('detail-' + _openResDetail);
-        if (el && el.classList.contains('open')) {
-            _fillDetail(_openResDetail, el);
-        }
+    if (_openResDetail && _resPopover && _resPopover.classList.contains('open')) {
+        _fillDetail(_openResDetail, _resPopover);
     }
 };
 
