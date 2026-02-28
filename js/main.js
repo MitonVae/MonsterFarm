@@ -223,6 +223,9 @@ function createMonster(type, parent1, parent2) {
         ? MONSTER_NAME_DB.generate(type, stats, typeData.rarity)
         : (typeData.name + '#' + (gameState.nextMonsterId + 1));
 
+    // ── 变异词条滚动 ──
+    var mutation = rollMutation(typeData.rarity);
+
     var monster = {
         id: gameState.nextMonsterId++,
         type: type,
@@ -235,6 +238,9 @@ function createMonster(type, parent1, parent2) {
         assignment: null,
         status: 'idle',
         traits: generateTraits(),
+        mutation: mutation,      // 变异词条（null = 无变异）
+        fatigue: 0,              // 疲劳值 0-100
+        defeatDebuff: null,      // 战败惩罚 { stat, penalty, until }
         generation: parent1 ? Math.max(parent1.generation, parent2.generation) + 1 : 1,
         // ── 亲代血统记录（供系谱树使用）──
         parent1Id:   parent1 ? parent1.id   : null,
@@ -273,6 +279,37 @@ function generateTraits() {
     return traits;
 }
 
+// ── 变异词条滚动函数 ──
+// 根据怪兽稀有度决定变异出现和等级概率
+function rollMutation(monsterRarity) {
+    if (typeof MUTATION_TRAITS === 'undefined' || typeof MUTATION_CATCH_WEIGHTS === 'undefined') return null;
+
+    var bonusMult = (typeof MUTATION_RARITY_BONUS !== 'undefined')
+        ? (MUTATION_RARITY_BONUS[monsterRarity] || 1.0)
+        : 1.0;
+
+    // 按稀有度分组
+    var byRarity = {};
+    MUTATION_TRAITS.forEach(function(t) {
+        if (!byRarity[t.rarity]) byRarity[t.rarity] = [];
+        byRarity[t.rarity].push(t);
+    });
+
+    // 从高到低逐级尝试（legendary → epic → rare → uncommon → common）
+    var order = ['legendary', 'epic', 'rare', 'uncommon', 'common'];
+    for (var i = 0; i < order.length; i++) {
+        var r = order[i];
+        var pool = byRarity[r];
+        if (!pool || pool.length === 0) continue;
+        var weight = (MUTATION_CATCH_WEIGHTS[r] || 0) * bonusMult;
+        if (Math.random() < weight) {
+            // 命中！从该稀有度的词条池随机选一个
+            return pool[Math.floor(Math.random() * pool.length)];
+        }
+    }
+    return null; // 无变异
+}
+
 function gainExp(monster, amount) {
     monster.exp += amount;
     
@@ -291,6 +328,51 @@ function gainExp(monster, amount) {
     if (typeof briefLevelUp === 'function') briefLevelUp(monster.name, monster.level);
     }
 }
+
+// ── 资源净流量计算（每分钟）──
+// 用于顶栏速率显示，综合考虑：怪兽维护消耗、农田产出估算
+window.getResourceRates = function() {
+    var foodPerMin   = 0;
+    var coinsPerMin  = 0;
+    var matsPerMin   = 0;
+    var researchPerMin = 0;
+
+    // 怪兽维护消耗（每tick消耗 * 60）
+    var upkeepTable = (typeof MONSTER_UPKEEP !== 'undefined') ? MONSTER_UPKEEP : {};
+    gameState.monsters.forEach(function(m) {
+        var td = monsterTypes[m.type];
+        var rarity = td ? td.rarity : 'common';
+        var base = upkeepTable[rarity] || { food: 0.08, coins: 0 };
+        var mFeedMult  = (m.mutation && m.mutation.feedMult  != null) ? m.mutation.feedMult  : 1.0;
+        var mMaintMult = (m.mutation && m.mutation.maintMult != null) ? m.mutation.maintMult : 1.0;
+        // 寄生词条：自身不消耗食物
+        if (m.mutation && m.mutation.effect && m.mutation.effect.parasitic) mFeedMult = 0;
+        foodPerMin  -= base.food  * mFeedMult  * 60;
+        coinsPerMin -= base.coins * mMaintMult * 60;
+    });
+
+    // 农田产出估算（基于正在耕种的地块）
+    gameState.plots.forEach(function(plot) {
+        if (plot.locked || !plot.crop || !plot.assignedMonster) return;
+        var cropType = cropTypes.find(function(c) { return c.id === plot.crop; });
+        if (!cropType) return;
+        // 估算：每分钟的期望产出（yield * value / growTimeMin）
+        var growMin = cropType.growTime / 60000;
+        if (growMin <= 0) return;
+        var perMin = (cropType.yield * cropType.value) / growMin;
+        coinsPerMin  += perMin;
+        foodPerMin   += (cropType.foodVal * cropType.yield) / growMin;
+        matsPerMin   += ((cropType.materialYield || 0) * cropType.yield) / growMin;
+        researchPerMin += ((cropType.researchYield || 0) * cropType.yield) / growMin;
+    });
+
+    return {
+        coins:    Math.round(coinsPerMin),
+        food:     Math.round(foodPerMin),
+        materials: Math.round(matsPerMin),
+        research:  Math.round(researchPerMin) || null
+    };
+};
 
 function autoSave() {
     // 序列化 zoneStates，过滤掉无法序列化的 autoTimerId（定时器句柄）
@@ -434,7 +516,7 @@ function resetGame() {
 
 // ==================== 全局事件与定时器 ====================
 
-// ── 资源循环核心（每10秒tick一次）──
+// ── 资源循环核心（每10秒tick一次）── 能量恢复
 setInterval(function() {
     var changed = false;
 
@@ -454,52 +536,128 @@ setInterval(function() {
         changed = true;
     }
 
-    // 3. 食物消耗：每只在岗怪兽每10s消耗0.5食物（取整计算，避免过于频繁的小数扣减）
-    var busyMonsters = gameState.monsters.filter(function(m) {
-        return m.status === 'farming' || m.status === 'exploring';
-    }).length;
-    if (busyMonsters > 0) {
-        var foodCost = Math.ceil(busyMonsters * 0.5);
-        var prevFood = gameState.food;
-        gameState.food = Math.max(0, gameState.food - foodCost);
-        // 食物耗尽警告
-        if (prevFood > 0 && gameState.food === 0) {
-            showNotification('⚠️ 食物已耗尽！怪兽效率下降50%！', 'warning');
-        }
-        changed = true;
-    }
+    if (changed) updateResources();
+}, 10000);
 
-    // 4. 金币维护费：每块有怪兽驻守的地块每10s消耗0.3金币（每分钟约1.8金/地块）
-    var activePlots = gameState.plots.filter(function(p) { return p.assignedMonster; }).length;
-    if (activePlots > 0) {
-        var maintainCost = parseFloat((activePlots * 0.3).toFixed(1));
-        // 使用累计扣减，避免浮点数问题
-        if (!gameState._maintainAcc) gameState._maintainAcc = 0;
-        gameState._maintainAcc += maintainCost;
-        if (gameState._maintainAcc >= 1) {
-            var toDeduct = Math.floor(gameState._maintainAcc);
-            gameState._maintainAcc -= toDeduct;
-            var prevCoins = gameState.coins;
-            gameState.coins = Math.max(0, gameState.coins - toDeduct);
-            // 金币耗尽警告
-            if (prevCoins > 0 && gameState.coins === 0) {
-                showNotification('⚠️ 金币已耗尽！怪兽无法维持工作效率！', 'warning');
+// ── 怪兽维护费细粒度 Tick（每1秒）──
+// 每只怪兽按稀有度扣除食物+金币（含变异词条倍率）
+// 同时处理：疲劳累计、战败惩罚过期、寄生词条偷食
+setInterval(function() {
+    if (!gameState.monsters || gameState.monsters.length === 0) return;
+
+    var upkeepTable = (typeof MONSTER_UPKEEP !== 'undefined') ? MONSTER_UPKEEP : {
+        common:    { food: 0.08, coins: 0 },
+        uncommon:  { food: 0.15, coins: 0.05 },
+        rare:      { food: 0.25, coins: 0.15 },
+        epic:      { food: 0.40, coins: 0.40 },
+        legendary: { food: 0.60, coins: 1.00 }
+    };
+
+    var now = Date.now();
+    var totalFoodDrain = 0;
+    var totalCoinDrain = 0;
+    var parasiticCount = 0; // 本tick有几只寄生怪兽
+
+    gameState.monsters.forEach(function(m) {
+        var typeData = monsterTypes[m.type];
+        var rarity   = typeData ? typeData.rarity : 'common';
+        var base     = upkeepTable[rarity] || upkeepTable['common'];
+
+        // 获取变异词条倍率（默认 1.0）
+        var mFeedMult  = 1.0;
+        var mMaintMult = 1.0;
+        if (m.mutation) {
+            mFeedMult  = m.mutation.feedMult  != null ? m.mutation.feedMult  : 1.0;
+            mMaintMult = m.mutation.maintMult != null ? m.mutation.maintMult : 1.0;
+        }
+
+        // 寄生词条：本怪食物消耗为0，额外计数（后面从其他怪兽偷）
+        if (m.mutation && m.mutation.effect && m.mutation.effect.parasitic) {
+            mFeedMult = 0;
+            parasiticCount++;
+        }
+
+        var foodDrain = base.food  * mFeedMult;
+        var coinDrain = base.coins * mMaintMult;
+
+        // 累计到怪兽级别（避免每帧扣小数）
+        if (!m._foodAcc)  m._foodAcc  = 0;
+        if (!m._coinAcc)  m._coinAcc  = 0;
+        m._foodAcc  += foodDrain;
+        m._coinAcc  += coinDrain;
+
+        // 疲劳：仅当怪兽正在探索/务农且没有"马拉松体质"变异时累计
+        if ((m.status === 'farming' || m.status === 'exploring')) {
+            var noFatigue = m.mutation && m.mutation.effect && m.mutation.effect.noFatigue;
+            if (!noFatigue) {
+                m.fatigue = Math.min(100, (m.fatigue || 0) + 0.02); // 约83分钟满
             }
+        } else {
+            // 休息时疲劳恢复
+            m.fatigue = Math.max(0, (m.fatigue || 0) - 0.05); // 约33分钟清空
+        }
+
+        // 战败惩罚过期检测
+        if (m.defeatDebuff && m.defeatDebuff.until && now > m.defeatDebuff.until) {
+            m.defeatDebuff = null;
+        }
+    });
+
+    // 寄生词条：每只寄生怪从每只其他怪偷取0.3食物/tick
+    if (parasiticCount > 0) {
+        var stealPerMonster = parasiticCount * 0.3;
+        gameState.monsters.forEach(function(m) {
+            if (!m.mutation || !m.mutation.effect || !m.mutation.effect.parasitic) {
+                if (!m._foodAcc) m._foodAcc = 0;
+                m._foodAcc += stealPerMonster;
+            }
+        });
+    }
+
+    // 批量整数结算食物和金币（每次累计 >= 1 才扣）
+    gameState.monsters.forEach(function(m) {
+        if (m._foodAcc >= 1) {
+            var toDeduct = Math.floor(m._foodAcc);
+            m._foodAcc -= toDeduct;
+            totalFoodDrain += toDeduct;
+        }
+        if (m._coinAcc >= 1) {
+            var toDeduct = Math.floor(m._coinAcc);
+            m._coinAcc -= toDeduct;
+            totalCoinDrain += toDeduct;
+        }
+    });
+
+    var changed = false;
+
+    if (totalFoodDrain > 0) {
+        var prevFood = gameState.food;
+        gameState.food = Math.max(0, gameState.food - totalFoodDrain);
+        if (prevFood > 0 && gameState.food === 0) {
+            showNotification('⚠️ 食物已耗尽！怪兽疲劳加速积累！', 'warning');
         }
         changed = true;
     }
 
-    // 5. 惩罚标志更新（食物OR金币耗尽则效率减半）
+    if (totalCoinDrain > 0) {
+        var prevCoins = gameState.coins;
+        gameState.coins = Math.max(0, gameState.coins - totalCoinDrain);
+        if (prevCoins > 0 && gameState.coins === 0) {
+            showNotification('⚠️ 金币已耗尽！怪兽工作效率下降！', 'warning');
+        }
+        changed = true;
+    }
+
+    // 惩罚标志更新（食物OR金币耗尽则效率减半）
     var wasPenalized = gameState.penalized;
     gameState.penalized = (gameState.food === 0 || gameState.coins === 0);
     if (gameState.penalized !== wasPenalized) {
         changed = true;
-        // 惩罚状态变化时刷新界面
         if (typeof renderFarm === 'function') renderFarm();
     }
 
     if (changed) updateResources();
-}, 10000);
+}, 1000);
 
 // 随机事件
 setInterval(function() {

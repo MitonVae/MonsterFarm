@@ -102,6 +102,21 @@ function updateSidebarResources() {
         if (valueEl) valueEl.innerText = res.value;
     });
 
+    // 桌面侧边栏速率显示（金币、食物、材料、研究）
+    if (typeof getResourceRates === 'function') {
+        var rates = getResourceRates();
+        var rateMap = { coins: rates.coins, food: rates.food, materials: rates.materials, research: rates.research };
+        Object.keys(rateMap).forEach(function(key) {
+            var rEl = document.getElementById('rate-' + key);
+            if (!rEl) return;
+            var val = rateMap[key];
+            if (!val) { rEl.textContent = ''; rEl.className = 'res-rate'; return; }
+            var sign = val > 0 ? '+' : '';
+            rEl.textContent = sign + val + '/m';
+            rEl.className = 'res-rate ' + (val > 0 ? 'rate-pos' : 'rate-neg');
+        });
+    }
+
     // 同步移动端顶部资源条（含速率显示）
     _updateMobTopbar();
 }
@@ -236,13 +251,17 @@ window.renderFarm = function() {
     
     farmGrid.innerHTML = gameState.plots.map(function(plot) {
         if (plot.locked) {
+            var cost = plot.unlockCost;
+            var canUnlock = gameState.coins >= cost.coins && gameState.materials >= cost.materials;
+            var coinColor  = gameState.coins     >= cost.coins     ? '#f0c53d' : '#f85149';
+            var matColor   = gameState.materials >= cost.materials ? '#c9d1d9' : '#f85149';
             return `
-                <div class="plot locked" id="plot-${plot.id}" data-plot-id="${plot.id}" onclick="unlockPlot(${plot.id})">
-                    ${createSVG('lock', 48)}
+                <div class="plot locked${canUnlock ? ' can-unlock' : ''}" id="plot-${plot.id}" data-plot-id="${plot.id}" onclick="unlockPlot(${plot.id})">
+                    ${canUnlock ? createSVG('unlock', 36) : createSVG('lock', 36)}
                     <div class="plot-text">
-                        ${T('unlockNeeds','farm')}<br>
-                        <span style="display: inline-block; vertical-align: middle; margin-right: 3px;">${createSVG('coin', 12)}</span>${plot.unlockCost.coins}<br>
-                        <span style="display: inline-block; vertical-align: middle; margin-right: 3px;">${createSVG('material', 12)}</span>${plot.unlockCost.materials}
+                        ${canUnlock ? '<span style="color:#46d164;font-weight:700;">可解锁</span>' : T('unlockNeeds','farm')}<br>
+                        <span style="display:inline-block;vertical-align:middle;margin-right:3px;">${createSVG('coin', 12)}</span><span style="color:${coinColor};">${plot.unlockCost.coins}</span><br>
+                        <span style="display:inline-block;vertical-align:middle;margin-right:3px;">${createSVG('material', 12)}</span><span style="color:${matColor};">${plot.unlockCost.materials}</span>
                     </div>
                 </div>
             `;
@@ -712,6 +731,55 @@ window.showMonsterDetailModal = function(monsterId) {
                 }
             </div>
         </div>
+
+        ${(function() {
+            // ── 变异词条展示 ──
+            if (!monster.mutation) return '';
+            var m = monster.mutation;
+            var rarityColor = { common:'#8b949e', uncommon:'#3fb950', rare:'#58a6ff', epic:'#a371f7', legendary:'#f0c53d' };
+            var c = rarityColor[m.rarity] || '#8b949e';
+            var rarityLabel = { common:'普通', uncommon:'稀有', rare:'珍贵', epic:'史诗', legendary:'传说' };
+            return '<div class="monster-detail-section" style="margin-bottom:8px;">' +
+                '<h4 style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">' +
+                    '<span>✨ 变异词条</span>' +
+                    '<span style="background:' + c + '33;color:' + c + ';font-size:10px;padding:1px 7px;border-radius:10px;border:1px solid ' + c + ';">' + (rarityLabel[m.rarity]||m.rarity) + '</span>' +
+                '</h4>' +
+                '<div style="background:#161b22;border:1px solid ' + c + '44;border-radius:8px;padding:10px 12px;">' +
+                    '<div style="font-size:16px;margin-bottom:4px;">' + (m.icon||'✨') + ' <strong style="color:' + c + ';">' + m.name + '</strong></div>' +
+                    '<div style="font-size:12px;color:#e6edf3;margin-bottom:5px;">' + m.desc + '</div>' +
+                    '<div style="font-size:11px;color:#8b949e;font-style:italic;">' + (m.flavor||'') + '</div>' +
+                    (m.feedMult !== 1.0 ? '<div style="font-size:11px;margin-top:5px;color:' + (m.feedMult < 1 ? '#46d164' : '#f85149') + ';">🍎 食物消耗 ×' + m.feedMult.toFixed(2) + '</div>' : '') +
+                    (m.maintMult !== 1.0 ? '<div style="font-size:11px;color:' + (m.maintMult < 1 ? '#46d164' : '#f85149') + ';">💰 维护费 ×' + m.maintMult.toFixed(2) + '</div>' : '') +
+                '</div>' +
+            '</div>';
+        })()}
+
+        ${(function() {
+            // ── 疲劳值 & 战败惩罚 ──
+            var fatigue = Math.round((monster.fatigue || 0));
+            var fatigueColor = fatigue >= 80 ? '#f85149' : fatigue >= 50 ? '#f0c53d' : '#46d164';
+            var fatigueLabel = fatigue >= 80 ? '严重过劳' : fatigue >= 50 ? '疲惫' : fatigue >= 20 ? '轻微疲惫' : '精力充沛';
+            var debuff = monster.defeatDebuff;
+            var debuffHtml = '';
+            if (debuff) {
+                var remainMin = Math.ceil((debuff.until - Date.now()) / 60000);
+                debuffHtml = '<div style="margin-top:8px;background:#2d1b1b;border:1px solid #f8514955;border-radius:6px;padding:7px 10px;font-size:11px;color:#f85149;">⚔️ 战败惩罚：' + debuff.stat + ' -' + debuff.penalty + '（剩余约 ' + Math.max(0, remainMin) + ' 分钟）</div>';
+            }
+            return '<div class="monster-detail-section" style="margin-bottom:8px;">' +
+                '<h4 style="margin-bottom:8px;">💤 体力状态</h4>' +
+                '<div style="background:#161b22;border-radius:8px;padding:10px 12px;">' +
+                    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">' +
+                        '<span style="font-size:12px;color:#8b949e;">疲劳度</span>' +
+                        '<span style="font-size:12px;color:' + fatigueColor + ';">' + fatigueLabel + ' (' + fatigue + '%)</span>' +
+                    '</div>' +
+                    '<div style="background:#21262d;border-radius:4px;height:6px;overflow:hidden;">' +
+                        '<div style="width:' + fatigue + '%;height:100%;background:' + fatigueColor + ';border-radius:4px;transition:width .3s;"></div>' +
+                    '</div>' +
+                    (fatigue >= 50 ? '<div style="font-size:10px;color:#8b949e;margin-top:4px;">效率 -' + Math.round(fatigue / 2) + '%（撤回休息可恢复）</div>' : '') +
+                '</div>' +
+                debuffHtml +
+            '</div>';
+        })()}
 
         ${(function(){
             var bondVal = (typeof AffinitySystem !== 'undefined') ? AffinitySystem.getPlayerBond(monsterId) : 0;
@@ -1187,10 +1255,20 @@ window.renderMonsterSidebar = function() {
                 var _rcm = { common:'#8b949e', uncommon:'#2196f3', rare:'#ff9800', epic:'#9c27b0', legendary:'#ffd700' };
                 var _mtd = monsterTypes[monster.type];
                 var _nc = _rcm[_mtd ? _mtd.rarity : 'common'] || '#e6edf3';
+                // 战败 & 疲劳徽章
+                var badgeHtml = '';
+                if (monster.defeatDebuff && monster.defeatDebuff.until > Date.now()) {
+                    badgeHtml += '<span title="战败惩罚中" style="font-size:12px;margin-left:2px;">⚔️</span>';
+                }
+                var fatiguePct = Math.round(monster.fatigue || 0);
+                var fatigueColor = fatiguePct >= 80 ? '#f85149' : fatiguePct >= 50 ? '#e0a02f' : '#46d164';
+                if (fatiguePct > 0) {
+                    badgeHtml += '<span title="疲劳:' + fatiguePct + '%" style="font-size:10px;color:' + fatigueColor + ';margin-left:2px;">😴' + fatiguePct + '%</span>';
+                }
                 return '<div class="compact-card monster ' + (monster.status || 'idle') + '" onclick="showMonsterDetailModal(' + monster.id + ')">' +
                     '<div style="width:28px;height:28px;flex-shrink:0;">' + createSVG(monster.type, 28) + '</div>' +
                     '<div style="display:flex;flex-direction:column;min-width:0;flex:1;gap:1px;">' +
-                        '<span class="compact-name" style="color:' + _nc + ';">' + (monster.starred ? '<span style="color:#f0c53d;font-size:11px;">⭐</span>' : '') + monster.name + '</span>' +
+                        '<span class="compact-name" style="color:' + _nc + ';">' + (monster.starred ? '<span style="color:#f0c53d;font-size:11px;">⭐</span>' : '') + monster.name + badgeHtml + '</span>' +
                         '<span class="compact-sub">Lv.' + monster.level + ' · 力' + monster.stats.strength + ' 耕' + monster.stats.farming + '</span>' +
                     '</div>' +
                     '<div style="width:28px;height:3px;background:#21262d;border-radius:2px;overflow:hidden;align-self:center;">' +
@@ -1228,11 +1306,18 @@ window.renderMonsterSidebar = function() {
             var _rcm2 = { common:'#8b949e', uncommon:'#2196f3', rare:'#ff9800', epic:'#9c27b0', legendary:'#ffd700' };
             var _mtd2 = monsterTypes[monster.type];
             var _nc2 = _rcm2[_mtd2 ? _mtd2.rarity : 'common'] || '#e6edf3';
+            // 战败 & 疲劳徽章（大卡）
+            var _fatiguePct2 = Math.round(monster.fatigue || 0);
+            var _fatigueColor2 = _fatiguePct2 >= 80 ? '#f85149' : _fatiguePct2 >= 50 ? '#e0a02f' : '#46d164';
+            var _defeatBadge2 = (monster.defeatDebuff && monster.defeatDebuff.until > Date.now())
+                ? '<span title="战败惩罚中" style="font-size:11px;margin-left:4px;">⚔️</span>' : '';
+            var _fatigueBadge2 = _fatiguePct2 > 0
+                ? '<span style="font-size:10px;color:' + _fatigueColor2 + ';margin-left:4px;" title="疲劳 ' + _fatiguePct2 + '%">😴' + _fatiguePct2 + '%</span>' : '';
             return '<div class="msb-monster-card ' + statusCls + '" onclick="showMonsterDetailModal(' + monster.id + ')">' +
                 '<div class="msb-monster-top">' +
                 '<div class="msb-monster-icon">' + createSVG(monster.type, 28) + '</div>' +
                 '<div class="msb-monster-meta">' +
-                '<div class="msb-monster-name" style="color:' + _nc2 + ';">' + (monster.starred ? '<span style="color:#f0c53d;font-size:11px;margin-right:2px;">⭐</span>' : '') + monster.name + '</div>' +
+                '<div class="msb-monster-name" style="color:' + _nc2 + ';">' + (monster.starred ? '<span style="color:#f0c53d;font-size:11px;margin-right:2px;">⭐</span>' : '') + monster.name + _defeatBadge2 + _fatigueBadge2 + '</div>' +
                 '<div class="msb-monster-level">Lv.' + monster.level + ' · ' + (monsterTypes[monster.type] ? monsterTypes[monster.type].name : monster.type) + '</div>' +
                 assignInfo +
                 '</div>' +

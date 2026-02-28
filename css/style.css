@@ -242,6 +242,25 @@ body {
     text-overflow: ellipsis;
 }
 
+/* 速率徽章（桌面侧边栏）*/
+.res-rate {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 8px;
+    line-height: 1.4;
+    flex-shrink: 0;
+    transition: color 0.3s;
+}
+.res-rate.rate-pos {
+    color: #46d164;
+    background: #46d16422;
+}
+.res-rate.rate-neg {
+    color: #f85149;
+    background: #f8514922;
+}
+
 /* 折叠箭头 */
 .res-chevron {
     font-size: 0.8571rem;
