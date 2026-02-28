@@ -1005,6 +1005,10 @@ document.addEventListener('keydown', function(e) {
                         (idx < last
                             ? '<button class="btn btn-success" onclick="window._tutPage++;window._tutRender();">下一页 →</button>'
                             : '<button class="btn btn-success" onclick="closeModal()">✓ 完成</button>') +
+                        (idx === last
+                            ? '<a class="btn" href="https://mitonvae.github.io/MonsterFarm/wiki/" target="_blank" rel="noopener" ' +
+                              'style="background:#1a2840;border:1px solid #1f6feb;color:#58a6ff;text-decoration:none;display:inline-flex;align-items:center;gap:5px;">📖 完整 Wiki</a>'
+                            : '') +
                     '</div>' +
                 '</div>'
             );
