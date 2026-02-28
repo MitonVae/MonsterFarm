@@ -262,6 +262,26 @@ function showTutorialStep(index) {
     });
 }
 
+/**
+ * 统一的"推进步骤"辅助函数：
+ * 立即移除当前遮罩/气泡（避免高亮框残留），
+ * 等待 delay ms 后再渲染下一步。
+ * @param {number} nextIndex  - 目标步骤下标
+ * @param {number} [delay=0]  - 等待时长（ms）
+ */
+function _advanceStep(nextIndex, delay) {
+    // ① 立刻撤掉旧引导 DOM，页面切换期间不留残影
+    removeTutorialDOM();
+    var ms = (typeof delay === 'number' && delay > 0) ? delay : 0;
+    if (ms > 0) {
+        setTimeout(function() {
+            if (tutorialState.active) showTutorialStep(nextIndex);
+        }, ms);
+    } else {
+        if (tutorialState.active) showTutorialStep(nextIndex);
+    }
+}
+
 // ── 清除引导 DOM ──
 function removeTutorialDOM() {
     var o = document.getElementById('tutorialOverlay');
@@ -419,19 +439,17 @@ window.onTutorialMonsterCaught = function() {
     if (!tutorialState.active || !tutorialState.waitingForMonster) return;
     tutorialState.waitingForMonster = false;
     tutorialState.guaranteeCatch = false;
-    setTimeout(function() {
-        showTutorialStep(2); // select_monster
-    }, 1200);
+    // ① 立刻清除旧遮罩，避免捕获通知弹出期间高亮框悬浮在错误位置
+    // ② 延迟 900ms 让通知显示完后再展示下一步
+    _advanceStep(2, 900);
 };
 
 // ── 点击怪兽卡片钩子（monster.js 中 selectMonster 调用）── Step2 → Step3
 window.onTutorialMonsterSelected = function() {
     if (!tutorialState.active || !tutorialState.waitingForMonsterSelect) return;
     tutorialState.waitingForMonsterSelect = false;
-    // 等待 DOM 重新渲染（卡片展开出现耕作按钮）
-    setTimeout(function() {
-        showTutorialStep(3); // assign_farm
-    }, 350);
+    // 立刻撤掉当前遮罩，等 DOM 重绘（卡片展开、派驻按钮出现）后再渲染下一步
+    _advanceStep(3, 320);
 };
 
 // ── 点击耕作按钮钩子（farm.js 中 showAssignPlotPicker 调用）── Step3→Step4，或 Step2 直接跳 Step4
@@ -443,28 +461,24 @@ window.onTutorialAssignFarm = function() {
         tutorialState.waitingForAssign = false;
         // ★ 同步设置，确保 showAssignPlotPicker 生成 HTML 时已为 true
         tutorialState.waitingForPlotPick = true;
-        setTimeout(function() {
-            showTutorialStep(4); // pick_plot
-        }, 350);
+        // 立刻清遮罩，等地块弹窗渲染完毕再显示下一步
+        _advanceStep(4, 320);
         return;
     }
     if (!tutorialState.waitingForAssign) return;
     tutorialState.waitingForAssign = false;
     // ★ 同步设置，确保 showAssignPlotPicker 生成 HTML 时已为 true
     tutorialState.waitingForPlotPick = true;
-    // 等待 showAssignPlotPicker 模态框渲染完毕
-    setTimeout(function() {
-        showTutorialStep(4); // pick_plot
-    }, 350);
+    // 立刻清遮罩，等 showAssignPlotPicker 模态框渲染完毕再显示下一步
+    _advanceStep(4, 320);
 };
 
 // ── 选择地块钩子（farm.js 中 assignMonsterToPlot 调用）── Step4 → Step5
 window.onTutorialPlotPicked = function() {
     if (!tutorialState.active || !tutorialState.waitingForPlotPick) return;
     tutorialState.waitingForPlotPick = false;
-    setTimeout(function() {
-        showTutorialStep(5); // go_farm
-    }, 400);
+    // 立刻清遮罩（地块选择弹窗会关闭，UI 会切换），延迟后再显示引导气泡
+    _advanceStep(5, 350);
 };
 
 // ── 完成引导 ──

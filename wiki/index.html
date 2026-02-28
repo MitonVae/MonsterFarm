@@ -32,15 +32,24 @@
     .app-nav a { color: #8b949e !important; }
     .app-nav a:hover { color: #46d164 !important; }
 
-    /* 侧栏分组标题 */
-    .sidebar-nav li > p {
+    /* 侧栏分组标题（Docsify 将 **粗体** 渲染为 li > strong 或 li > p > strong）*/
+    .sidebar-nav > ul > li > strong,
+    .sidebar-nav > ul > li > p > strong {
+      display: block;
       font-size: 11px;
       font-weight: 700;
       letter-spacing: .1em;
       text-transform: uppercase;
-      color: #30363d !important;
+      color: #484f58 !important;
       margin: 20px 0 4px 0;
-      padding: 0 16px;
+      padding: 0 4px;
+      pointer-events: none;
+      user-select: none;
+    }
+    /* 分组标题所在的 li 不作为可点击项 */
+    .sidebar-nav > ul > li:has(> strong),
+    .sidebar-nav > ul > li:has(> p > strong) {
+      cursor: default;
     }
 
     /* 搜索框 */
@@ -115,11 +124,16 @@
   <div id="app">Loading…</div>
 
   <script>
+    /* ── 自动判断是否运行在 GitHub Pages 环境 ── */
+    var _isGhPages = location.hostname.indexOf('github.io') !== -1;
+    var _basePath  = _isGhPages ? '/MonsterFarm/wiki/' : './';
+
     window.$docsify = {
       name: '🌾 怪兽农场 Wiki',
-      nameLink: '/MonsterFarm/wiki/',
+      nameLink: _isGhPages ? '/MonsterFarm/wiki/' : './',
+      basePath: _basePath,
       repo: 'https://github.com/MitonVae/MonsterFarm',
-      loadSidebar: true,
+      loadSidebar: '_sidebar.md',
       loadNavbar: false,
       subMaxLevel: 3,
       auto2top: true,
