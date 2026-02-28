@@ -1192,12 +1192,10 @@ window.showSettingsModal = function() {
     });
     html += '</div></div>' +
 
-        // 存档操作
+        // 存档操作（仅导入导出，保存/召回已在左侧快捷栏）
         '<div style="margin-bottom:14px;">' +
         '<h3 style="margin-bottom:8px;font-size:13px;color:#8b949e;letter-spacing:.05em;">' + _t('save','settings') + '</h3>' +
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
-        '<button class="btn btn-primary" onclick="quickSave();closeModal();">' + _t('saveBtn','settings') + '</button>' +
-        '<button class="btn btn-secondary" onclick="confirmRecallAll();">' + _t('recallBtn','settings') + '</button>' +
         '<button class="btn btn-warning" style="background:#9a6700;border-color:#9a6700;" onclick="window._settingsExportSave();">' + _t('exportBtn','settings') + '</button>' +
         '<button class="btn btn-secondary" style="border-color:#58a6ff;color:#58a6ff;" onclick="window._settingsImportSave();">' + _t('importBtn','settings') + '</button>' +
         '</div></div>' +
@@ -1216,6 +1214,28 @@ window.showSettingsModal = function() {
             '</div>';
         })() : '') +
 
+        // 界面选项
+        (function() {
+            var floatOn = localStorage.getItem('mf_float_btn') !== 'off';
+            return '<div style="margin-bottom:14px;">' +
+            '<h3 style="margin-bottom:8px;font-size:13px;color:#8b949e;letter-spacing:.05em;">🖥 界面选项</h3>' +
+            '<div style="background:#21262d;padding:12px 15px;border-radius:8px;">' +
+            '<label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">' +
+                '<div>' +
+                    '<div style="font-size:13px;color:#e6edf3;font-weight:600;">悬浮设置球</div>' +
+                    '<div style="font-size:11px;color:#8b949e;margin-top:2px;">屏幕右下角的可拖拽快捷入口</div>' +
+                '</div>' +
+                '<div class="settings-toggle' + (floatOn ? ' on' : '') + '" id="floatBtnToggle" ' +
+                    'onclick="window._toggleFloatBtn(this)" ' +
+                    'style="width:40px;height:22px;border-radius:11px;background:' + (floatOn ? '#46d164' : '#30363d') + ';' +
+                    'position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;">' +
+                    '<div style="position:absolute;top:3px;' + (floatOn ? 'right:3px' : 'left:3px') + ';' +
+                    'width:16px;height:16px;border-radius:50%;background:#fff;transition:all 0.2s;"></div>' +
+                '</div>' +
+            '</label>' +
+            '</div></div>';
+        })() +
+
         // 快捷键
         '<div style="margin-bottom:14px;">' +
         '<h3 style="margin-bottom:8px;font-size:13px;color:#8b949e;letter-spacing:.05em;">' + _t('shortcuts','settings') + '</h3>' +
@@ -1228,14 +1248,8 @@ window.showSettingsModal = function() {
 
         '</div>' + // end padding wrapper
 
-        // 底部按钮行
+        // 底部按钮行（教程/更新日志已移至左侧快捷栏）
         '<div class="modal-buttons">' +
-        '<button class="btn btn-info" style="background:#1f6feb;border-color:#1f6feb;" onclick="closeModal();if(typeof showTextTutorial===\'function\')showTextTutorial();">' + _t('tutorialBtn','settings') + '</button>' +
-        (function() {
-            var unread = (typeof getChangelogUnread === 'function') ? getChangelogUnread() : 0;
-            var dot = unread ? '<span style="display:inline-block;width:7px;height:7px;background:#f85149;border-radius:50%;margin-left:5px;vertical-align:middle;"></span>' : '';
-            return '<button class="btn btn-secondary" style="border-color:#46d164;color:#46d164;" onclick="closeModal();if(typeof showChangelog===\'function\')showChangelog();">📋 更新公告' + dot + '</button>';
-        })() +
         '<button class="btn btn-danger" onclick="if(typeof resetGame===\'function\')resetGame();">' + _t('resetBtn','settings') + '</button>' +
         '<button class="btn btn-primary" onclick="closeModal()">' + _t('closeBtn','settings') + '</button>' +
         '</div>' +
@@ -1677,7 +1691,38 @@ window.addEventListener('load', function() {
     if (saveIconEl) saveIconEl.innerHTML = createSVG('save', 16);
     var recallIconEl = document.getElementById('recallIcon');
     if (recallIconEl) recallIconEl.innerHTML = createSVG('recall', 16);
+    var tutorialIconEl = document.getElementById('tutorialIcon');
+    if (tutorialIconEl) tutorialIconEl.innerHTML = createSVG('tutorial', 16);
+    var changelogIconEl = document.getElementById('changelogIcon');
+    if (changelogIconEl) changelogIconEl.innerHTML = createSVG('changelog', 16);
+    var settingsIconEl = document.getElementById('settingsIcon');
+    if (settingsIconEl) settingsIconEl.innerHTML = createSVG('settings', 16);
+    // 浮窗开关：读取本地配置，隐藏/显示悬浮球
+    _applyFloatBtnPref();
 });
+
+// ==================== 悬浮设置球开关 ====================
+function _applyFloatBtnPref() {
+    var on = localStorage.getItem('mf_float_btn') !== 'off';
+    var btn = document.getElementById('settingsBtn');
+    if (btn) btn.style.display = on ? '' : 'none';
+}
+
+window._toggleFloatBtn = function(el) {
+    var on = el.classList.contains('on');
+    on = !on;
+    localStorage.setItem('mf_float_btn', on ? 'on' : 'off');
+    // 更新 toggle 样式
+    el.classList.toggle('on', on);
+    el.style.background = on ? '#46d164' : '#30363d';
+    var knob = el.querySelector('div');
+    if (knob) {
+        knob.style.right = on ? '3px' : '';
+        knob.style.left  = on ? ''    : '3px';
+    }
+    // 同步悬浮球显示
+    _applyFloatBtnPref();
+};
 
 // ==================== 早期体验版提示弹窗 ====================
 window.showEarlyAccessNotice = function(forceShow) {
