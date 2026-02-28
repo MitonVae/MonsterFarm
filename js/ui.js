@@ -1697,6 +1697,8 @@ window.addEventListener('load', function() {
     if (changelogIconEl) changelogIconEl.innerHTML = createSVG('changelog', 16);
     var settingsIconEl = document.getElementById('settingsIcon');
     if (settingsIconEl) settingsIconEl.innerHTML = createSVG('settings', 16);
+    var wikiIconEl = document.getElementById('wikiIcon');
+    if (wikiIconEl) wikiIconEl.innerHTML = createSVG('wiki', 16);
     // 浮窗开关：读取本地配置，隐藏/显示悬浮球
     _applyFloatBtnPref();
 });
