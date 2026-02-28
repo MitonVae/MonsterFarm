@@ -218,6 +218,7 @@ var explorationZones = [
       unlockCondition:{ type:'purchase', value:10000, label:'花费 10000 金币购买通行证' },
       energyCostManual:18, progressPerClick:[4,10],
       monsters:['shadow','wisp','deepkraken','voidwalker'], catchChance:0.10,
+      defeatChance:0.12,
       rewards:{ coins:[100,220], food:[0,15], materials:[50,100], research:[50,100] } },
 
     { id:'deep_ocean',     name:'深海秘境',   icon:'🌀', tier:4,
@@ -567,6 +568,241 @@ var allTraits = [
     { id:'soul_eater',   name:'噬魂者',   rarity:'epic',      effect:{ researchBonus:0.5 },         desc:'研究点获取+50%' },
     { id:'berserker_weak',name:'鲁莽',    rarity:'uncommon',  effect:{ strength:4, intelligence:-2 },desc:'力大但不用脑' }
 ];
+
+// ========== 变异词条（Mutation Traits）数据表 ==========
+// 通过捕获随机获得，不可通过重铸获取
+// mutationType: 'farm'|'explore'|'passive'|'cost'（影响方向分类）
+// trigger: 触发机制描述
+// feedMult: 食物消耗倍率（叠乘，默认1.0）
+// maintMult: 金币维护费倍率（叠乘，默认1.0）
+var MUTATION_TRAITS = [
+    // ══════════════════════════════════════════
+    // 普通变异（common）── 捕获概率约 5%
+    // ══════════════════════════════════════════
+    {
+        id: 'green_soul',
+        name: '绿色灵魂',
+        icon: '🌿',
+        rarity: 'common',
+        mutationType: 'farm',
+        desc: '农田产量永久+30%',
+        flavor: '它的双手总是带着泥土的气息',
+        effect: { farmYield: 0.30 },
+        feedMult: 1.0,
+        maintMult: 1.0
+    },
+    {
+        id: 'iron_will',
+        name: '钢铁意志',
+        icon: '🔩',
+        rarity: 'common',
+        mutationType: 'passive',
+        desc: '维护金币消耗-30%',
+        flavor: '粗茶淡饭，照样生龙活虎',
+        effect: { maintMult: -0.30 },
+        feedMult: 1.0,
+        maintMult: 0.70
+    },
+    {
+        id: 'swift_paws',
+        name: '疾行爪',
+        icon: '💨',
+        rarity: 'common',
+        mutationType: 'explore',
+        desc: '探索进度+40%',
+        flavor: '永远走在最前面',
+        effect: { exploreProgress: 0.40 },
+        feedMult: 1.1,
+        maintMult: 1.0
+    },
+    {
+        id: 'forager',
+        name: '觅食者',
+        icon: '🍃',
+        rarity: 'common',
+        mutationType: 'passive',
+        desc: '食物消耗-25%',
+        flavor: '总能在角落找到食物',
+        effect: { feedMult: -0.25 },
+        feedMult: 0.75,
+        maintMult: 1.0
+    },
+
+    // ══════════════════════════════════════════
+    // 稀有变异（uncommon）── 捕获概率约 2.5%
+    // ══════════════════════════════════════════
+    {
+        id: 'golden_touch',
+        name: '黄金之触',
+        icon: '✨',
+        rarity: 'uncommon',
+        mutationType: 'farm',
+        desc: '每次收获额外+50%金币',
+        flavor: '它碰过的庄稼都闪着金光',
+        effect: { harvestCoinBonus: 0.50 },
+        feedMult: 1.2,
+        maintMult: 1.1
+    },
+    {
+        id: 'treasure_nose',
+        name: '寻宝嗅觉',
+        icon: '💎',
+        rarity: 'uncommon',
+        mutationType: 'explore',
+        desc: '探索奖励数值+60%',
+        flavor: '它能闻到两公里外的金币气味',
+        effect: { exploreRewardMult: 0.60 },
+        feedMult: 1.15,
+        maintMult: 1.0
+    },
+    {
+        id: 'marathon',
+        name: '马拉松体质',
+        icon: '🏃',
+        rarity: 'uncommon',
+        mutationType: 'explore',
+        desc: '探索不积累疲劳值',
+        flavor: '永远不知疲倦地奔跑',
+        effect: { noFatigue: true },
+        feedMult: 1.3,
+        maintMult: 1.0
+    },
+    {
+        id: 'bulwark',
+        name: '坚不可摧',
+        icon: '🛡',
+        rarity: 'uncommon',
+        mutationType: 'explore',
+        desc: '探索战败时免疫属性惩罚',
+        flavor: '就算是石头砸下来也只是打个哈欠',
+        effect: { defeatImmune: true },
+        feedMult: 1.0,
+        maintMult: 1.2
+    },
+
+    // ══════════════════════════════════════════
+    // 珍贵变异（rare）── 捕获概率约 1.2%
+    // ══════════════════════════════════════════
+    {
+        id: 'eternal_flame',
+        name: '永久瀛火',
+        icon: '🔥',
+        rarity: 'rare',
+        mutationType: 'explore',
+        desc: '探索奖励+100%，但每次探索额外消耗8食物',
+        flavor: '内心燃烧着永不熄灭的火焰',
+        effect: { exploreRewardMult: 1.00, exploreExtraFood: 8 },
+        feedMult: 1.0,
+        maintMult: 1.0
+    },
+    {
+        id: 'dual_nature',
+        name: '双重天赋',
+        icon: '⚡',
+        rarity: 'rare',
+        mutationType: 'passive',
+        desc: '所有属性计算时视为×1.5，维护金币消耗×2',
+        flavor: '双重人格，双重力量',
+        effect: { allStatMult: 1.50 },
+        feedMult: 1.0,
+        maintMult: 2.0
+    },
+    {
+        id: 'harvest_soul',
+        name: '丰收之魂',
+        icon: '🌾',
+        rarity: 'rare',
+        mutationType: 'farm',
+        desc: '该地块产量+80%，不受过劳影响',
+        flavor: '每一株庄稼都感受到了它的爱',
+        effect: { farmYield: 0.80, farmingNoFatigue: true },
+        feedMult: 1.4,
+        maintMult: 1.0
+    },
+    {
+        id: 'phantom_step',
+        name: '幽灵步伐',
+        icon: '👣',
+        rarity: 'rare',
+        mutationType: 'explore',
+        desc: '探索速度+100%（进度加倍）',
+        flavor: '来去如风，根本看不到身影',
+        effect: { exploreProgress: 1.00 },
+        feedMult: 1.5,
+        maintMult: 1.2
+    },
+
+    // ══════════════════════════════════════════
+    // 史诗变异（epic）── 捕获概率约 0.5%
+    // ══════════════════════════════════════════
+    {
+        id: 'parasite',
+        name: '寄生共生',
+        icon: '🕸',
+        rarity: 'epic',
+        mutationType: 'cost',
+        desc: '食物消耗为0，但每tick从其他怪兽各偷取0.3食物',
+        flavor: '生存之道：让别人为我服务',
+        effect: { feedMult: 0, parasitic: true },
+        feedMult: 0,
+        maintMult: 1.5
+    },
+    {
+        id: 'void_sight',
+        name: '虚空洞察',
+        icon: '🌌',
+        rarity: 'epic',
+        mutationType: 'passive',
+        desc: '探索和农耕中稀有资源（材料/研究）获取×2',
+        flavor: '它的眼睛能看见普通人看不见的东西',
+        effect: { rareResourceMult: 2.0 },
+        feedMult: 1.2,
+        maintMult: 1.5
+    },
+
+    // ══════════════════════════════════════════
+    // 传说变异（legendary）── 捕获概率约 0.1%
+    // ══════════════════════════════════════════
+    {
+        id: 'world_will',
+        name: '世界意志',
+        icon: '🌍',
+        rarity: 'legendary',
+        mutationType: 'passive',
+        desc: '所有产出+50%，食物和金币消耗+50%，属于游戏最强变异',
+        flavor: '它不仅仅是一只怪兽，它是这片土地的守护神',
+        effect: { allYieldMult: 0.50, feedMult: 1.50 },
+        feedMult: 1.50,
+        maintMult: 1.50
+    }
+];
+
+// ── 变异词条按稀有度的捕获权重（基础，乘以怪兽自身稀有度系数）──
+var MUTATION_CATCH_WEIGHTS = {
+    common:    0.05,   // 5%
+    uncommon:  0.025,  // 2.5%
+    rare:      0.012,  // 1.2%
+    epic:      0.005,  // 0.5%
+    legendary: 0.001   // 0.1%
+};
+
+// ── 怪兽稀有度对变异概率的加成系数 ──
+var MUTATION_RARITY_BONUS = {
+    common:    1.0,
+    uncommon:  1.2,
+    rare:      1.5,
+    epic:      2.0,
+    legendary: 3.0
+};
+
+// ── 每只怪兽的稀有度决定维护费用（每tick扣除）──
+var MONSTER_UPKEEP = {
+    common:    { food: 0.08, coins: 0    },  // ~5食/分钟
+    uncommon:  { food: 0.15, coins: 0.05 },  // ~9食/分钟
+    rare:      { food: 0.25, coins: 0.15 },  // ~15食/分钟
+    epic:      { food: 0.40, coins: 0.40 },  // ~24食/分钟
+    legendary: { food: 0.60, coins: 1.00 }   // ~36食/分钟
+};
 
 // ========== 成就系统（16项）==========
 var achievements = [

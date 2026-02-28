@@ -103,19 +103,72 @@ function settleZone(zone) {
     gameState.research += research;
     gameState.totalExplorations++;
 
-    // 怪兽经验
+    // 怪兽经验 + 变异特效
     zs.assignedMonsterIds.forEach(function(mid) {
         var m = gameState.monsters.find(function(x) { return x.id === mid; });
-        if (m) gainExp(m, 20 + Math.floor(Math.random() * 15));
+        if (!m) return;
+        gainExp(m, 20 + Math.floor(Math.random() * 15));
+
+        // 变异：eternal_flame（永久瀛火）── 探索奖励×2，但消耗额外食物
+        if (m.mutation && m.mutation.id === 'eternal_flame') {
+            var extra = (m.mutation.effect && m.mutation.effect.exploreExtraFood) || 8;
+            gameState.food = Math.max(0, gameState.food - extra);
+            // 奖励翻倍（在本次结算结果中补差值）
+            var mult = (m.mutation.effect && m.mutation.effect.exploreRewardMult) || 1.0;
+            gameState.coins    += Math.floor(coins    * mult);
+            gameState.food     += Math.floor(food     * mult);
+            gameState.materials+= Math.floor(mats     * mult);
+            gameState.research += Math.floor(research * mult);
+        }
+
+        // 变异：treasure_nose（寻宝嗅觉）── 探索奖励+60%
+        if (m.mutation && m.mutation.id === 'treasure_nose') {
+            var mult2 = (m.mutation.effect && m.mutation.effect.exploreRewardMult) || 0.60;
+            gameState.coins    += Math.floor(coins    * mult2);
+            gameState.food     += Math.floor(food     * mult2);
+            gameState.materials+= Math.floor(mats     * mult2);
+            gameState.research += Math.floor(research * mult2);
+        }
     });
+
+    // ── 战败惩罚判定（高难区域专属）──
+    var defeatTriggered = false;
+    if (zone.defeatChance && zone.defeatChance > 0 && zs.assignedMonsterIds.length > 0) {
+        zs.assignedMonsterIds.forEach(function(mid) {
+            var m = gameState.monsters.find(function(x) { return x.id === mid; });
+            if (!m) return;
+
+            // 变异：bulwark（坚不可摧）─ 免疫战败惩罚
+            var hasBulwark = m.mutation && m.mutation.id === 'bulwark';
+            if (hasBulwark) return; // 跳过，免疫
+
+            // 疲劳越高，战败概率越大（fatigue/100 * defeatChance）
+            var effectiveDefeatChance = zone.defeatChance * (1 + (m.fatigue || 0) / 100);
+            if (Math.random() < effectiveDefeatChance) {
+                var penaltyStats = ['strength', 'agility', 'intelligence', 'farming'];
+                var penaltyStat = penaltyStats[Math.floor(Math.random() * penaltyStats.length)];
+                var penaltyVal  = Math.ceil(m.stats[penaltyStat] * 0.15); // 15% 惩罚
+                m.defeatDebuff = {
+                    stat:    penaltyStat,
+                    penalty: penaltyVal,
+                    until:   Date.now() + 20 * 60 * 1000
+                };
+                defeatTriggered = true;
+                showNotification('⚔️ ' + m.name + ' 遭遇战败！' + penaltyStat + ' -' + penaltyVal + '，持续20分钟', 'warning');
+            }
+        });
+    }
 
     // 捕获判定（引导第一步必定捕获）
     var caught = null;
     var catchRoll = (typeof tutorialState !== 'undefined' && tutorialState.guaranteeCatch)
         ? 1.0 : Math.random();
     if (catchRoll < zone.catchChance || tutorialState && tutorialState.guaranteeCatch) {
-        var typeId = zone.monsters[Math.floor(Math.random() * zone.monsters.length)];
-        caught = createMonster(typeId);
+        // 战败时捕获概率减半
+        if (!defeatTriggered || Math.random() < 0.5) {
+            var typeId = zone.monsters[Math.floor(Math.random() * zone.monsters.length)];
+            caught = createMonster(typeId);
+        }
     }
 
     // 通知
