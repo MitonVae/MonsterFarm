@@ -433,7 +433,7 @@ function startGrowTimer(plotId) {
             if (growIntervals[plotId] === intervalId) delete growIntervals[plotId];
             autoHarvestPlot(plotId);
         }
-    }, 200);
+    }, 500);  // 500ms 足够流畅，减少 CPU 唤醒次数
     growIntervals[plotId] = intervalId;
 }
 

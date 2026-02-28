@@ -53,37 +53,48 @@ function renderResourceCards() {
     }).join('');
 }
 
-// 更新资源显示 (侧边栏和顶部资源)
+// ── updateResources 节流控制 ──
+// 每秒最多执行一次真正的 DOM 更新（资源条文字），防止每个 tick 都全量重绘
+var _updateResourcesScheduled = false;
 window.updateResources = function() {
+    if (_updateResourcesScheduled) return;
+    _updateResourcesScheduled = true;
+    requestAnimationFrame(function() {
+        _updateResourcesScheduled = false;
+        _doUpdateResources();
+    });
+};
+
+function _doUpdateResources() {
     // 更新顶部资源（如果存在）
     var coinsEl = document.getElementById('res-coins');
     if (coinsEl) coinsEl.innerText = gameState.coins;
-    
+
     var researchEl = document.getElementById('res-research');
     if (researchEl) researchEl.innerText = gameState.research;
-    
+
     var landEl = document.getElementById('res-land');
     if (landEl) {
         var unlocked = gameState.plots.filter(function(p) { return !p.locked; }).length;
         landEl.innerText = unlocked + '/' + gameState.plots.length;
     }
-    
+
     var foodEl = document.getElementById('res-food');
     if (foodEl) foodEl.innerText = gameState.food;
-    
+
     var materialsEl = document.getElementById('res-materials');
     if (materialsEl) materialsEl.innerText = gameState.materials;
-    
+
     var energyEl = document.getElementById('res-energy');
     if (energyEl) energyEl.innerText = gameState.energy + '/' + gameState.maxEnergy;
-    
+
     // 更新侧边栏资源
     updateSidebarResources();
-    // 更新侧边栏怪兽列表
-    renderSidebarMonsters();
+    // 更新侧边栏怪兽列表（轻量增量更新）
+    _updateSidebarMonstersLight();
     // 同步刷新已展开的资源详情面板
     if (typeof refreshOpenResourceDetail === 'function') refreshOpenResourceDetail();
-};
+}
 
 // 更新侧边栏资源显示
 function updateSidebarResources() {
@@ -198,6 +209,49 @@ function _updateMobTopbar() {
     }
 }
 
+// ── 轻量增量更新：仅刷新怪兽状态文字，不重建 DOM ──
+// updateResources 每秒调用此函数代替完整的 renderSidebarMonsters
+function _updateSidebarMonstersLight() {
+    var sidebarMonstersEl = document.getElementById('sidebarMonsters');
+    if (!sidebarMonstersEl) return;
+
+    var existingCards = sidebarMonstersEl.querySelectorAll('.sidebar-monster');
+    var displayCount = Math.min(gameState.monsters.length, 6);
+
+    // ① 数量不一致 → 必须完整重建
+    if (existingCards.length !== displayCount) {
+        renderSidebarMonsters();
+        return;
+    }
+
+    // ② 逐张校验怪兽 ID，防止同数量但身份已变（出售+捕获同步发生）
+    for (var i = 0; i < displayCount; i++) {
+        var card = existingCards[i];
+        var monster = gameState.monsters[i];
+        if (!card || !monster) { renderSidebarMonsters(); return; }
+        // 卡片上记录的 monster id（renderSidebarMonsters 写入 onclick 属性中）
+        // 用 data-mid 属性做快速对比，若不存在则退化为完整渲染
+        var dataMid = card.getAttribute('data-mid');
+        if (dataMid === null || String(monster.id) !== dataMid) {
+            renderSidebarMonsters();
+            return;
+        }
+    }
+
+    // ③ 身份完全匹配，仅刷新状态文字（textContent，不触发布局）
+    for (var j = 0; j < displayCount; j++) {
+        var m = gameState.monsters[j];
+        var c = existingCards[j];
+        var statusEl = c.querySelector('.sidebar-monster-status');
+        if (statusEl) {
+            var newText = m.status !== 'idle'
+                ? getStatusText(m.status)
+                : 'Lv.' + m.level + ' · ' + T('idle', 'monsterStatus');
+            if (statusEl.textContent !== newText) statusEl.textContent = newText;
+        }
+    }
+}
+
 // 渲染侧边栏怪兽列表
 function renderSidebarMonsters() {
     var sidebarMonstersEl = document.getElementById('sidebarMonsters');
@@ -218,6 +272,7 @@ function renderSidebarMonsters() {
         
         return `
             <div class="sidebar-monster ${isSelected ? 'selected' : ''}" 
+                 data-mid="${monster.id}"
                  onclick="showMonsterDetailModal(${monster.id});" 
                  oncontextmenu="selectMonster(${monster.id}); return false;">
                 <div class="sidebar-monster-icon">

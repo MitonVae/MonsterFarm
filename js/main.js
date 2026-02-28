@@ -253,27 +253,43 @@ function createMonster(type, parent1, parent2) {
     return monster;
 }
 
-function generateTraits() {
-    // 使用 gamedata.js 中的扩展特性库
+// ── 预计算特性加权总量（只在首次调用时构建，避免每次 generateTraits 重建大数组）──
+var _traitWeightCache = null;
+var _traitWeightTotal = 0;
+
+function _getTraitWeights() {
+    if (_traitWeightCache) return _traitWeightCache;
     var pool = (typeof allTraits !== 'undefined') ? allTraits : [
         { id: 'fast', name: '敏捷', rarity:'common', effect: { agility: 1 } },
         { id: 'strong', name: '强壮', rarity:'common', effect: { strength: 1 } },
         { id: 'farmer', name: '农夫', rarity:'common', effect: { farming: 2 } }
     ];
-    // 按稀有度加权抽取
     var rarityWeight = { common: 60, uncommon: 25, rare: 10, epic: 4, legendary: 1 };
-    var weightedPool = [];
+    var cumulative = [];
+    var total = 0;
     pool.forEach(function(t) {
-        var w = rarityWeight[t.rarity] || 30;
-        for (var i = 0; i < w; i++) weightedPool.push(t);
+        total += (rarityWeight[t.rarity] || 30);
+        cumulative.push({ trait: t, cum: total });
     });
-    
+    _traitWeightTotal = total;
+    _traitWeightCache = cumulative;
+    return cumulative;
+}
+
+function generateTraits() {
+    var weighted = _getTraitWeights();
+    var total    = _traitWeightTotal;
+
     var numTraits = Math.random() < 0.3 ? 2 : 1;
     var traits = [];
     for (var i = 0; i < numTraits; i++) {
-        var trait = weightedPool[Math.floor(Math.random() * weightedPool.length)];
-        if (!traits.find(function(t) { return t.id === trait.id; })) {
-            traits.push(trait);
+        var r = Math.random() * total;
+        var picked = weighted[0].trait;
+        for (var j = 0; j < weighted.length; j++) {
+            if (r <= weighted[j].cum) { picked = weighted[j].trait; break; }
+        }
+        if (!traits.find(function(t) { return t.id === picked.id; })) {
+            traits.push(picked);
         }
     }
     return traits;
@@ -412,7 +428,7 @@ function autoSave() {
         // ── 探索系统状态 ──
         zoneStates:     zoneStatesData,
         purchasedZones: Object.assign({}, gameState.purchasedZones || {}),
-        expeditions:    JSON.parse(JSON.stringify(gameState.expeditions || [])),
+        expeditions:    (gameState.expeditions || []).map(function(ex) { return Object.assign({}, ex); }),
         // ── 事件 & 好感度系统 ──
         eventSystem:    (typeof EventSystem !== 'undefined') ? EventSystem.save() : null
     };
